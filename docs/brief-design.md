@@ -16,38 +16,50 @@ Il ne vend pas du rêve : il montre des chantiers réels, des références publi
 
 ## 3. Charte graphique — dérivée strictement du logo
 
-Le logo : deux plans parallélogrammes superposés (bleu profond au-dessus, gris argent en dessous), « ANDY » en noir et « CONSTRUCT » en bleu dans une linéale carrée type DIN, sous-titre « PLAFONDS CLOISONS PEINTURE » en gris, capitales espacées.
+> Mise à jour : le client a fourni son **logo actuel** (`docs/source/logo-andy-construct-original.webp`). L'ancien logo bleu de 2016 est archivé dans `docs/source/ancien-logo/` et **ne doit plus être utilisé**.
+
+Le logo : « ANDY » en capitales grasses **rouges**, tracé oblique et coupes en biseau (le A se prolonge en une diagonale dynamique), pastille rouge à croix blanche (croix suisse) accolée au Y ; « CONSTRUCT » dessous, en capitales géométriques larges et très espacées, **blanc** (logo pensé pour fond sombre).
+
+Déclinaisons préparées (`site/assets/img/brand/`) :
+- `logo-andy-construct.(png|webp)` : « CONSTRUCT » en anthracite, **pour fonds clairs** (en-tête blanc) ;
+- `logo-andy-construct-blanc.(png|webp)` : version d'origine, « CONSTRUCT » blanc, **pour fonds anthracite** (pied de page, héro) ;
+- favicon : le « A » rouge du logo.
+Ne jamais déformer, recolorer autrement, ni poser le logo sur une photo chargée sans voile.
 
 ### Couleurs (seules couleurs autorisées)
 
+Principe : **l'anthracite et le blanc portent le site, le rouge ponctue**. Le rouge est la signature, pas le fond : il ne couvre jamais une grande surface (public senior, BTP, anti-extravagance).
+
 | Rôle | Nom | Valeur | Usage |
 |---|---|---|---|
-| Primaire | Bleu Andy | `#004A99` | Boutons, liens, titres d'accent, icônes. Contraste blanc sur bleu ≈ 8.6:1 |
-| Primaire foncé | Bleu nuit | `#00346E` | Survol des boutons, pied de page |
-| Texte | Encre | `#1B1D1F` | Titres et texte courant |
-| Texte secondaire | Graphite | `#4A4F55` | Textes d'appoint (≥ 7:1 sur blanc) |
-| Décor | Argent | `#C3C6C9` | Plan gris du logo : filets, séparateurs, motifs. **Jamais pour du texte** |
-| Fond alterné | Brume | `#F3F4F5` | Une section sur deux |
-| Filets | Trait | `#DDE0E3` | Bordures de cartes, tableaux |
+| Signature | Rouge Andy | `#E8000F` | Boutons principaux (texte blanc, 4.7:1), marqueurs, filets d'accent, pastilles. Rouge du logo |
+| Signature foncé | Rouge profond | `#C4000D` | Survol des boutons, **liens et petits textes rouges sur fond clair** (6.3:1) |
+| Structure | Anthracite | `#1D1F22` | Pied de page, bandeau d'appel à l'action, voile du héro, titres |
+| Texte | Encre | `#1D1F22` | Titres et texte courant |
+| Texte secondaire | Graphite | `#44494F` | Textes d'appoint (≥ 8:1 sur blanc) |
+| Texte sur sombre | Acier | `#B9BDC2` | Texte secondaire sur anthracite (8.7:1) |
+| Fond alterné | Brume | `#F4F4F5` | Une section sur deux |
+| Filets | Trait | `#E2E3E5` | Bordures de cartes, tableaux |
 | Fond | Blanc | `#FFFFFF` | Fond principal |
 
-Interdits : dégradés colorés, violet/turquoise/orange, néons, fonds noirs pleine page, texte gris clair sur blanc.
-Seule exception : voile sombre (noir 55-70 %) sur la photo d'en-tête pour la lisibilité du titre.
+Règles : pas de texte courant rouge vif (#E8000F) sur fond clair ni sur anthracite (utiliser `#C4000D` sur clair ; sur anthracite, le rouge vif seulement pour grands titres ≥ 24 px ou éléments décoratifs). Pas de fond rouge pleine largeur. Interdits : dégradés colorés, autres teintes (bleu, orange, vert…), néons, texte gris clair sur blanc.
+Exception : voile anthracite (70-85 % à gauche, dégradé vers la droite) sur la photo d'en-tête pour la lisibilité du titre.
 
 ### Typographie
 
-- **Titres et libellés** : *Barlow* (linéale d'inspiration DIN, proche du lettrage du logo), graisses 600 et 700. Petits libellés (surtitres) en capitales, espacement 0.12em, rappel direct de « PLAFONDS CLOISONS PEINTURE ».
+- **Titres** : *Montserrat* 700 (linéale géométrique large, même famille visuelle que « CONSTRUCT »), en casse normale (pas de titres tout en capitales). 600 pour les sous-titres.
+- **Surtitres et petits libellés** : *Montserrat* 600 en capitales, espacement **0.18em**, rappel direct du « C O N S T R U C T » espacé du logo.
 - **Texte courant** : *Source Sans 3*, 400 et 600. Très lisible pour un public senior.
 - Polices **auto-hébergées** (woff2 dans `assets/fonts/`), aucun appel à Google Fonts (conformité nLPD / RGPD, rapidité).
 - Taille de base **18 px** (1.125rem), interligne 1.6, longueur de ligne max ~70 caractères.
-- H1 entre 2.2rem (mobile) et 3.4rem (desktop). Pas de titres géants.
+- H1 entre 2.1rem (mobile) et 3.2rem (desktop), interlettrage légèrement resserré (-0.01em). Pas de titres géants.
 
 ### Motif graphique
 
-Le **double plan** du logo (parallélogramme bleu + parallélogramme argent décalé) est le seul motif décoratif :
-- petit marqueur devant les surtitres de section (≈ 28×8 px),
-- éventuellement un filet biseauté en haut du pied de page.
-Usage parcimonieux. Pas de formes décoratives flottantes, pas de blobs.
+La **coupe en biseau** du logo (diagonales du A et du N) est le seul motif décoratif :
+- petit trait oblique rouge (parallélogramme ≈ 26×6 px, inclinaison ~ -20°) devant les surtitres de section ;
+- éventuellement un angle coupé en biseau sur un seul élément fort (bas du héro ou coin d'une image mise en avant).
+Usage parcimonieux. Pas de formes décoratives flottantes, pas de blobs, pas de texte en italique forcé pour « faire dynamique ».
 
 ### Formes, ombres, mouvement
 
@@ -59,13 +71,14 @@ Usage parcimonieux. Pas de formes décoratives flottantes, pas de blobs.
 ### Iconographie et images
 
 - Photos **réelles** uniquement (dossier `assets/img/portfolio/`). Aucune banque d'images.
-- Icônes : traits fins (1.75 px), bleu Andy, SVG en ligne, sobres. Une icône par prestation max.
+- Icônes : traits fins (1.75 px), anthracite (rouge seulement pour un détail), SVG en ligne, sobres. Une icône par prestation max.
 - Légendes factuelles sous les photos (type de travail), sans inventer de lieu ni de client.
 
 ## 4. Accessibilité et confort senior (non négociable)
 
-- WCAG 2.1 AA minimum : contrastes, focus visible (contour bleu 3 px), lien d'évitement, formulaires avec étiquettes visibles.
+- WCAG 2.1 AA minimum : contrastes, focus visible, lien d'évitement, formulaires avec étiquettes visibles.
 - Zones cliquables ≥ 48 px. Boutons avec **texte** (jamais icône seule).
+- Contour de focus : 3 px, `#1D1F22` sur fond clair, blanc sur fond anthracite (pas de rouge : trop proche des boutons).
 - **Numéro de téléphone visible en permanence** : en-tête sur ordinateur, barre fixe « Appeler / Devis » en bas sur mobile.
 - Aucune information uniquement dans une image.
 - Formulaire court : nom, téléphone, e-mail, type de travaux, commune, message, préférence « rappelez-moi ».
@@ -76,7 +89,7 @@ Usage parcimonieux. Pas de formes décoratives flottantes, pas de blobs.
 - Factuel et local : « entreprise genevoise », « depuis 2010 », « Chêne-Bourg », « Genève et Vaud ».
 - Aucune promesse invérifiable (« n°1 », « meilleur de Genève »). Pas d'anglicismes.
 - Orthographe suisse romande, format de téléphone suisse (`+41 22 771 20 15`), montants en CHF.
-- Pas de croix suisse en logo ou en décor (usage commercial réglementé) : l'ancrage suisse passe par les mots, les lieux et les références.
+- La croix suisse existe **uniquement dans le logo** (entreprise domiciliée et administrée à Genève). On n'en ajoute pas ailleurs (usage commercial réglementé, et ce serait ostentatoire) : l'ancrage suisse passe par les mots, les lieux et les références.
 
 ## 6. Architecture (reprise nettoyée de la démo)
 
