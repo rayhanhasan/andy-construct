@@ -2,7 +2,7 @@
 
 Maquette Andy Construct, version du 25 septembre 2026.
 Chaque élément ci-dessous est entouré d'un commentaire `<!-- PROVISOIRE : … -->` dans le code HTML (`site/*.html`).
-Les pages sont générées : pour corriger un texte, modifier la source puis régénérer (voir le rapport de l'agence).
+Les pages sont générées : pour corriger un texte, modifier les sources dans `tools/build/` puis lancer `python3 tools/build/build.py` depuis la racine du dépôt (ne pas modifier `site/*.html` à la main).
 
 ## 1. Identité et coordonnées (NAP), bloquant pour la mise en ligne
 
@@ -65,7 +65,7 @@ Les pages sont générées : pour corriger un texte, modifier la source puis ré
 
 | Page | Élément | Valeur provisoire | Question à poser au client |
 |---|---|---|---|
-| Mentions légales | Hébergeur | « Hébergeur suisse, à confirmer » ; conception : Harbor Digital | Nom et adresse de l'hébergeur de production. |
+| Mentions légales | Hébergeur | « Le site est hébergé en Suisse. » (nom et adresse absents) ; conception : Harbor Digital | Nom et adresse de l'hébergeur de production, à ajouter dans les mentions légales. |
 | Mentions légales | Durée de conservation | 12 mois sans suite, sinon durée légale des pièces commerciales | Cette durée vous convient-elle ? |
 | Mentions légales | Lieu de traitement | « Les données sont traitées en Suisse » | Votre messagerie (Bluewin) et l'hébergeur sont-ils en Suisse ? |
-| Accueil, contact | Formulaire | Maquette sans envoi réel ; pièce jointe (photo ou plan) prévue | À quelle adresse faut-il envoyer les demandes ? Taille maximale des pièces jointes ? |
+| Accueil, contact | Formulaire | Sans envoi réel (le message de confirmation s'affiche, rien n'est transmis) ; pièce jointe « photo ou plan » prévue | À quelle adresse faut-il envoyer les demandes ? Taille maximale des pièces jointes ? |

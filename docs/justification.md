@@ -28,8 +28,8 @@ Vérifications du 25.09.2026 (détail dans `docs/analyse-marche.md`, section 4).
 
 Au bureau, sur ordinateur. Elle tape « plafond acoustique Genève », ou pose la question à une IA.
 
-1. **Accueil.** Le titre dit le métier et le lieu. Juste dessous : Conservatoire de Musique de Genève, HEAD, salles communales de Plan-les-Ouates et de Collonge-Bellerive.
-2. **Prestations › Plafonds phoniques et acoustiques.** Locaux, avantages, et un point d'attention honnête : un plafond absorbant réduit l'écho, pas forcément le bruit du voisin. Le bloc « Normes et qualité » cite l'AEAI, la SIA 181 et la SIA 118. Vous parlez son langage.
+1. **Accueil.** Le titre dit le métier et le lieu. Juste dessous : Conservatoire, HEAD, salles communales de Plan-les-Ouates et de Collonge-Bellerive.
+2. **Prestations › Plafonds phoniques et acoustiques.** Locaux, avantages, et un point d'attention honnête : un plafond absorbant réduit l'écho, pas forcément le bruit du voisin. Les normes AEAI, SIA 181 et SIA 118 sont citées. Vous parlez son langage.
 3. **« Voir des réalisations »** ouvre la galerie filtrée sur l'acoustique.
 4. **Réalisations › Pour les architectes, régies et collectivités** : codes CFC 271, 283 et 285, dossier de références, contact direct.
 5. **Elle appelle** le numéro affiché en haut de chaque page, ou envoie ses plans par le formulaire.
@@ -108,7 +108,7 @@ Le soir, sur sa tablette. Elle ne connaît pas le vocabulaire.
 - Ni carrousel, ni vidéo, ni fenêtre surgissante, ni chat.
 - Formulaire court : nom, téléphone ou e-mail, commune, type de travaux, message, photo facultative, case « Je préfère être rappelé(e) ». Messages d'erreur en français clair.
 
-**Pourquoi ça compte.** Avec des lunettes de lecture, ou sur un chantier en plein soleil, un petit texte gris se lit mal et un pouce rate un petit lien. Chaque obstacle est un appel perdu. Et beaucoup de vos clients préfèrent parler qu'écrire.
+**Pourquoi ça compte.** Avec des lunettes de lecture ou en plein soleil, un petit texte gris se lit mal et un pouce rate un petit lien. Chaque obstacle est un appel perdu.
 
 ### 4.8 Visibilité sur Google et dans les IA
 
@@ -145,7 +145,7 @@ Le soir, sur sa tablette. Elle ne connaît pas le vocabulaire.
 4. **Même identité partout (0 à 30 jours).** Fiche Google complète (catégories, zone, horaires, 30 photos), Bing Places, Apple Business Connect. Correction de local.ch, search.ch, GGE, Kompass (classé à tort en « charpenterie »).
 5. **Campagne d'avis (dès la mise en ligne).** 30 clients, un message avec lien direct, une relance, une réponse à chaque avis. Objectif proposé : 15 avis à 90 jours, 30 à 180 jours.
 6. **Jours 30 à 90 : la preuve.** 10 fiches projets (références publiques d'abord), dossier de références PDF, veille des appels d'offres sur simap.ch et dans les FAO (CFC 271, 283, 285), une actualité par mois sur la fiche Google.
-7. **Jour 90 : bilan.** Appels, formulaires, positions relevées depuis Genève, test de 10 questions dans ChatGPT, Perplexity, Google et Copilot. Puis décision sur les contenus spécialisés (plafonds tendus, acoustique, incendie).
+7. **Jour 90 : bilan.** Appels, formulaires, positions relevées depuis Genève, test de 10 questions dans ChatGPT, Perplexity, Google et Copilot. Puis choix des contenus spécialisés à écrire.
 
 ---
 
