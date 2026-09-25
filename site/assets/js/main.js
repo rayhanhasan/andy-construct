@@ -54,7 +54,7 @@
     d.addEventListener('click', function (e) {
       if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) setOpen(false);
     });
-    var mq = window.matchMedia('(min-width: 1180px)');
+    var mq = window.matchMedia('(min-width: 1240px)');
     var onMq = function () { if (mq.matches) setOpen(false); };
     if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq);
   }
