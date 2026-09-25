@@ -71,38 +71,57 @@
     var select = form.querySelector('select[name="travaux"]');
     if (type && select && select.querySelector('option[value="' + type + '"]')) select.value = type;
 
+    var UN_DES = 'Indiquez un téléphone ou un e-mail pour que nous puissions vous répondre.';
+    var errorOf = function (field) {
+      var ids = (field.getAttribute('aria-describedby') || '').split(' ');
+      for (var i = 0; i < ids.length; i++) {
+        var el = ids[i] && d.getElementById(ids[i]);
+        if (el && el.classList.contains('error')) return el;
+      }
+      return null;
+    };
     var showError = function (field) {
-      var box = field.closest('.field');
-      var err = box && box.querySelector('.error');
-      if (!err) return;
+      var err = errorOf(field);
+      if (!err) return true;
+      var pair = field.getAttribute('data-un-des'); // au moins un des deux champs (téléphone ou e-mail)
+      var other = pair && form.elements[pair];
+      if (other) field.setCustomValidity(!field.value.trim() && !other.value.trim() ? UN_DES : '');
+      var v = field.validity;
       var msg = '';
-      if (!field.validity.valid) {
-        if (field.validity.valueMissing) msg = field.getAttribute('data-requis') || 'Ce champ est obligatoire.';
-        else if (field.validity.typeMismatch) msg = 'Vérifiez le format de l’adresse e-mail (exemple : nom@domaine.ch).';
-        else if (field.validity.patternMismatch) msg = field.getAttribute('data-format') || 'Le format saisi n’est pas valide.';
+      if (!v.valid) {
+        if (v.valueMissing) msg = field.getAttribute('data-requis') || 'Ce champ est obligatoire.';
+        else if (v.typeMismatch) msg = 'Vérifiez l\u2019adresse e-mail (exemple : nom@domaine.ch).';
+        else if (v.patternMismatch) msg = field.getAttribute('data-format') || 'Le format saisi n\u2019est pas valide.';
         else msg = field.validationMessage;
       }
       err.textContent = msg;
       err.hidden = !msg;
-      box.classList.toggle('has-error', !!msg);
+      var box = field.closest('.field');
+      if (box && field.type !== 'checkbox') box.classList.toggle('has-error', !!msg);
       field.setAttribute('aria-invalid', msg ? 'true' : 'false');
+      return !msg;
     };
 
     each('input, select, textarea', function (field) {
-      field.addEventListener('blur', function () { if (field.value || field.closest('.has-error')) showError(field); });
-      field.addEventListener('input', function () { if (field.closest('.has-error')) showError(field); });
+      var recheck = function () {
+        if (field.getAttribute('aria-invalid') === 'true') showError(field);
+        var tel = form.querySelector('[data-un-des="' + field.name + '"]');
+        if (tel && tel.getAttribute('aria-invalid') === 'true') showError(tel);
+      };
+      field.addEventListener('blur', function () { if (field.value && field.type !== 'checkbox') showError(field); });
+      field.addEventListener('input', recheck);
+      field.addEventListener('change', recheck);
     }, form);
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var first = null;
       each('input, select, textarea', function (field) {
-        showError(field);
-        if (!first && !field.validity.valid) first = field;
+        if (!showError(field) && !first) first = field;
       }, form);
       if (first) { first.focus(); return; }
 
-      /* Confirmation (maquette) */
+      /* Confirmation (maquette). Pot de miel rempli = robot : même message, rien ne serait envoyé. */
       var ok = form.parentNode.querySelector('.form-success');
       var name = form.querySelector('[name="nom"]');
       var who = ok && ok.querySelector('[data-nom]');

@@ -1,0 +1,9 @@
+# robots.txt de production (www.andyconstruct.ch)
+# La maquette hébergée sur harbor-digital.fr est protégée par <meta name="robots" content="noindex, nofollow">
+# sur chaque page (un « Disallow » ne suffit pas à empêcher l'indexation). Retirer ce noindex en production.
+# Les robots des moteurs et des IA ne sont pas bloqués : un contenu bloqué ne peut pas être cité.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.andyconstruct.ch/sitemap.xml
