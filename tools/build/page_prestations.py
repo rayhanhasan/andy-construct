@@ -1,112 +1,49 @@
 # -*- coding: utf-8 -*-
-"""Prestations : structure H2/H3 et ancres du brief SEO §3.2."""
+"""Prestations : les 4 services du client (placo, peinture, isolation acoustique, cloisons isothermes)."""
 from common import *
 
-TITLE = 'Plafond tendu, acoustique, cloison à Genève | Andy Construct'
-DESC = "Plafonds tendus et acoustiques, placoplâtre, fibre, métal ; cloisons légères et mobiles ; isolation, chape flottante, protection incendie. Genève et Vaud."
-
+TITLE = 'Placo, peinture, isolation · Suisse romande | Andy Construct'
+DESC = "Placo (doublages, faux-plafonds, cloisons), peinture intérieure, isolation acoustique et cloisons isothermes, à Genève et dans toute la Suisse romande."
 SIZES = '(min-width: 1000px) 360px, (min-width: 760px) 40vw, 100vw'
-
-
-def item(anchor, title, desc, uses, benef, attention, photo, cat, travaux, note=''):
-    return dict(anchor=anchor, title=title, desc=desc, uses=uses, benef=benef, attention=attention,
-                photo=photo, cat=cat, travaux=travaux, note=note)
-
-
-PLAFONDS = [
-    item('plafonds-tendus', 'Plafonds en tissu tendu à froid',
-         "Une toile en tissu est fixée sur des profilés posés au pourtour de la pièce, puis mise en tension sans chauffage, contrairement aux membranes en PVC posées à chaud. Le résultat est un plafond parfaitement lisse, posé proprement, souvent sans déposer l'ancien plafond. La toile accepte spots, caissons lumineux et puits de lumière.",
-         ['Logements, même habités', 'Salles communales et de conférence', 'Restaurants et commerces', 'Bâtiments anciens à poutres apparentes'],
-         ['Surface lisse, sans fissure ni joint visible', 'Pose rapide, très peu de poussière', "Rénovation sans démolir l'ancien plafond", 'Éclairage intégré possible'],
-         "le choix de la toile (aspect, acoustique, comportement au feu) dépend de l'usage du local, et les réservations pour l'éclairage se prévoient avant la pose.",
-         'plafond-tendu-poutres-apparentes-01', 'plafonds-tendus', 'plafond-tendu'),
-    item('plafonds-acoustiques', 'Plafonds phoniques et acoustiques',
-         "Dans une salle de réunion, une classe ou un restaurant, l'écho fatigue et gêne la conversation. Un plafond acoustique absorbe une partie du son et réduit la réverbération. Un plafond phonique, associé à une isolation, limite en plus la transmission du bruit entre deux locaux.",
-         ['Salles de réunion et bureaux', 'Écoles, conservatoires, salles de musique', 'Restaurants et cantines', 'Salles communales et polyvalentes'],
-         ['Meilleure compréhension de la parole', "Moins d'écho et moins de fatigue", 'Finitions variées : dalles, panneaux, plâtre perforé', 'Compatible avec l\'éclairage et la ventilation'],
-         "un plafond absorbant réduit l'écho dans la pièce, pas forcément le bruit qui vient d'un autre logement. Pour cela, il faut une isolation phonique (voir plus bas).",
-         'panneaux-acoustiques-muraux-01', 'plafonds-acoustiques', 'plafond-acoustique'),
-    item('plafonds-placoplatre', 'Plafonds en plaques de plâtre (placoplâtre)',
-         "Le faux-plafond en plaques de plâtre est vissé sur une ossature métallique, puis les joints sont enduits et le plafond est peint. Il permet toutes les formes : plafonds plats, retombées, gorges lumineuses, îlots arrondis. Il cache les gaines techniques et reçoit l'isolation nécessaire.",
-         ["Halls d'entrée et couloirs", 'Logements et bureaux', 'Locaux commerciaux', "Cages d'escalier"],
-         ['Formes libres : courbes, caissons, gorges lumineuses', 'Passage discret des gaines et des câbles', 'Isolation thermique ou phonique intégrée', "Plaques résistantes au feu ou à l'humidité"],
-         "les joints sont enduits puis poncés avant peinture : le local doit être protégé. Les trappes de visite se placent dès la conception.",
-         'faux-plafond-placo-gorge-lumineuse-01', 'plafonds-placo', 'faux-plafond'),
-    item('plafonds-fibre', 'Plafonds en fibre de bois et en fibre minérale',
-         "Deux familles de panneaux posés apparents. La fibre de bois agglomérée allie une bonne correction acoustique à un aspect chaleureux et résiste bien aux chocs. La fibre minérale, en dalles sur ossature apparente, est la solution économique et démontable des bureaux et des bâtiments publics : chaque dalle se retire pour accéder aux installations.",
-         ['Bureaux et couloirs', 'Écoles, crèches, salles de sport', 'Cabinets médicaux et laboratoires', 'Parkings et locaux techniques'],
-         ['Bonne correction acoustique', 'Accès facile aux installations (dalles)', "Remplacement d'une dalle à l'unité", 'Aspect naturel pour la fibre de bois'],
-         "les dalles minérales supportent mal l'humidité et les chocs ; dans ces locaux, nous proposons la fibre de bois ou le métal.",
-         'plafond-dalles-couloir-01', 'plafonds-acoustiques', 'faux-plafond',
-         'PROVISOIRE : à valider avec le client (matériau exact des dalles de la photo ; photo de fibre de bois à fournir)'),
-    item('plafonds-metalliques', 'Plafonds en bacs métalliques',
-         "Bacs ou lames en acier ou en aluminium laqué : un plafond résistant, lavable et démontable, adapté aux locaux très fréquentés ou soumis à des exigences d'hygiène.",
-         ['Cuisines professionnelles', 'Laboratoires', 'Halls et zones de passage', 'Sanitaires'],
-         ["Surface lavable, adaptée à l'hygiène", "Démontable pour l'entretien", 'Perforations acoustiques possibles', 'Longue durée de vie'],
-         "le type de perforation et le voile acoustique se choisissent selon l'écho à corriger dans le local.",
-         'plafond-bacs-metalliques-cuisine-01', 'plafonds-metalliques', 'faux-plafond'),
-    item('cadres-acoustiques', 'Cadres acoustiques',
-         "Un cadre en aluminium tendu d'une toile imprimée, avec un absorbant au dos. Il corrige l'acoustique d'une salle tout en servant de décor : paysage, photo, motif ou couleur unie.",
-         ['Salles de réunion', 'Accueils et réceptions', 'Restaurants', 'Bureaux ouverts'],
-         ['Correction acoustique sans gros travaux', 'Impression sur mesure', 'Pose murale ou suspendue', 'Toile remplaçable'],
-         "l'image doit être fournie en haute définition ; nous vous indiquons le format exact à prévoir.",
-         'cadre-acoustique-salle-de-reunion-01', 'plafonds-acoustiques', 'cadres-acoustiques'),
-]
-
-CLOISONS = [
-    item('cloisons-placoplatre', 'Cloisons légères en plaques de plâtre',
-         "Montées sur ossature métallique, les cloisons en plaques de plâtre redistribuent un logement ou un étage de bureaux sans maçonnerie. Selon le nombre de plaques et l'isolant choisis, elles isolent du bruit ou résistent au feu. Les mêmes plaques servent aux habillages et aux doublages.",
-         ['Aménagement de bureaux', 'Rénovation de logements', 'Locaux techniques', 'Habillages et niches sur mesure'],
-         ['Pose rapide, sans temps de séchage de maçonnerie', "Isolation phonique selon l'épaisseur", "Versions résistantes au feu ou à l'humidité", 'Surface prête à peindre'],
-         "les performances phoniques et coupe-feu dépendent de la composition de la cloison et de ses raccords : elles sont précisées dans l'offre.",
-         'habillage-placo-niches-arrondies-01', 'cloisons', 'cloisons'),
-    item('cloisons-mobiles', 'Cloisons mobiles en aluminium',
-         "Les cloisons démontables à cadre en aluminium, pleines ou vitrées, suivent l'évolution de vos bureaux. Elles se démontent et se remontent quand l'organisation change.",
-         ['Bureaux et plateaux ouverts', 'Salles de réunion', 'Cabinets et agences'],
-         ['Espaces modulables et réutilisables', 'Vitrages avec stores intégrés possibles', 'Lumière naturelle préservée', 'Chantier court, possible en site occupé'],
-         "les passages de l'électricité et de la ventilation se coordonnent avec les autres corps de métier avant la pose.",
-         'cloisons-modulaires-vitrees-01', 'cloisons', 'cloisons',
-         'PROVISOIRE : à valider avec le client (système exact des cloisons de la photo)'),
-]
 
 
 def ticks(items):
     return '<ul class="ticks">' + ''.join('<li>%s</li>' % i for i in items) + '</ul>'
 
 
-def render_item(it):
-    media = ''
-    if it['photo']:
-        m = BY[it['photo']]
-        media = '''
+def figure(pid):
+    it = BY[pid]
+    return '''
               <figure class="svc__media">
                 <span class="media">%s</span>
                 <figcaption class="caption">%s</figcaption>
-              </figure>''' % (pic(it['photo'], SIZES), e(m['titre']))
-    note = ('\n            <!-- %s -->' % it['note']) if it['note'] else ''
-    return '''
-          <article class="svc" id="%(a)s" aria-labelledby="%(a)s-titre">%(note)s
+              </figure>''' % (pic(pid, SIZES), e(titre(it)))
+
+
+def bloc(texte, uses, benef, attention, travaux, cat=None, photo=None, note=''):
+    liens = ''
+    if cat:
+        liens += '\n                  <a class="link-arrow" href="realisations.html?categorie=%s">Voir des réalisations</a>' % cat
+    liens += '\n                  <a class="link-arrow" href="contact.html?travaux=%s#devis">Demander une offre</a>' % travaux
+    return '''%(note)s
+          <div class="svc">
             <div class="svc__grid%(g)s">
-              <div>
-                <h3 class="svc__title" id="%(a)s-titre">%(t)s</h3>
-                <p>%(d)s</p>
+              <div>%(texte)s
                 <div class="svc__cols">
-                  <div><h4 class="label">Pour quels locaux</h4>%(u)s</div>
-                  <div><h4 class="label">Avantages</h4>%(b)s</div>
+                  <div><h3 class="label">Pour quels locaux</h3>%(u)s</div>
+                  <div><h3 class="label">Avantages</h3>%(b)s</div>
                 </div>
                 <p class="svc__note"><strong>Point d'attention :</strong> %(att)s</p>
-                <p class="svc__links">
-                  <a class="link-arrow" href="realisations.html?categorie=%(cat)s">Voir des réalisations</a>
-                  <a class="link-arrow" href="contact.html?travaux=%(tr)s#devis">Demander une offre</a>
+                <p class="svc__links">%(liens)s
                 </p>
               </div>%(m)s
             </div>
-          </article>''' % dict(a=it['anchor'], note=note, g='' if it['photo'] else ' svc__grid--text', t=it['title'],
-                               d=it['desc'], u=ticks(it['uses']), b=ticks(it['benef']), att=it['attention'],
-                               cat=it['cat'], tr=it['travaux'], m=media)
+          </div>''' % dict(note=('\n          <!-- %s -->' % note) if note else '', g='' if photo else ' svc__grid--text',
+                           texte=texte, u=ticks(uses), b=ticks(benef), att=attention, liens=liens,
+                           m=figure(photo) if photo else '')
 
 
-def group(gid, title, intro, inner, eyebrow):
+def group(gid, eyebrow, title, intro, inner):
     return '''
         <section class="svc-group" id="%(g)s" aria-labelledby="%(g)s-titre">
           <div class="svc-group__head">
@@ -114,105 +51,65 @@ def group(gid, title, intro, inner, eyebrow):
             <h2 id="%(g)s-titre">%(t)s</h2>
             <p class="lead">%(i)s</p>
           </div>%(inner)s
-        </section>''' % dict(g=gid, t=title, i=intro, inner=inner, eb=eyebrow)
-
-
-def figure(pid):
-    m = BY[pid]
-    return '''
-              <figure class="svc__media">
-                <span class="media">%s</span>
-                <figcaption class="caption">%s</figcaption>
-              </figure>''' % (pic(pid, SIZES), e(m['titre']))
+        </section>''' % dict(g=gid, eb=eyebrow, t=title, i=intro, inner=inner)
 
 
 def build():
     h = head(TITLE, DESC, 'prestations.html', ld=[page_ld('prestations.html', TITLE, 'Prestations')])
 
-    plafonds = group('plafonds', 'Plafonds', "Six familles de plafonds, du plus décoratif au plus technique. Nous vous conseillons celle qui convient à l'usage du local.",
-                     ''.join(render_item(i) for i in PLAFONDS), 'Six systèmes')
-    cloisons = group('cloisons', 'Cloisons', "Des cloisons fixes ou démontables pour créer, redistribuer ou isoler des espaces, sans maçonnerie.",
-                     ''.join(render_item(i) for i in CLOISONS), 'Fixes ou démontables')
+    placo = group('placo', 'Plâtrerie', 'Placo : doublages, faux-plafonds et cloisons',
+                  "Les plaques de plâtre sur ossature métallique permettent de créer, de redresser ou de redistribuer vos espaces, sans maçonnerie et avec une finition prête à peindre.",
+                  bloc('''
+                <div class="svc__subs">
+                  <div id="placo-doublages">
+                    <h3 class="svc__title">Doublages</h3>
+                    <p>Un parement en plaques de plâtre posé devant un mur existant, collé ou sur ossature. Il redresse le mur, cache les gaines et peut recevoir un isolant.</p>
+                  </div>
+                  <div id="placo-faux-plafonds">
+                    <h3 class="svc__title">Faux-plafonds en plaques de plâtre</h3>
+                    <p>Plafonds plats, retombées, gorges lumineuses ou formes courbes, suspendus sous la dalle. Ils cachent les réseaux techniques et intègrent spots et trappes de visite.</p>
+                  </div>
+                  <div id="placo-cloisons">
+                    <h3 class="svc__title">Cloisons en placo</h3>
+                    <p>Des cloisons légères pour redistribuer un logement ou un étage de bureaux, rapidement et proprement, sans temps de séchage de maçonnerie.</p>
+                  </div>
+                </div>''',
+                       ['Logements neufs ou en rénovation', 'Bureaux et commerces', "Halls d'entrée, couloirs et cages d'escalier", 'Salles et bâtiments publics'],
+                       ['Formes libres : courbes, retombées, gorges lumineuses', 'Passage discret des gaines et des câbles', 'Isolant intégré si nécessaire', "Plaques adaptées aux pièces humides"],
+                       "les joints sont enduits puis poncés avant peinture : le local doit être protégé. Les trappes de visite se prévoient dès la conception.",
+                       'placo', cat='placo', photo='faux-plafond-placo-gorge-lumineuse-01'))
 
-    isolation_inner = '''
-          <div class="svc svc--flat">
-            <div class="svc__grid">
-              <div class="svc__subs">
-                <div id="isolation-phonique">
-                  <h3 class="svc__title">Isolation phonique</h3>
-                  <p>Faux-plafond désolidarisé avec isolant, cloisons à double ossature, doublages : pour limiter les bruits aériens (voix, musique, télévision) entre deux locaux ou deux logements.</p>
-                </div>
-                <div id="isolation-thermique">
-                  <h3 class="svc__title">Isolation thermique intérieure</h3>
-                  <p>Isolant posé sous une dalle froide, dans les combles ou en doublage des murs : moins de pertes de chaleur et plus de confort en été. Certaines mesures peuvent être subventionnées (programme GEnergie, Programme Bâtiments) ; la demande se dépose avant le début des travaux.</p>
-                </div>
-                <div id="chape-flottante">
-                  <h3 class="svc__title">Chape flottante contre les bruits d'impact</h3>
-                  <p>Posée sur une couche isolante souple, sans contact rigide avec la dalle ni avec les murs, la chape flottante réduit les bruits de pas et de chocs transmis aux locaux du dessous. Elle se prévoit lors d'une rénovation de sol ou d'une construction.</p>
-                </div>
-                <p class="svc__links">
-                  <a class="link-arrow" href="realisations.html?categorie=chantier">Voir des chantiers en cours</a>
-                  <a class="link-arrow" href="contact.html?travaux=isolation#devis">Demander une offre</a>
-                </p>
-              </div>%s
-            </div>
-          </div>''' % figure('chantier-ossature-puits-de-lumiere-02')
-    isolation = group('isolation', 'Isolation thermique et phonique',
-                      "Nous posons l'isolant dans les faux-plafonds, les cloisons et les doublages. Bien choisi et bien posé, il réduit les pertes de chaleur et limite le bruit.",
-                      isolation_inner, 'Chaleur et bruit')
+    peinture = group('peinture', 'Finitions', 'Peinture intérieure',
+                     "La finition fait partie du travail : nous vous livrons des pièces terminées.",
+                     bloc('''
+                <p>Après la pose, nous préparons les supports, réalisons les enduits et les bandes, puis peignons plafonds et murs. Un seul intervenant, du montage des plaques à la dernière couche.</p>''',
+                          ['Plafonds et murs après pose de placo', 'Rénovation de logements', 'Bureaux et commerces'],
+                          ['Un seul intervenant du début à la fin', 'Préparation soignée des supports', "Peintures adaptées à l'usage des locaux"],
+                          "un support neuf en plaques de plâtre se traite avec une impression adaptée avant la peinture de finition.",
+                          'peinture', note="PROVISOIRE : à valider avec le client (périmètre exact de l'offre peinture ; photos à fournir)"))
 
-    incendie_inner = '''
-          <!-- PROVISOIRE : à valider avec le client (types d'ouvrages coupe-feu réalisés ; aucune certification revendiquée) -->
-          <div class="svc svc--flat">
-            <div class="svc__grid svc__grid--text">
-              <div>
-                <p>Nous posons des plafonds, des cloisons et des habillages de protection incendie, par exemple autour des structures ou dans les voies d'évacuation. La résistance au feu exigée (par exemple EI 30) est fixée par le concept de protection incendie du bâtiment, selon les prescriptions de l'AEAI, et le système posé doit y correspondre.</p>
-                %s
-                <p class="svc__links"><a class="link-arrow" href="contact.html?travaux=protection-incendie#devis">Demander une offre</a></p>
-              </div>
-            </div>
-          </div>''' % ticks(['Plafonds et cloisons résistants au feu', 'Habillage de gaines et de structures', 'Mise en œuvre selon les fiches techniques des fabricants', 'Niveau demandé à indiquer dès la demande d\'offre'])
-    incendie = group('protection-incendie', 'Protection incendie',
-                     "Des ouvrages coupe-feu posés selon les exigences définies pour le projet.", incendie_inner, 'Sécurité')
+    acoustique = group('isolation-acoustique', 'Confort acoustique', 'Isolation acoustique',
+                       "Voix, musique, télévision, pas à l'étage : nous réduisons le bruit qui passe d'une pièce, d'un logement ou d'un étage à l'autre.",
+                       bloc('''
+                <p>Selon la situation, nous posons un faux-plafond désolidarisé avec isolant, un doublage acoustique ou une cloison à double ossature. Chaque paroi associe plaques de plâtre et laine isolante, sans contact rigide avec la structure pour limiter la transmission du bruit.</p>''',
+                            ['Séparations entre logements', 'Salles de réunion et bureaux', 'Chambres et pièces de repos', 'Locaux techniques bruyants'],
+                            ['Moins de bruit entre les locaux', 'Plus de confort et de discrétion', 'Solution posée sans gros œuvre', 'Finition prête à peindre'],
+                            "un panneau absorbant réduit l'écho dans la pièce, mais pas le bruit qui vient d'un autre logement : pour cela, il faut isoler la paroi.",
+                            'isolation-acoustique', cat='isolation-acoustique', photo='panneaux-acoustiques-muraux-01',
+                            note="PROVISOIRE : à valider avec le client (la photo montre des panneaux acoustiques muraux : prestation à confirmer)"))
 
-    integ_inner = '''
-          <div class="svc svc--flat">
-            <div class="svc__grid">
-              <div>
-                <ul class="svc__extra svc__extra--stack">
-                  <li><h3>Caissons lumineux</h3><p>Éclairage intégré au plafond, en lumière directe ou indirecte (gorge lumineuse, îlots, plafonds rétroéclairés).</p></li>
-                  <li><h3>Trappes de visite</h3><p>Accès discret aux vannes, gaines et installations techniques, dans la finition du plafond.</p></li>
-                  <li><h3>Puits de lumière</h3><p>Ouverture dans le faux-plafond pour faire entrer la lumière naturelle d'une verrière ou d'un lanterneau.</p></li>
-                </ul>
-                <p class="svc__links">
-                  <a class="link-arrow" href="realisations.html?categorie=plafonds-tendus">Voir des plafonds lumineux</a>
-                  <a class="link-arrow" href="contact.html?travaux=faux-plafond#devis">Demander une offre</a>
-                </p>
-              </div>%s
-            </div>
-          </div>''' % figure('plafond-tendu-puits-de-lumiere-01')
-    integ = group('integrations', 'Intégrations au plafond',
-                  "Autour du plafond, nous réalisons aussi les éléments qui font un ouvrage complet. Les réservations se prévoient avec votre électricien.",
-                  integ_inner, 'Autour du plafond')
+    isothermes = group('cloisons-isothermes', 'Isolation thermique', 'Cloisons isothermes',
+                       "Des cloisons et doublages isolants pour séparer un local chauffé d'un local qui ne l'est pas, et limiter les pertes de chaleur.",
+                       bloc('''
+                <p>Une cloison isotherme associe une ossature métallique, un isolant thermique et des plaques de plâtre. Elle se pose entre un logement et un garage, une cave, des combles ou un dépôt non chauffé. Certaines mesures d'isolation peuvent être subventionnées par les cantons et par le Programme Bâtiments ; la demande se dépose avant le début des travaux.</p>''',
+                            ['Garages, caves et dépôts attenants', 'Combles et locaux sous toiture', 'Ateliers et locaux techniques', 'Rénovation énergétique'],
+                            ['Moins de pertes de chaleur', 'Confort en hiver comme en été', 'Pose rapide et propre', 'Finition prête à peindre'],
+                            "l'épaisseur d'isolant se choisit selon la différence de température entre les deux locaux et les exigences énergétiques du canton.",
+                            'cloisons-isothermes', cat='chantier', photo='chantier-ossature-puits-de-lumiere-02',
+                            note="PROVISOIRE : à valider avec le client (définition des cloisons isothermes ; photo de chantier d'isolation utilisée en attendant une photo dédiée)"))
 
-    peinture_inner = '''
-          <!-- PROVISOIRE : à valider avec le client (périmètre exact de l'offre peinture ; photos à fournir) -->
-          <div class="svc svc--flat">
-            <div class="svc__grid svc__grid--text">
-              <div>
-                <p>Pour vous livrer des pièces terminées, nous préparons les supports, réalisons les enduits et les bandes, puis peignons plafonds et murs. Un seul intervenant, du plafond à la finition.</p>
-                <div class="svc__cols">
-                  <div><h3 class="label">Pour quels locaux</h3>%s</div>
-                  <div><h3 class="label">Avantages</h3>%s</div>
-                </div>
-                <p class="svc__links"><a class="link-arrow" href="contact.html?travaux=peinture#devis">Demander une offre</a></p>
-              </div>
-            </div>
-          </div>''' % (ticks(['Plafonds et murs après pose', 'Rénovation de logements', 'Bureaux et commerces']),
-                       ticks(['Un seul intervenant', 'Préparation soignée des supports', "Peintures adaptées à l'usage des locaux"]))
-    peinture = group('peinture', 'Peinture intérieure', "La finition fait partie du travail.", peinture_inner, 'Finitions')
-
-    deroulement_inner = '''
+    deroulement = group('deroulement', 'Méthode', 'Comment se déroule un chantier',
+                        "Six étapes, toujours dans le même ordre, pour savoir à quoi vous attendre.", '''
           <!-- PROVISOIRE : à valider avec le client (déroulé d'un chantier) -->
           <ol class="steps steps--6">
             <li><h3>Visite</h3><p>Relevé des mesures et des contraintes du local, écoute de vos besoins.</p></li>
@@ -221,25 +118,15 @@ def build():
             <li><h3>Protection des lieux</h3><p>Sols, mobilier et accès protégés avant le début des travaux.</p></li>
             <li><h3>Nettoyage</h3><p>Évacuation des déchets et nettoyage en fin de chantier.</p></li>
             <li><h3>Réception</h3><p>Contrôle des finitions avec vous, puis remise de l'ouvrage.</p></li>
-          </ol>'''
-    deroulement = group('deroulement', 'Comment se déroule un chantier',
-                        "Six étapes, toujours dans le même ordre, pour savoir à quoi vous attendre.", deroulement_inner, 'Méthode')
+          </ol>''')
 
-    toc_items = [('plafonds', 'Plafonds', [('plafonds-tendus', 'Tissu tendu à froid'), ('plafonds-acoustiques', 'Phoniques et acoustiques'),
-                                           ('plafonds-placoplatre', 'Plaques de plâtre'), ('plafonds-fibre', 'Fibre de bois et minérale'),
-                                           ('plafonds-metalliques', 'Bacs métalliques'), ('cadres-acoustiques', 'Cadres acoustiques')]),
-                 ('cloisons', 'Cloisons', [('cloisons-placoplatre', 'Plaques de plâtre'), ('cloisons-mobiles', 'Mobiles en aluminium')]),
-                 ('isolation', 'Isolation et chape flottante', []),
-                 ('protection-incendie', 'Protection incendie', []),
-                 ('integrations', 'Intégrations au plafond', []),
-                 ('peinture', 'Peinture intérieure', []),
-                 ('deroulement', 'Déroulement d\'un chantier', []),
+    toc_items = [('placo', 'Placo', [('placo-doublages', 'Doublages'), ('placo-faux-plafonds', 'Faux-plafonds'), ('placo-cloisons', 'Cloisons en placo')]),
+                 ('peinture', 'Peinture intérieure', []), ('isolation-acoustique', 'Isolation acoustique', []),
+                 ('cloisons-isothermes', 'Cloisons isothermes', []), ('deroulement', "Déroulement d'un chantier", []),
                  ('normes', 'Normes et qualité', [])]
     toc = ''
     for a, t, subs in toc_items:
-        sub = ''
-        if subs:
-            sub = '<ol>' + ''.join('<li><a href="#%s">%s</a></li>' % s for s in subs) + '</ol>'
+        sub = ('<ol>' + ''.join('<li><a href="#%s">%s</a></li>' % x for x in subs) + '</ol>') if subs else ''
         toc += '<li><a href="#%s">%s</a>%s</li>' % (a, t, sub)
 
     body = '''
@@ -265,28 +152,28 @@ def build():
           </div>
           <p class="lead">Nos travaux suivent les règles de l'art et les normes suisses applicables à chaque ouvrage. Les performances visées sont celles définies pour le projet et précisées dans l'offre.</p>
         </div>
-        <!-- PROVISOIRE : à valider avec le client (références normatives, attestations disponibles ; aucune certification n'est revendiquée) -->
+        <!-- PROVISOIRE : à valider avec le client (références normatives ; aucune certification n'est revendiquée) -->
         <div class="norms">
           <article>
-            <h3>Protection incendie</h3>
-            <p>Les plafonds, cloisons et habillages coupe-feu sont mis en œuvre selon les prescriptions de protection incendie de l'AEAI, avec des systèmes dont la classification est attestée par le fabricant.</p>
+            <h3>Acoustique</h3>
+            <p>Pour l'isolation acoustique entre locaux, nous nous référons à la norme SIA 181 « Protection contre le bruit dans le bâtiment », selon les exigences définies pour le projet.</p>
           </article>
           <article>
-            <h3>Acoustique</h3>
-            <p>Pour l'isolation phonique entre locaux, nous nous référons à la norme SIA 181 « Protection contre le bruit dans le bâtiment », selon les exigences définies pour le projet.</p>
+            <h3>Thermique</h3>
+            <p>Les cloisons et doublages isolants tiennent compte de la norme SIA 180 et des exigences énergétiques du canton concerné.</p>
           </article>
           <article>
             <h3>Exécution et réception</h3>
-            <p>Sauf accord contraire, les travaux sont exécutés selon les conditions générales de la norme SIA 118, puis réceptionnés avec vous en fin de chantier.</p>
+            <p>Sauf accord contraire, les travaux sont exécutés selon les conditions générales de la norme SIA 118. Lorsque le projet l'exige, les plaques et systèmes posés respectent les prescriptions de protection incendie de l'AEAI.</p>
           </article>
         </div>
       </div>
     </section>
 %(cta)s  </main>
-''' % dict(ph=page_head('Prestations', 'Nos prestations : plafonds, cloisons, isolation et peinture',
-                        "Du plafond tendu à la cloison mobile, nous posons le système adapté à chaque usage. Pour chaque prestation : à quoi elle sert, où l'utiliser, ses avantages et les points d'attention.",
-                        aside='<p>Une question sur un système ?</p><a href="%s">%s</a>' % (TEL_URI, TEL)),
-           toc=toc, groups=plafonds + cloisons + isolation + incendie + integ + peinture + deroulement,
-           cta=cta_band('Demander une offre', "Décrivez-nous votre local et vos besoins : nous vous conseillons le système adapté et vous remettons une offre détaillée."))
+''' % dict(ph=page_head('Prestations', 'Nos prestations : placo, peinture et isolation',
+                        "Quatre métiers complémentaires : le placo (doublages, faux-plafonds, cloisons), la peinture intérieure, l'isolation acoustique et les cloisons isothermes. Pour chacun : à quoi il sert, où l'utiliser, ses avantages et les points d'attention.",
+                        aside='<p>Une question sur vos travaux ?</p><a href="%s">%s</a>' % (TEL_URI, TEL)),
+           toc=toc, groups=placo + peinture + acoustique + isothermes + deroulement,
+           cta=cta_band('Demander une offre', "Décrivez-nous votre local et vos besoins : nous vous conseillons la solution adaptée et vous remettons une offre détaillée, partout en Suisse romande."))
 
     write('prestations.html', h + header('prestations.html') + body + footer(joined=True))

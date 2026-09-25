@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Contenus partagés : références, FAQ (brief SEO §4, mot pour mot), prestations de l'accueil."""
+"""Contenus partagés : références, FAQ (adaptée du brief SEO §4 aux 4 services), prestations de l'accueil."""
 import json, os
 from common import fr
 
@@ -25,19 +25,12 @@ REF_GROUPS = [
 FAQ = [(fr(q), fr(a)) for q, a in json.load(open(os.path.join(os.path.dirname(__file__), 'faq.json'), encoding='utf-8'))]
 
 HOME_SERVICES = [
-    ('tendu', 'Plafonds tendus', 'plafonds-tendus',
-     "Tissu tendu à froid pour un plafond parfaitement lisse. Idéal en rénovation et pour intégrer l'éclairage."),
-    ('acoustique', 'Plafonds acoustiques et phoniques', 'plafonds-acoustiques',
-     "Moins d'écho et moins de bruit entre les locaux : salles de réunion, salles communales, restaurants, écoles."),
-    ('fauxplafond', 'Faux-plafonds', 'plafonds-placoplatre',
-     "Plaques de plâtre, fibre de bois ou minérale, bacs métalliques : le matériau adapté à chaque local."),
-    ('cloison', 'Cloisons', 'cloisons',
-     "Cloisons légères en plaques de plâtre et cloisons mobiles en aluminium, pour redistribuer bureaux et logements."),
-    ('isolation', 'Isolation thermique et phonique', 'isolation',
-     "Isolant posé dans les plafonds et les cloisons, chape flottante contre les bruits d'impact."),
+    ('fauxplafond', 'Placo', 'placo',
+     "Doublages, faux-plafonds et cloisons en plaques de plâtre : pour créer, redresser ou redistribuer vos espaces."),
     ('peinture', 'Peinture intérieure', 'peinture',
      "Préparation des supports, enduits et peinture des plafonds et des murs : des pièces livrées terminées."),
+    ('acoustique', 'Isolation acoustique', 'isolation-acoustique',
+     "Moins de bruit entre les pièces, les logements et les étages, grâce à des plafonds et des parois isolés."),
+    ('isotherme', 'Cloisons isothermes', 'cloisons-isothermes',
+     "Cloisons et doublages isolants entre locaux chauffés et non chauffés, pour limiter les pertes de chaleur."),
 ]
-
-ALSO = [('Cadres acoustiques', 'cadres-acoustiques'), ('Caissons lumineux', 'integrations'), ('Trappes de visite', 'integrations'),
-        ('Chape flottante', 'chape-flottante'), ('Protection incendie', 'protection-incendie'), ('Puits de lumière', 'integrations')]

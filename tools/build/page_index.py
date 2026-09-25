@@ -5,11 +5,11 @@ from icons import ICONS
 
 HERO = 'plafond-tendu-ilots-lumineux-01'
 ABOUT = 'chantier-pose-plafond-lumineux-01'
-WORKS = ['plafond-lumineux-circulaire-01', 'paroi-lumineuse-imprimee-01', 'plafond-couronnes-lumineuses-01',
-         'panneaux-acoustiques-muraux-01', 'chantier-ossature-puits-de-lumiere-01', 'faux-plafond-placo-gorge-lumineuse-02']
+WORKS = ['faux-plafond-placo-gorge-lumineuse-02', 'plafond-lumineux-circulaire-01', 'panneaux-acoustiques-muraux-01',
+         'chantier-ossature-puits-de-lumiere-01', 'plafond-couronnes-lumineuses-01', 'habillage-placo-niches-arrondies-01']
 
-TITLE = 'Faux-plafonds et cloisons à Genève | Andy Construct'
-DESC = "Faux-plafonds, cloisons, isolation phonique et peinture à Genève et dans l'ouest vaudois. Particuliers, régies, architectes. Tél. +41 22 771 20 15."
+TITLE = 'Placo, peinture, isolation · Genève | Andy Construct'
+DESC = "Placo, peinture intérieure, isolation acoustique et cloisons isothermes. Entreprise de Carouge (Genève), active dans toute la Suisse romande. Tél. +41 22 771 20 15."
 
 
 def build():
@@ -35,7 +35,6 @@ def build():
             <p>%s</p>
             <a class="link-arrow" href="prestations.html#%s">En savoir plus<span class="visually-hidden"> : %s</span></a>
           </li>''' % (ICONS[ic], t, d, anchor, t) for ic, t, anchor, d in HOME_SERVICES)
-    also = ''.join('<li><a href="prestations.html#%s">%s</a></li>' % (a, t) for t, a in ALSO)
 
     works = ''
     for pid in WORKS:
@@ -46,8 +45,8 @@ def build():
               <span class="media">%s</span>
               <span class="caption"><span class="tag">%s</span><b>%s</b></span>
             </a>
-          </li>''' % (it['categorie'], pic(pid, '(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw'),
-                      CAT[it['categorie']], e(it['titre']))
+          </li>''' % (groupe(it), pic(pid, '(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw'),
+                      CAT[groupe(it)], e(titre(it)))
 
     faq = ''.join('''
             <details>
@@ -64,8 +63,8 @@ def build():
         <div class="hero__content">
           <!-- PROVISOIRE : à confirmer avec le client (inscription au registre du commerce depuis 2007) -->
           <p class="eyebrow">Entreprise genevoise depuis 2007</p>
-          <h1 id="titre-page">Faux-plafonds, cloisons et isolation à Genève</h1>
-          <p class="hero__text">Plafonds · Cloisons · Peinture. Pour les particuliers, les régies, les architectes et les collectivités, de Genève à Nyon.</p>
+          <h1 id="titre-page">Placo, peinture et isolation en Suisse romande</h1>
+          <p class="hero__text">Placo · Peinture · Isolation. Depuis notre siège de Carouge, nous travaillons pour les particuliers, les régies, les architectes et les collectivités de toute la Suisse romande.</p>
           <div class="hero__actions">
             <a class="btn" href="#devis">Demander un devis</a>
             <a class="btn btn--light" href="%(tel_uri)s">Appeler le %(tel)s</a>
@@ -74,7 +73,7 @@ def build():
         <ul class="hero__facts" aria-label="En bref">
           <li><strong>Depuis 2007</strong><span>Siège à Carouge (Genève)</span></li>
           <li><strong>18 références publiques</strong><span>Collectivités, culture, entreprises</span></li>
-          <li><strong>Genève et Vaud</strong><span>Jusqu'à Coppet et Nyon</span></li>
+          <li><strong>Toute la Suisse romande</strong><span>6 cantons et le Jura bernois</span></li>
           <!-- PROVISOIRE : à valider avec le client (devis gratuit et sans engagement, établi après visite) -->
           <li><strong>Devis gratuit</strong><span>Après visite sur place</span></li>
         </ul>
@@ -87,7 +86,7 @@ def build():
         <div>
           <p class="eyebrow">Références</p>
           <h2 id="refs-titre">Ils nous ont fait confiance</h2>
-          <p class="muted">Collectivités publiques, lieux culturels, horlogerie, banques, laboratoires : des maîtres d'ouvrage exigeants nous ont confié leurs plafonds et leurs cloisons.</p>
+          <p class="muted">Collectivités publiques, lieux culturels, horlogerie, banques, laboratoires : des maîtres d'ouvrage exigeants nous ont confié leurs travaux.</p>
           <a class="link-arrow" href="realisations.html#references">Voir les références par secteur</a>
         </div>
         <ul class="refs-list">%(refs)s</ul>
@@ -100,11 +99,11 @@ def build():
         <div class="about">
           <div>
             <p class="eyebrow">L'entreprise</p>
-            <h2 id="entreprise-titre">Le plafond et la cloison, notre métier depuis 2007</h2>
+            <h2 id="entreprise-titre">Le placo et la finition, notre métier depuis 2007</h2>
             <!-- PROVISOIRE : à confirmer avec le client (2007, dirigée par ses deux associés) -->
-            <p class="lead">Andy Construct est une entreprise genevoise spécialisée dans la pose de faux-plafonds (tendus, acoustiques, en plaques de plâtre, en fibre ou métalliques), de cloisons légères et mobiles, d'isolation thermique et phonique, ainsi que dans la peinture intérieure.</p>
-            <p>Inscrite au registre du commerce depuis 2007 et dirigée par ses deux associés, elle intervient dans tout le canton de Genève et dans l'ouest vaudois pour des particuliers, des régies, des architectes, des entreprises et des collectivités publiques.</p>
-            <p>Nous prenons en charge les travaux complexes : grands volumes, îlots suspendus, éclairages intégrés, puits de lumière. Notre objectif : plus de confort et un bel aspect, sans jamais sacrifier la technique.</p>
+            <p class="lead">Andy Construct est une entreprise genevoise, basée à Carouge, spécialisée dans le placo (doublages, faux-plafonds et cloisons en plaques de plâtre), la peinture intérieure, l'isolation acoustique et les cloisons isothermes.</p>
+            <p>Inscrite au registre du commerce depuis 2007 et dirigée par ses deux associés, elle intervient dans toute la Suisse romande pour des particuliers, des régies, des architectes, des entreprises et des collectivités publiques.</p>
+            <p>Nous prenons en charge les travaux complexes : grands volumes, faux-plafonds courbes, gorges lumineuses, puits de lumière. Notre objectif : plus de confort et un bel aspect, sans jamais sacrifier la technique.</p>
             <p class="about__sign"><b>Les associés d'Andy Construct</b>Route des Acacias 48, Carouge</p>
           </div>
           <figure>
@@ -117,7 +116,7 @@ def build():
           <li><b>18</b><span>références publiques citées</span></li>
           <!-- PROVISOIRE : à valider avec le client (nombre de chantiers réalisés) -->
           <li><b>300+</b><span>chantiers réalisés</span></li>
-          <li><b>2 cantons</b><span>Genève et Vaud</span></li>
+          <li><b>6 cantons</b><span>romands, plus le Jura bernois</span></li>
         </ul>
       </div>
     </section>
@@ -127,17 +126,13 @@ def build():
       <div class="container">
         <div class="section-head section-head--split">
           <div>
-            <p class="eyebrow">Plafonds · Cloisons · Peinture</p>
+            <p class="eyebrow">Placo · Peinture · Isolation</p>
             <h2 id="prestations-titre">Nos prestations</h2>
           </div>
-          <p class="lead">Nous posons tous les types de faux-plafonds et de cloisons, et nous réalisons les finitions. Chaque système est choisi selon l'usage du local : acoustique, isolation, résistance au feu, esthétique.</p>
+          <p class="lead">Quatre métiers complémentaires, du montage des plaques à la dernière couche de peinture. Chaque solution est choisie selon l'usage du local : confort acoustique, isolation, esthétique.</p>
         </div>
         <ul class="services">%(services)s
         </ul>
-        <div class="also">
-          <h3 class="label">Également</h3>
-          <ul>%(also)s</ul>
-        </div>
         <div class="section-foot">
           <a class="btn btn--ghost" href="prestations.html">Toutes nos prestations en détail</a>
         </div>
@@ -152,7 +147,7 @@ def build():
             <p class="eyebrow">Réalisations</p>
             <h2 id="realisations-titre">Des chantiers réels, photographiés sur place</h2>
           </div>
-          <p class="lead">Salles publiques, bureaux, commerces : un aperçu de nos travaux, de la pose de l'ossature à la finition. Toutes les photos proviennent de nos chantiers.</p>
+          <p class="lead">Salles publiques, bureaux, commerces, logements : un aperçu de nos travaux, de la pose de l'ossature à la finition. Toutes les photos proviennent de nos chantiers.</p>
         </div>
         <ul class="works">%(works)s
         </ul>
@@ -174,7 +169,7 @@ def build():
         </div>
         <!-- PROVISOIRE : à valider avec le client (déroulé d'un chantier) -->
         <ol class="steps">
-          <li><h3>Visite et conseil</h3><p>Nous venons voir le local, prenons les mesures et écoutons vos besoins : acoustique, isolation, éclairage, budget.</p></li>
+          <li><h3>Visite et conseil</h3><p>Nous venons voir le local, prenons les mesures et écoutons vos besoins : acoustique, isolation, finitions, budget.</p></li>
           <li><h3>Offre détaillée</h3><p>Vous recevez une offre écrite, poste par poste et en CHF, avec la durée prévue du chantier.</p></li>
           <li><h3>Pose soignée</h3><p>Nous protégeons les lieux, respectons le planning convenu et laissons un chantier propre.</p></li>
           <li><h3>Réception des travaux</h3><p>Nous contrôlons les finitions avec vous et restons joignables après la fin du chantier.</p></li>
@@ -193,9 +188,9 @@ def build():
         <ul class="commit__list">
           <!-- PROVISOIRE : à confirmer avec le client (2007) -->
           <li><h3>Une entreprise établie</h3><p>Inscrite au registre du commerce depuis 2007, avec un siège à Carouge.</p></li>
-          <li><h3>Des spécialistes du plafond</h3><p>Plafonds, cloisons, isolation et finitions : c'est notre cœur de métier, pas une activité d'appoint.</p></li>
+          <li><h3>Des spécialistes du second œuvre</h3><p>Placo, peinture et isolation : c'est notre cœur de métier, pas une activité d'appoint.</p></li>
           <li><h3>Des références vérifiables</h3><p>Ville de Genève, Conservatoire, HEAD, salles communales : des maîtres d'ouvrage exigeants, cités publiquement.</p></li>
-          <li><h3>Une entreprise locale</h3><p>Des chantiers dans tout le canton de Genève et dans l'ouest vaudois, de Carouge à Nyon.</p></li>
+          <li><h3>Une entreprise romande</h3><p>Un siège à Carouge et des chantiers dans toute la Suisse romande, de Genève au Jura.</p></li>
           <!-- PROVISOIRE : à valider avec le client (engagements de service formulés par l'agence) -->
           <li><h3>Une offre lisible</h3><p>Matériaux, surfaces et finitions : chaque poste est détaillé et chiffré en CHF.</p></li>
           <li><h3>Un chantier protégé</h3><p>Protection des sols et du mobilier pendant les travaux, nettoyage en fin de chantier.</p></li>
@@ -215,22 +210,22 @@ def build():
           <li>
             <figure class="quote">
               <span class="quote__mark" aria-hidden="true">«</span>
-              <blockquote><p>Plafond acoustique posé dans les délais, sans gêne pour les bureaux voisins. Le rendu correspond exactement aux plans.</p></blockquote>
-              <figcaption><b>Architecte, Carouge</b>Plafond acoustique, bureaux</figcaption>
+              <blockquote><p>Isolation acoustique posée dans les délais, sans gêne pour les bureaux voisins. Le rendu correspond exactement aux plans.</p></blockquote>
+              <figcaption><b>Architecte, Carouge</b>Isolation acoustique, bureaux</figcaption>
             </figure>
           </li>
           <li>
             <figure class="quote">
               <span class="quote__mark" aria-hidden="true">«</span>
               <blockquote><p>Un interlocuteur joignable, une offre claire et une équipe soigneuse dans un immeuble habité. Nous faisons de nouveau appel à eux.</p></blockquote>
-              <figcaption><b>Régie immobilière, Genève</b>Cloisons et faux-plafonds, immeuble locatif</figcaption>
+              <figcaption><b>Régie immobilière, Genève</b>Cloisons et faux-plafonds en placo, immeuble locatif</figcaption>
             </figure>
           </li>
           <li>
             <figure class="quote">
               <span class="quote__mark" aria-hidden="true">«</span>
-              <blockquote><p>Notre plafond tendu a transformé le séjour. Pose rapide et propre, et de bons conseils pour l'éclairage.</p></blockquote>
-              <figcaption><b>Propriétaire, Vésenaz</b>Plafond tendu, séjour</figcaption>
+              <blockquote><p>Une cloison isolante pour le garage, puis la peinture de tout l'étage : un chantier propre, rapide et de bons conseils.</p></blockquote>
+              <figcaption><b>Propriétaire, Vésenaz</b>Cloison isotherme et peinture, maison</figcaption>
             </figure>
           </li>
         </ul>
@@ -261,7 +256,7 @@ def build():
         <div>
           <p class="eyebrow">Contact</p>
           <h2 id="devis-titre">Demander un devis</h2>
-          <p class="lead">Décrivez-nous vos travaux en quelques lignes : nous vous rappelons pour convenir d'une visite. Vous préférez en parler tout de suite ? Appelez-nous.</p>
+          <p class="lead">Décrivez-nous vos travaux en quelques lignes, partout en Suisse romande : nous vous rappelons pour convenir d'une visite. Vous préférez en parler tout de suite ? Appelez-nous.</p>
           %(p_addr)s
           <ul class="contact-lines">
             <li class="is-main"><span class="label">Bureau</span><a href="%(tel_uri)s">%(tel)s</a></li>
@@ -277,7 +272,7 @@ def build():
 ''' % dict(hero_pic=pic(HERO, '100vw', eager=True, hero=True), tel_uri=TEL_URI, tel=TEL, mob_uri=MOB_URI, mob=MOB,
            mail=MAIL, hours=HOURS, p_addr=P_ADDR, refs=refs,
            about_pic=pic(ABOUT, '(min-width: 900px) 480px, 100vw', pos='58% 50%'),
-           about_cap=e(BY[ABOUT]['titre']), services=services, also=also, works=works, nb=len(MANIFEST),
+           about_cap=e(titre(BY[ABOUT])), services=services, works=works, nb=len(MANIFEST),
            zone=zone_block(), faq=faq, form=devis_form('accueil', title='Votre demande'))
 
     write('index.html', h + header('index.html', devis='#devis') + body + footer(devis='#devis', joined=True))

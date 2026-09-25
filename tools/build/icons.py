@@ -25,6 +25,9 @@ ICONS = {
     # Isolation : parois et symbole d'isolant en ondes (rouge)
     'isolation': svg('<path d="M4 12h40M4 36h40"/>'
                      '<path class="accent" d="M4 24c3-9 5-9 8 0s5 9 8 0 5-9 8 0 5 9 8 0 5-9 8 0"/>'),
+    # Cloison isotherme : sol, plafond, deux parements et isolant en ondes (rouge)
+    'isotherme': svg('<path d="M4 6h40M4 42h40M16 6v36M32 6v36"/>'
+                     '<path class="accent" d="M24 8c-7 3-7 6 0 9s7 6 0 9-7 6 0 9"/>'),
     # Peinture : rouleau (rouge) et manche
     'peinture': svg('<path class="accent" d="M8 7h24v9H8z"/><path d="M32 11h6v10H22v7"/><path d="M20 28h4v15h-4z"/>'),
 }

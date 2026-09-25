@@ -3,10 +3,10 @@
 from common import *
 from content import REF_GROUPS, REF_NOTE
 
-TITLE = 'Réalisations et références à Genève | Andy Construct'
-DESC = "Faux-plafonds et cloisons réalisés pour la Ville de Genève, des salles communales, le Conservatoire, la HEAD, des entreprises et des particuliers."
+TITLE = 'Réalisations et références | Andy Construct'
+DESC = "Travaux de placo, d'isolation et de peinture pour la Ville de Genève, des salles communales, le Conservatoire, la HEAD, des entreprises et des particuliers."
 
-ORDER = ['plafonds-tendus', 'plafonds-acoustiques', 'plafonds-placo', 'plafonds-metalliques', 'cloisons', 'chantier']
+ORDER = ['placo', 'isolation-acoustique', 'cloisons', 'peinture', 'chantier']  # filtres vides (peinture) non affichés
 
 SVG_PREV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
 SVG_NEXT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
@@ -14,7 +14,7 @@ SVG_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 
 
 
 def gallery():
-    counts = {c: sum(1 for m in MANIFEST if m['categorie'] == c) for c in ORDER}
+    counts = {c: sum(1 for m in MANIFEST if groupe(m) == c) for c in ORDER}
     filters = ['<li><button type="button" data-filter="toutes" data-label="Toutes" aria-pressed="true">Toutes<span>(%d)</span></button></li>' % len(MANIFEST)]
     for c in ORDER:
         if counts[c]:
@@ -30,8 +30,8 @@ def gallery():
               <span class="media">%(pic)s</span>
               <span class="caption"><b>%(t)s</b><span>%(lab)s</span></span>
             </button>
-          </li>''' % dict(cat=m['categorie'], t=e(m['titre']), b=b, w=m['largeur_1600'], h=m['hauteur_1600'],
-                          lab=CAT[m['categorie']], pic=pic(m['id'], '(min-width: 1180px) 280px, (min-width: 760px) 33vw, 50vw')))
+          </li>''' % dict(cat=groupe(m), t=e(titre(m)), b=b, w=m['largeur_1600'], h=m['hauteur_1600'],
+                          lab=CAT[groupe(m)], pic=pic(m['id'], '(min-width: 1180px) 280px, (min-width: 760px) 33vw, 50vw')))
     return '\n          '.join(filters), ''.join(items)
 
 
@@ -103,13 +103,13 @@ def build():
         <div>
           <p class="eyebrow">Professionnels</p>
           <h2 id="pros-titre">Pour les architectes, régies et collectivités</h2>
-          <p class="lead">Nous établissons nos offres sur la base de vos plans et descriptifs, et nous nous coordonnons avec les autres corps de métier du chantier.</p>
+          <p class="lead">Nous établissons nos offres sur la base de vos plans et descriptifs, dans toute la Suisse romande, et nous nous coordonnons avec les autres corps de métier du chantier.</p>
           <p><a class="link-arrow" href="contact.html#devis">Transmettre un dossier</a></p>
         </div>
         <!-- PROVISOIRE : à valider avec le client (codes CFC selon les prestations réelles, dossier de références PDF à produire) -->
         <dl class="pros__list">
           <div><dt>Ouvrages traités</dt><dd>Salles communales et polyvalentes, lieux culturels, bureaux et sièges d'entreprises, laboratoires, commerces et restaurants, logements.</dd></div>
-          <div><dt>Codes CFC</dt><dd>271 Plâtrerie · 283 Faux-plafonds · 285 Traitement des surfaces intérieures (peinture)</dd></div>
+          <div><dt>Codes CFC</dt><dd>271 Plâtrerie · 285 Traitement des surfaces intérieures (peinture)</dd></div>
           <div><dt>Dossier de références</dt><dd>Dossier PDF disponible sur demande, par e-mail à <a href="mailto:%(mail)s">%(mail)s</a>.</dd></div>
           <div><dt>Contact direct</dt><dd><a href="%(tel_uri)s">%(tel)s</a> · <a href="%(mob_uri)s">%(mob)s</a></dd></div>
         </dl>
@@ -117,9 +117,9 @@ def build():
     </section>
 %(cta)s  </main>
 ''' % dict(ph=page_head('Réalisations', 'Réalisations et références',
-                        "%d photos prises sur nos chantiers, de la pose de l'ossature à la finition, et les 18 maîtres d'ouvrage qui nous ont fait confiance." % len(MANIFEST)),
+                        "%d photos prises sur nos chantiers, placo, isolation et finitions, de la pose de l'ossature à la dernière couche, et les 18 maîtres d'ouvrage qui nous ont fait confiance." % len(MANIFEST)),
            filters=filters, n=len(MANIFEST), items=items, close=SVG_CLOSE, prev=SVG_PREV, next=SVG_NEXT,
            groups=groups, mail=MAIL, tel=TEL, tel_uri=TEL_URI, mob=MOB, mob_uri=MOB_URI,
-           cta=cta_band('Votre projet', "Montrez-nous votre local ou vos plans : nous vous conseillons le système adapté et vous remettons une offre détaillée."))
+           cta=cta_band('Votre projet', "Montrez-nous votre local ou vos plans : nous vous conseillons la solution adaptée et vous remettons une offre détaillée."))
 
     write('realisations.html', h + header('realisations.html') + body + footer(joined=True))

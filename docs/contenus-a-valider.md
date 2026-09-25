@@ -34,18 +34,36 @@ Les pages sont générées : pour corriger un texte, modifier les sources dans `
 |---|---|---|---|
 | Accueil | 3 témoignages | Textes fictifs attribués à des profils génériques : « Architecte, Carouge », « Régie immobilière, Genève », « Propriétaire, Vésenaz » | Pouvez-vous nous transmettre 2 ou 3 témoignages réels, avec l'accord écrit des auteurs (profil et commune suffisent) ? Sans cela, la section sera retirée. |
 
-## 4. Prestations, normes et zone
+## 4. Prestations, normes et zone (recentrées sur les 4 services du client)
 
 | Page | Élément | Valeur provisoire | Question à poser au client |
 |---|---|---|---|
+| Toutes | Les 4 services | Placo (doublages, faux-plafonds, cloisons en plaques de plâtre) ; peinture intérieure ; isolation acoustique ; cloisons isothermes. Accroche « Placo · Peinture · Isolation » | Les textes de chaque service vous conviennent-ils ? « Cloisons isothermes » = cloisons isolantes thermiques entre locaux chauffés et non chauffés : est-ce bien votre définition (ou s'agit-il aussi de chambres froides) ? |
 | Prestations | Peinture intérieure | Préparation des supports, enduits, bandes, peinture des plafonds et des murs | Quel est le périmètre exact de votre offre peinture ? Avez-vous des photos ? |
-| Prestations | Protection incendie | Plafonds, cloisons et habillages coupe-feu selon les prescriptions AEAI (aucune certification revendiquée) | Quels ouvrages coupe-feu réalisez-vous ? Disposez-vous d'attestations à mentionner ? |
-| Prestations (normes et qualité) | Références normatives | AEAI (incendie), SIA 181 (acoustique), SIA 118 (exécution et réception) | Travaillez-vous selon ces normes ? Faut-il en citer d'autres ? |
-| Prestations | Fibre de bois / fibre minérale | Photo « Plafond en dalles dans un couloir » utilisée pour illustrer la fibre minérale | Ces dalles sont-elles en fibre minérale ? Avez-vous une photo de plafond en fibre de bois ? |
-| Prestations | Cloisons mobiles | Photo « Cloisons de bureaux vitrées » utilisée pour les cloisons mobiles en aluminium | S'agit-il bien de cloisons démontables en aluminium ? |
-| Accueil, contact | Zone d'intervention | Liste du brief SEO, Carouge en tête ; côté vaudois jusqu'à Gland et Rolle | Jusqu'où vous déplacez-vous (Gland, Rolle) ? Faut-il retirer des communes ? |
-| Réalisations (professionnels) | Codes CFC | 271 Plâtrerie · 283 Faux-plafonds · 285 Traitement des surfaces intérieures | Ces codes CFC correspondent-ils à vos soumissions ? |
+| Prestations | Isolation acoustique | Photo « Panneaux acoustiques muraux » (correction de l'écho, pas isolation entre locaux) | Avez-vous une photo d'isolation acoustique entre locaux (doublage, faux-plafond désolidarisé) ? |
+| Prestations | Cloisons isothermes | Photo de chantier « Ossature et isolation avant fermeture » en attendant une photo dédiée | Pouvez-vous fournir une photo de cloison isotherme terminée ? |
+| Prestations (normes et qualité) | Références normatives | SIA 181 (acoustique), SIA 180 (thermique), SIA 118 (exécution), prescriptions AEAI lorsque le projet l'exige (aucune certification revendiquée) | Travaillez-vous selon ces normes ? Faut-il en citer d'autres ? |
+| Accueil, contact, JSON-LD, `llms.txt` | Zone d'intervention | Toute la Suisse romande : Genève, Vaud, Neuchâtel, Fribourg, Jura, Valais romand, Jura bernois ; chiffre clé « 6 cantons » | Vous déplacez-vous vraiment partout, y compris dans le Haut-Jura et le Valais central ? Bienne (bilingue) doit-elle figurer sur la carte ? |
+| Accueil, contact | Villes citées par canton | Liste indicative des villes principales (tableau à côté de la carte) | Faut-il ajouter ou retirer des villes (idéalement celles où vous avez réellement travaillé) ? |
+| Accueil, contact | Carte « Zone d'intervention » | Limites swisstopo / OFS (via le paquet swiss-maps, licence BSD, mention dans les mentions légales) ; « A » du logo sur Carouge (siège), Nyon, Lausanne, Yverdon-les-Bains, Neuchâtel, Fribourg, Sion, Delémont, Bienne | Les villes marquées vous conviennent-elles ? |
+| Réalisations (professionnels) | Codes CFC | 271 Plâtrerie · 285 Traitement des surfaces intérieures (peinture) | Ces codes CFC correspondent-ils à vos soumissions ? |
 | Réalisations (professionnels) | Dossier de références PDF | « Disponible sur demande par e-mail » | Pouvez-vous fournir un dossier de références (PDF) à mettre en téléchargement ? |
+
+## 4 bis. Photos qui montrent des travaux hors des 4 services (à garder ou retirer)
+
+Les légendes ont été rendues neutres (plus aucune mention de « plafond tendu », de « cadre acoustique » ni de « bac métallique » comme service proposé). Les photos restent dans la galerie tant que le client n'a pas tranché.
+
+| Photo (manifeste) | Légende affichée | Ce que montre la photo | Question à poser au client |
+|---|---|---|---|
+| `plafond-tendu-ilots-lumineux-01` (**photo du héro**), `-02`, `-03`, `plafond-tendu-ilot-eclairage-indirect-01`, `plafond-tendu-puits-de-lumiere-01` | « Faux-plafond et îlots suspendus lumineux », etc. | Salle aux îlots suspendus, classée « plafond tendu » par l'agence photo | Ces îlots sont-ils en placo ? Sinon, faut-il changer la photo du héro ? |
+| `plafond-tendu-poutres-apparentes-01`, `plafond-tendu-mat-01` | « Plafond lisse entre poutres apparentes », « Plafond blanc mat » | Plafonds classés « tendus » | Technique réelle : placo ou toile tendue ? |
+| `plafond-lumineux-circulaire-01`, `plafond-couronnes-lumineuses-01` / `-02`, `paroi-lumineuse-imprimee-01` | « Faux-plafond lumineux circulaire », « Couronnes lumineuses… », « Volume lumineux à décor imprimé » | Plafonds et parois rétroéclairés | Réalisés par vous (en placo) ou par un autre corps de métier ? |
+| `cadre-acoustique-salle-de-reunion-01`, `cadre-acoustique-imprime-01` | « Panneau acoustique imprimé… », « Panneau mural imprimé grand format » | Cadres acoustiques (service retiré) | À garder dans « Isolation acoustique » ou à retirer ? |
+| `plafond-lames-metalliques-01` / `-02`, `plafond-bacs-metalliques-cuisine-01` | « Faux-plafond à lames… », « Faux-plafond de cuisine professionnelle » | Plafonds métalliques (service retiré) | À garder ou à retirer ? |
+| `plafond-dalles-couloir-01` | « Plafond en dalles dans un couloir » | Dalles en fibre minérale probables (service retiré) | À garder ou à retirer ? |
+| `cloisons-modulaires-vitrees-01` / `-02` | « Cloisons de bureaux vitrées… » | Cloisons démontables vitrées (cloisons mobiles aluminium, service retiré) | À garder dans « Cloisons » ou à retirer ? |
+| `chantier-pose-plafond-lumineux-01` (photo de « L'entreprise ») | « Pose d'un plafond lumineux circulaire » | Pose d'un plafond lumineux | Photo à conserver pour illustrer l'entreprise ? |
+| `chantier-salle-de-spectacle-01` / `-02` | « Salle de spectacle pendant les travaux… » | Prestation inconnue | Quels travaux avez-vous réalisés dans cette salle ? |
 
 ## 5. Références et photos
 
@@ -55,7 +73,7 @@ Les pages sont générées : pour corriger un texte, modifier les sources dans `
 | Réalisations | Bank Sarasin | Mention « Aujourd'hui J. Safra Sarasin » | Le chantier date-t-il d'avant 2013 ? |
 | Réalisations | Fiches « projets choisis » | Absentes : galerie de 30 photos à la place | Pour 3 à 5 chantiers : commune, année, type de client, besoin, solution posée, accord pour citer le client. |
 | Réalisations | Photos avant / après | Absentes (ancre `#avant-apres` conservée pour la redirection de l'ancien site) | Avez-vous des paires de photos avant / après prises au même endroit ? |
-| Réalisations (galerie) | Catégories des photos (voir `docs/selection-photos.md`) | Plafonds lumineux (IMG_5964, P1000755, IMG_3735, IMG_3727) classés en « Plafonds tendus » ; IMG_2464 en « Plafonds métalliques » ; salle de spectacle (IMG_6636, IMG_6632) en « Chantiers en cours » | Quelle technique a été posée sur ces chantiers ? Quelle prestation pour la salle de spectacle ? |
+| Réalisations (galerie) | Catégories des photos (voir `docs/selection-photos.md`) | Les filtres sont regroupés selon les 4 services : « Placo et faux-plafonds » (ex-plafonds placo, tendus et métalliques), « Isolation acoustique », « Cloisons », « Chantiers en cours » ; pas de filtre « Peinture » faute de photo | Quelle technique a été posée sur ces chantiers ? Quelle prestation pour la salle de spectacle ? |
 | Accueil, réalisations | Photo IMG_5922 (poseur en t-shirt Andy Construct) | Publiée (accueil et galerie) | Le poseur a-t-il donné son accord pour la publication ? |
 | Réalisations | Photo P1000435 (slogan lisible au mur) | Publiée dans la galerie | Le client du chantier accepte-t-il d'être reconnaissable ? |
 | Accueil (L'entreprise), galerie | Photo IMG_5963 (poseur sur échafaudage) | Publiée | Même question : accord de la personne photographiée. |

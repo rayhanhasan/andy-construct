@@ -4,8 +4,8 @@ from common import *
 
 
 def contact():
-    title = 'Contact et devis faux-plafond Genève | Andy Construct'
-    desc = "Contactez Andy Construct pour votre faux-plafond, cloison ou isolation à Genève : +41 22 771 20 15 ou +41 78 631 14 34, du lundi au vendredi."
+    title = 'Contact et devis · Genève et Suisse romande | Andy Construct'
+    desc = "Contactez Andy Construct pour vos travaux de placo, peinture ou isolation en Suisse romande : +41 22 771 20 15 ou +41 78 631 14 34, du lundi au vendredi."
     h = head(title, desc, 'contact.html', ld=[page_ld('contact.html', title, 'Contact', 'ContactPage')])
     body = '''
   <main id="contenu">
@@ -55,7 +55,7 @@ def contact():
 
 def mentions():
     title = 'Mentions légales et confidentialité | Andy Construct'
-    desc = "Mentions légales et politique de confidentialité du site d'Andy Construct, Chanton & Cie, entreprise de faux-plafonds et cloisons à Genève."
+    desc = "Mentions légales et politique de confidentialité du site d'Andy Construct, Chanton & Cie, entreprise de placo, peinture et isolation à Carouge (Genève)."
     h = head(title, desc, 'mentions-legales.html', ld=[page_ld('mentions-legales.html', title, 'Mentions légales')])
     body = '''
   <main id="contenu">
@@ -82,7 +82,7 @@ def mentions():
 
         <h2 id="propriete">Propriété intellectuelle et crédits photos</h2>
         <p>Les textes, le logo et les photos de chantiers publiés sur ce site appartiennent à %(legal)s. Toute reproduction demande son accord écrit. Les noms des clients cités en référence restent la propriété de leurs titulaires ; aucun logo de client n'est reproduit.</p>
-        <p>Polices de caractères : Montserrat et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site.</p>
+        <p>Polices de caractères : Montserrat et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Fond de la carte « Zone d'intervention » : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
 
         <h2 id="donnees">Protection des données (nLPD)</h2>
         <p>Nous traitons vos données personnelles conformément à la loi fédérale sur la protection des données (nLPD).</p>

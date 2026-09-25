@@ -31,14 +31,40 @@ MANIFEST_PATH = os.path.join(SITE, 'assets/img/portfolio/manifest.json')
 MANIFEST = json.load(open(MANIFEST_PATH, encoding='utf-8')) if os.path.exists(MANIFEST_PATH) else []
 BY = {m['id']: m for m in MANIFEST}
 
-CAT = {
-    'plafonds-tendus': 'Plafonds tendus',
-    'plafonds-acoustiques': 'Acoustique',
-    'plafonds-placo': 'Plafonds en plâtre',
-    'plafonds-metalliques': 'Plafonds métalliques',
-    'cloisons': 'Cloisons',
-    'chantier': 'Chantiers en cours',
+# Galerie : regroupement des catégories du manifeste selon les 4 services du client
+GROUPE = {'plafonds-tendus': 'placo', 'plafonds-placo': 'placo', 'plafonds-metalliques': 'placo',
+          'plafonds-acoustiques': 'isolation-acoustique', 'cloisons': 'cloisons', 'chantier': 'chantier'}
+CAT = {'placo': 'Placo et faux-plafonds', 'isolation-acoustique': 'Isolation acoustique',
+       'cloisons': 'Cloisons', 'peinture': 'Peinture', 'chantier': 'Chantiers en cours'}
+# Légendes neutres : rien n'est présenté comme « plafond tendu » (service non proposé)
+TITRES = {
+    'plafond-tendu-ilots-lumineux-01': 'Faux-plafond et îlots suspendus lumineux',
+    'plafond-lumineux-circulaire-01': 'Faux-plafond lumineux circulaire',
+    'plafond-tendu-ilot-eclairage-indirect-01': 'Îlot de faux-plafond à éclairage indirect',
+    'plafond-tendu-puits-de-lumiere-01': 'Puits de lumière dans un faux-plafond',
+    'plafond-tendu-ilots-lumineux-03': 'Îlot de faux-plafond autour d\'un pilier',
+    'plafond-tendu-poutres-apparentes-01': 'Plafond lisse entre poutres apparentes',
+    'plafond-tendu-mat-01': 'Plafond blanc mat',
+    'cadre-acoustique-salle-de-reunion-01': 'Panneau acoustique imprimé en salle de réunion',
+    'cadre-acoustique-imprime-01': 'Panneau mural imprimé grand format',
+    'plafond-lames-metalliques-01': 'Faux-plafond à lames et suspensions',
+    'plafond-lames-metalliques-02': 'Faux-plafond à lames près des fenêtres',
+    'plafond-bacs-metalliques-cuisine-01': 'Faux-plafond de cuisine professionnelle',
 }
+
+
+def groupe(it):
+    return GROUPE[it['categorie']]
+
+
+def titre(it):
+    return TITRES.get(it['id'], it['titre'])
+
+
+def alt(it):
+    a = it['alt'].replace('plafond tendu blanc', 'faux-plafond blanc').replace('un plafond tendu', 'un faux-plafond')
+    a = a.replace('cadre acoustique', 'panneau acoustique').replace('Grand cadre mural tendu', 'Grand panneau mural')
+    return a.replace('le plafond tendu', 'le faux-plafond').replace('plafond tendu', 'faux-plafond')
 
 
 def pic(pid, sizes, eager=False, pos=None, hero=False):
@@ -57,7 +83,7 @@ def pic(pid, sizes, eager=False, pos=None, hero=False):
     style = ' style="object-position:%s"' % pos if pos else ''
     return ('<picture><source type="image/webp" srcset="%s" sizes="%s">'
             '<img src="%s-800.jpg" width="%d" height="%d" alt="%s" %s decoding="async"%s></picture>'
-            % (srcset, sizes, b, w, h, e(it['alt']), load, style))
+            % (srcset, sizes, b, w, h, e(alt(it)), load, style))
 
 
 def hero_preload(pid):
@@ -79,8 +105,8 @@ BUSINESS = {
     '@id': PROD + '#entreprise',
     'name': NAME,
     'legalName': LEGAL,
-    'slogan': 'Plafonds · Cloisons · Peinture',
-    'description': "Entreprise genevoise spécialisée dans la pose de faux-plafonds (tendus, acoustiques, en plaques de plâtre, en fibre ou métalliques), de cloisons légères et mobiles, d'isolation thermique et phonique, ainsi que dans la peinture intérieure. Intervient dans le canton de Genève et dans l'ouest vaudois pour particuliers, régies, architectes, entreprises et collectivités.",
+    'slogan': 'Placo · Peinture · Isolation',
+    'description': "Entreprise genevoise basée à Carouge, spécialisée dans le placo (doublages, faux-plafonds et cloisons en plaques de plâtre), la peinture intérieure, l'isolation acoustique et les cloisons isothermes. Intervient dans toute la Suisse romande pour particuliers, régies, architectes, entreprises et collectivités.",
     'url': PROD,
     'logo': PROD + 'assets/img/brand/logo-andy-construct.png',
     'image': [PROD + 'assets/img/portfolio/plafond-tendu-ilots-lumineux-01-1600.webp',
@@ -102,32 +128,21 @@ BUSINESS = {
     ],
     'areaServed': [
         {'@type': 'AdministrativeArea', 'name': 'Canton de Genève'},
-        {'@type': 'City', 'name': 'Carouge'}, {'@type': 'City', 'name': 'Genève'},
-        {'@type': 'City', 'name': 'Chêne-Bourg'}, {'@type': 'City', 'name': 'Collonge-Bellerive'},
-        {'@type': 'City', 'name': 'Plan-les-Ouates'}, {'@type': 'AdministrativeArea', 'name': 'District de Nyon'},
-        {'@type': 'City', 'name': 'Nyon'}, {'@type': 'City', 'name': 'Coppet'}, {'@type': 'City', 'name': 'Chavannes-de-Bogis'},
+        {'@type': 'AdministrativeArea', 'name': 'Canton de Vaud'},
+        {'@type': 'AdministrativeArea', 'name': 'Canton de Neuchâtel'},
+        {'@type': 'AdministrativeArea', 'name': 'Canton de Fribourg'},
+        {'@type': 'AdministrativeArea', 'name': 'Canton du Valais (partie francophone)'},
+        {'@type': 'AdministrativeArea', 'name': 'Canton du Jura'},
+        {'@type': 'AdministrativeArea', 'name': 'Jura bernois'},
+        {'@type': 'City', 'name': 'Carouge'},
     ],
-    'knowsAbout': ['Faux-plafonds', 'Plafonds en tissu tendu à froid', 'Plafonds acoustiques et phoniques',
-                   'Plafonds en plaques de plâtre', 'Plafonds en fibre de bois et fibre minérale', 'Plafonds en bacs métalliques',
-                   'Cadres acoustiques', 'Cloisons légères en plaques de plâtre', 'Cloisons mobiles en aluminium',
-                   'Isolation thermique intérieure', 'Isolation phonique', 'Chape flottante', 'Protection incendie', 'Peinture intérieure'],
+    'knowsAbout': ['Placo', 'Plâtrerie', 'Doublages en plaques de plâtre', 'Faux-plafonds en plaques de plâtre',
+                   'Cloisons en plaques de plâtre', 'Peinture intérieure', 'Isolation acoustique', 'Cloisons isothermes'],
     'hasOfferCatalog': {'@type': 'OfferCatalog', 'name': 'Prestations Andy Construct', 'itemListElement': [
-        {'@type': 'OfferCatalog', 'name': 'Plafonds', 'itemListElement': [
-            _offer('Plafonds en tissu tendu à froid', 'plafonds-tendus'),
-            _offer('Plafonds phoniques et acoustiques', 'plafonds-acoustiques'),
-            _offer('Plafonds en plaques de plâtre', 'plafonds-placoplatre'),
-            _offer('Plafonds en fibre de bois et fibre minérale', 'plafonds-fibre'),
-            _offer('Plafonds en bacs métalliques', 'plafonds-metalliques'),
-            _offer('Cadres acoustiques', 'cadres-acoustiques')]},
-        {'@type': 'OfferCatalog', 'name': 'Cloisons', 'itemListElement': [
-            _offer('Cloisons légères en plaques de plâtre', 'cloisons-placoplatre'),
-            _offer('Cloisons mobiles en aluminium', 'cloisons-mobiles')]},
-        {'@type': 'OfferCatalog', 'name': 'Isolation, acoustique et sécurité', 'itemListElement': [
-            _offer('Isolation thermique et phonique', 'isolation'),
-            _offer("Chape flottante contre les bruits d'impact", 'chape-flottante'),
-            _offer('Protection incendie', 'protection-incendie'),
-            _offer('Caissons lumineux, trappes de visite et puits de lumière', 'integrations')]},
-        {'@type': 'OfferCatalog', 'name': 'Peinture', 'itemListElement': [_offer('Peinture intérieure', 'peinture')]},
+        _offer('Placo : doublages, faux-plafonds et cloisons en plaques de plâtre', 'placo'),
+        _offer('Peinture intérieure', 'peinture'),
+        _offer('Isolation acoustique', 'isolation-acoustique'),
+        _offer('Cloisons isothermes', 'cloisons-isothermes'),
     ]},
     'sameAs': [FB,
                'https://www.local.ch/fr/d/carouge-ge/1227/revetement-des-plafonds-et-plafonds-suspendus/andy-construct-chanton-cie-OGrZ5DP4atJqYki9WoTjPg',
@@ -181,7 +196,7 @@ def head(title, desc, file, ld=(), preload='', canonical=True):
             '  <meta property="og:image" content="%sassets/img/og-andy-construct.jpg">\n' % PROD,
             '  <meta property="og:image:width" content="1200">\n',
             '  <meta property="og:image:height" content="630">\n',
-            '  <meta property="og:image:alt" content="Plafond tendu et îlots suspendus lumineux posés par Andy Construct">\n',
+            '  <meta property="og:image:alt" content="Faux-plafond et îlots suspendus lumineux réalisés par Andy Construct">\n',
             '  <meta name="twitter:card" content="summary_large_image">\n',
             '  <link rel="icon" href="favicon.ico" sizes="any">\n',
             '  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/brand/favicon-32.png">\n',
@@ -265,7 +280,7 @@ def footer(devis='contact.html#devis', joined=False):
       <div class="footer-brand">
         <picture><source type="image/webp" srcset="assets/img/brand/logo-andy-construct-blanc.webp"><img src="assets/img/brand/logo-andy-construct-blanc.png" width="640" height="232" alt="Andy Construct" loading="lazy"></picture>
         <!-- PROVISOIRE : à confirmer avec le client (inscription au registre du commerce depuis 2007) -->
-        <p>Plafonds · Cloisons · Peinture. Entreprise genevoise depuis 2007, active dans tout le canton et dans l'ouest vaudois.</p>
+        <p>Placo · Peinture · Isolation. Entreprise genevoise depuis 2007, basée à Carouge et active dans toute la Suisse romande.</p>
       </div>
       <div>
         <h2>Coordonnées</h2>
@@ -335,11 +350,9 @@ def page_head(crumb, h1, lead, aside=''):
 
 
 # ---------------------------------------------------------------- formulaire
-TRAVAUX = [('plafond-tendu', 'Plafond tendu'), ('plafond-acoustique', 'Plafond acoustique ou phonique'),
-           ('faux-plafond', 'Faux-plafond (plâtre, fibre, métal)'), ('cloisons', 'Cloisons'),
-           ('isolation', 'Isolation thermique ou phonique'), ('protection-incendie', 'Protection incendie'),
-           ('cadres-acoustiques', 'Cadres acoustiques'), ('peinture', 'Peinture intérieure'),
-           ('autre', 'Autres travaux ou plusieurs prestations')]
+TRAVAUX = [('placo', 'Placo : doublage, faux-plafond ou cloison'), ('peinture', 'Peinture intérieure'),
+           ('isolation-acoustique', 'Isolation acoustique'), ('cloisons-isothermes', 'Cloisons isothermes'),
+           ('autre', 'Plusieurs prestations ou autre demande')]
 
 
 def devis_form(fid, title='Demande de devis', hl='h3', title_id=None):
@@ -425,36 +438,41 @@ def devis_form(fid, title='Demande de devis', hl='h3', title_id=None):
         </div>''' % dict(fid=fid, hl=hl, tid=tid, title=title, opts=opts, tel=TEL, tel_uri=TEL_URI)
 
 
-# ---------------------------------------------------------------- zone d'intervention (brief SEO §5, Carouge en tête)
+# ---------------------------------------------------------------- zone d'intervention : toute la Suisse romande
 ZONES = [
-    ('Siège', [('Carouge', True)]),
-    ('Ville de Genève', [('Genève', True), ('Eaux-Vives', False), ('Champel', False), ('Plainpalais', False), ('Jonction', False),
-                         ('Pâquis', False), ('Servette', False), ('Cité', False)]),
-    ('Trois-Chêne', [('Chêne-Bourg', True), ('Chêne-Bougeries', False), ('Thônex', False)]),
-    ('Arve-Lac', [('Collonge-Bellerive', True), ('Cologny', False), ('Vandœuvres', False), ('Corsier', False), ('Anières', False),
-                  ('Hermance', False), ('Choulex', False), ('Meinier', False), ('Puplinge', False), ('Presinge', False), ('Jussy', False)]),
-    ('Sud, Arve et Rhône', [('Plan-les-Ouates', True), ('Lancy', False), ('Veyrier', False), ('Troinex', False), ('Bardonnex', False),
-                            ('Onex', False), ('Confignon', False), ('Bernex', False), ('Perly-Certoux', False)]),
-    ('Rive droite', [('Vernier', False), ('Meyrin', False), ('Grand-Saconnex', False), ('Pregny-Chambésy', False), ('Bellevue', False),
-                     ('Genthod', False), ('Versoix', False), ('Collex-Bossy', False), ('Satigny', False), ('Céligny', False)]),
-    ('Vaud : Terre Sainte', [('Coppet', True), ('Chavannes-de-Bogis', True), ('Founex', False), ('Commugny', False), ('Mies', False),
-                            ('Tannay', False), ('Chavannes-des-Bois', False)]),
-    ('Vaud : Nyon et environs', [('Nyon', True), ('Prangins', False), ('Gland', False), ('Crans', False), ('Rolle', False)]),
+    ('Genève', 'Carouge (siège), Genève, Lancy, Vernier, Meyrin, Onex, Thônex, Chêne-Bourg, Plan-les-Ouates, Collonge-Bellerive'),
+    ('Vaud', 'Lausanne, Nyon, Coppet, Morges, Vevey, Montreux, Yverdon-les-Bains, Renens, Gland, Rolle'),
+    ('Neuchâtel', 'Neuchâtel, La Chaux-de-Fonds, Le Locle, Boudry'),
+    ('Fribourg', 'Fribourg, Bulle, Morat, Estavayer-le-Lac, Romont'),
+    ('Valais romand', 'Sion, Martigny, Monthey, Sierre, Conthey'),
+    ('Jura', 'Delémont, Porrentruy, Saignelégier'),
+    ('Jura bernois', 'Moutier, Saint-Imier, Tavannes'),
 ]
+_CARTE = None
+
+
+def carte_figure():
+    """Carte SVG inline (générée par carte.py à partir des limites swisstopo)."""
+    global _CARTE
+    if _CARTE is None:
+        from carte import carte_svg
+        _CARTE = carte_svg()
+    return """<figure class="carte">
+          %s
+          <figcaption>Toute la Suisse romande : Genève, Vaud, Neuchâtel, Fribourg, Valais romand, Jura et Jura bernois. Siège à Carouge. Fond de carte : swisstopo.</figcaption>
+        </figure>""" % _CARTE
 
 
 def zone_block(level='h2', tid='zone-titre', eyebrow=True):
-    rows = ''
-    for label, communes in ZONES:
-        txt = ', '.join(('<strong>%s</strong>' % c) if b else c for c, b in communes)
-        note = '\n          <!-- PROVISOIRE : à valider avec le client (jusqu\'où se déplace-t-il : Gland, Rolle ?) -->' if label.endswith('environs') else ''
-        rows += '%s\n          <div><dt>%s</dt><dd>%s</dd></div>' % (note, label, txt)
-    eb = '<p class="eyebrow">Genève et ouest vaudois</p>\n          ' if eyebrow else ''
+    rows = ''.join('\n            <div><dt>%s</dt><dd>%s</dd></div>' % z for z in ZONES)
+    eb = '<p class="eyebrow">Toute la Suisse romande</p>\n          ' if eyebrow else ''
     return '''<div class="container split zone">
         <div>
           %(eb)s<%(l)s id="%(tid)s">Zone d'intervention</%(l)s>
-          <p class="lead">Nous intervenons dans tout le canton de Genève (Genève-ville, Trois-Chêne, Carouge, Lancy, Arve-Lac, Rive droite) et dans l'ouest vaudois (Terre Sainte, Nyon et environs).</p>
-          <p>Pour un chantier situé ailleurs, appelez-nous : nous vous dirons franchement si nous pouvons le prendre en charge.</p>
+          <p class="lead">Depuis notre siège de Carouge, nous intervenons dans toute la Suisse romande : cantons de Genève, Vaud, Neuchâtel, Fribourg et Jura, Valais romand et Jura bernois.</p>
+          <!-- PROVISOIRE : à valider avec le client (villes citées à titre indicatif) -->
+          <dl class="zones">%(rows)s
+          </dl>
           <div class="hq">
             <p class="label">Notre siège</p>
             %(p_addr)s
@@ -462,9 +480,8 @@ def zone_block(level='h2', tid='zone-titre', eyebrow=True):
             <a class="link-arrow" href="%(maps)s" rel="noopener">Voir sur la carte</a>
           </div>
         </div>
-        <dl class="zones">%(rows)s
-        </dl>
-      </div>''' % dict(eb=eb, l=level, tid=tid, p_addr=P_ADDR, street=STREET, city=CITY, maps=MAPS, rows=rows)
+        %(carte)s
+      </div>''' % dict(eb=eb, l=level, tid=tid, p_addr=P_ADDR, street=STREET, city=CITY, maps=MAPS, rows=rows, carte=carte_figure())
 
 
 def cta_band(title, text, hid='cta-titre'):
