@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Généré par tools/build — modifier les sources, pas ce fichier -->
 <html lang="fr-CH" class="no-js">
 <head>
   <meta charset="utf-8">
@@ -213,9 +214,14 @@
                 <textarea id="contact-msg" name="message" rows="5" aria-describedby="contact-msg-hint"></textarea>
                 <span class="hint" id="contact-msg-hint">Type de local, surface approximative, délai souhaité…</span>
               </div>
-              <div class="field field--full">
+              <div class="field field--full file-field">
                 <label for="contact-fichier">Photo ou plan</label>
-                <input id="contact-fichier" name="fichier" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="contact-fichier-hint">
+                <!-- Champ fichier natif masqué visuellement (reste accessible au clavier) ; libellé stylé en bouton, état mis à jour en JS -->
+                <input class="visually-hidden file-input" id="contact-fichier" name="fichier" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="contact-fichier-etat contact-fichier-hint">
+                <div class="file-row">
+                  <label class="btn btn--ghost file-btn" for="contact-fichier">Choisir un fichier</label>
+                  <span class="file-state" id="contact-fichier-etat" aria-live="polite">Aucun fichier sélectionné</span>
+                </div>
                 <span class="hint" id="contact-fichier-hint">Formats JPG, PNG ou PDF.</span>
               </div>
               <div class="field field--full">
@@ -238,7 +244,7 @@
           <div class="form-success" role="status" tabindex="-1" hidden>
             <p class="form-success__title">Merci <span data-nom></span>, votre demande est bien prête.</p>
             <p>Nous vous recontactons rapidement pour convenir d'une visite. Pour une question urgente : <a href="tel:+41227712015">+41 22 771 20 15</a>.</p>
-            <p class="muted">Maquette : aucun message n'a réellement été envoyé.</p>
+            <!-- MAQUETTE : aucun message n'est réellement envoyé (voir le commentaire BRANCHEMENT). -->
           </div>
         </div>
         </section>

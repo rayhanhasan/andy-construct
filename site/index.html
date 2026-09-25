@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Généré par tools/build — modifier les sources, pas ce fichier -->
 <html lang="fr-CH" class="no-js">
 <head>
   <meta charset="utf-8">
@@ -485,7 +486,7 @@
         <div>
           <p class="eyebrow">Références</p>
           <h2 id="refs-titre">Ils nous ont fait confiance</h2>
-          <p class="muted">Collectivités publiques, lieux culturels, horlogerie, banques, laboratoires : les maîtres d'ouvrage que nous citons publiquement depuis plusieurs années.</p>
+          <p class="muted">Collectivités publiques, lieux culturels, horlogerie, banques, laboratoires : des maîtres d'ouvrage exigeants nous ont confié leurs plafonds et leurs cloisons.</p>
           <a class="link-arrow" href="realisations.html#references">Voir les références par secteur</a>
         </div>
         <ul class="refs-list"><li>Ville de Genève</li><li>Salle communale de Collonge-Bellerive</li><li>Piaget</li><li>Conservatoire de Musique de Genève</li><li>Salle de l&#x27;Alhambra</li><li>Mairie de Plan-les-Ouates<small>Salle communale</small></li><li>Laboratoire Covance CLS SA</li><li>De Grisogono</li><li>Energestion Ingénieurs &amp; Architectes SIA</li><li>Domaine des Perrières<small>Coppet (VD)</small></li><li>Dipan SA<small>Nyon (VD)</small></li><li>HEAD – Haute école d&#x27;art et de design<small>Genève</small></li><li>OMC</li><li>Celgene</li><li>Bank Sarasin<small>Aujourd&#x27;hui J. Safra Sarasin</small></li><li>UBS</li><li>Hôtel à Chavannes-de-Bogis</li><li>Harmonie Nautique de Genève</li></ul>
@@ -858,9 +859,14 @@
                 <textarea id="accueil-msg" name="message" rows="5" aria-describedby="accueil-msg-hint"></textarea>
                 <span class="hint" id="accueil-msg-hint">Type de local, surface approximative, délai souhaité…</span>
               </div>
-              <div class="field field--full">
+              <div class="field field--full file-field">
                 <label for="accueil-fichier">Photo ou plan</label>
-                <input id="accueil-fichier" name="fichier" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="accueil-fichier-hint">
+                <!-- Champ fichier natif masqué visuellement (reste accessible au clavier) ; libellé stylé en bouton, état mis à jour en JS -->
+                <input class="visually-hidden file-input" id="accueil-fichier" name="fichier" type="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="accueil-fichier-etat accueil-fichier-hint">
+                <div class="file-row">
+                  <label class="btn btn--ghost file-btn" for="accueil-fichier">Choisir un fichier</label>
+                  <span class="file-state" id="accueil-fichier-etat" aria-live="polite">Aucun fichier sélectionné</span>
+                </div>
                 <span class="hint" id="accueil-fichier-hint">Formats JPG, PNG ou PDF.</span>
               </div>
               <div class="field field--full">
@@ -883,7 +889,7 @@
           <div class="form-success" role="status" tabindex="-1" hidden>
             <p class="form-success__title">Merci <span data-nom></span>, votre demande est bien prête.</p>
             <p>Nous vous recontactons rapidement pour convenir d'une visite. Pour une question urgente : <a href="tel:+41227712015">+41 22 771 20 15</a>.</p>
-            <p class="muted">Maquette : aucun message n'a réellement été envoyé.</p>
+            <!-- MAQUETTE : aucun message n'est réellement envoyé (voir le commentaire BRANCHEMENT). -->
           </div>
         </div>
       </div>

@@ -102,6 +102,15 @@
       return !msg;
     };
 
+    // Champ fichier personnalisé : affiche le nom du fichier choisi (zone aria-live)
+    each('.file-input', function (inp) {
+      var state = d.getElementById(inp.id + '-etat');
+      inp.addEventListener('change', function () {
+        var f = inp.files && inp.files[0];
+        if (state) state.textContent = f ? f.name : 'Aucun fichier sélectionné';
+      });
+    }, form);
+
     each('input, select, textarea', function (field) {
       var recheck = function () {
         if (field.getAttribute('aria-invalid') === 'true') showError(field);
