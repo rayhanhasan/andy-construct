@@ -10,11 +10,11 @@
     "fichier_blanc": null,
     "fichier_couleur": "couleur/ville-de-geneve.svg",
     "couleur_dominante": "#CC3333",
-    "echelle": 1.4,
+    "echelle": 1.9,
     "source_url": "https://www.geneve.ch/autorites-administration/administration-municipale/mise-disposition-logo",
     "source_couleur_url": "https://www.geneve.ch/themes/custom/vdg_theme/logo.svg",
     "licence_note": "Logo officiel de la Ville (SVG de l'en-tête de geneve.ch, relevé le 31.10.2026). Il intègre les armoiries de la Ville (demi-aigle et clé) : usage réservé à la collectivité, sauf autorisation de sa part (LPAP (RS 232.21) art. 8 al. 1 et 5). La Ville ne met son logo à disposition que pour les projets qu'elle subventionne ou soutient : un accord pour un fournisseur n'est pas acquis. Demande : Service des relations extérieures et de la communication, Unité information et communication, rue du Tir 3, 1204 Genève, +41 22 418 59 43.",
-    "remarque": "Logo officiel d'une collectivité publique (armoiries) / emblème d'organisation internationale : affichage en version de validation seulement ; publication en production uniquement avec l'autorisation écrite de l'institution (LPAP / Convention de Paris art. 6ter)."
+    "remarque": "Logo officiel d'une collectivité publique (armoiries) / emblème d'organisation internationale : affichage en version de validation seulement ; publication en production uniquement avec l'autorisation écrite de l'institution (LPAP / Convention de Paris art. 6ter). Fichier couleur recadré au plus serré le 31.10.2026 (viewBox seulement, sans déformation) : la constellation de points extérieure (en haut et à droite) sort du cadre ; écusson, trame et « VILLE DE GENÈVE » intacts. Échelle portée à 1,9 pour que le texte reste lisible dans les murs."
   },
   {
     "id": "piaget",
@@ -95,11 +95,11 @@
     "fichier_blanc": null,
     "fichier_couleur": "couleur/collonge-bellerive.png",
     "couleur_dominante": "#E20913",
-    "echelle": 0.7,
+    "echelle": 1.0,
     "source_url": "https://www.collonge-bellerive.ch/",
     "source_couleur_url": "https://www.collonge-bellerive.ch/dist/collonge-bellerive/2023/images/logo-color.7c7cfaae13de72eb684d.png",
     "licence_note": "Logo officiel de la commune (PNG couleur de collonge-bellerive.ch, 770 × 120 px, seule version publiée), relevé le 31.10.2026 : écusson aux armoiries communales et nom. Armoiries : usage réservé à la commune, sauf autorisation de sa part (LPAP (RS 232.21) art. 8 al. 1 et 5). Demande : Mairie de Collonge-Bellerive, secrétariat général, chemin du Château-de-Bellerive 1, 1245 Collonge-Bellerive, 022 722 11 50, info@collonge-bellerive.ch.",
-    "remarque": "Logo officiel d'une collectivité publique (armoiries) / emblème d'organisation internationale : affichage en version de validation seulement ; publication en production uniquement avec l'autorisation écrite de l'institution (LPAP / Convention de Paris art. 6ter)."
+    "remarque": "Logo officiel d'une collectivité publique (armoiries) / emblème d'organisation internationale : affichage en version de validation seulement ; publication en production uniquement avec l'autorisation écrite de l'institution (LPAP / Convention de Paris art. 6ter). Logo très allongé (6,4 : 1), déjà sans marge : il occupe toute la largeur de sa cellule (classe « logo--large », composants.py) ; échelle portée à 1,0."
   },
   {
     "id": "j-safra-sarasin",

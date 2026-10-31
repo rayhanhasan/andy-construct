@@ -26,7 +26,7 @@
   <link rel="manifest" href="site.webmanifest">
   <link rel="preload" href="assets/fonts/archivo-v3-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/css/styles.css?v=f68267f1b9">
+  <link rel="stylesheet" href="assets/css/styles.css?v=14440018ac">
   <script>(function(d){d.className=d.className.replace('no-js','js');try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}try{if('IntersectionObserver'in window&&matchMedia('(prefers-reduced-motion: no-preference)').matches)d.classList.add('anim')}catch(e){}})(document.documentElement);window.AC_AB={"aa-temoin":{"v":["a","b"],"p":[50,50],"n":1,"pg":["index.html"]},"hero-titre":{"v":["a","b"],"p":[50,50],"n":1,"pg":["index.html"],"off":1},"ordre-sections":{"v":["a","b"],"p":[50,50],"n":1,"pg":["index.html"],"off":1},"cta-libelle":{"v":["a","b"],"p":[50,50],"n":1,"off":1},"entree-demande":{"v":["a","b"],"p":[50,50],"n":1,"x":"#demande","off":1},"etape3-allegee":{"v":["a","b"],"p":[50,50],"n":1,"x":"#demande","off":1},"hero-media":{"v":["a","b"],"p":[50,50],"n":1,"pg":["index.html"],"off":1}};(function(w,h){var C=w.AC_AB,K='ac_ab',A={},S=null,F={},q,n,N=w.navigator,dnt=N.doNotTrack=='1'||w.doNotTrack=='1'||!!N.globalPrivacyControl,page=w.location.pathname.split('/').pop()||'index.html';if(!C)return;if(!dnt){try{S=JSON.parse(w.localStorage.getItem(K)||'{}')||{};}catch(e){S=null;}}
 q=/[?&]flag=([^&#]*)/.exec(w.location.search);if(q)decodeURIComponent(q[1]).split(',').forEach(function(x){var p=x.split(':');if(p[0]==='reset'){if(S)S={};try{w.localStorage.removeItem('ac_ab_vus');w.localStorage.removeItem('ac_ic');}catch(e){}}else if(p[1])F[p[0]]=p[1];});for(n in C){var c=C[n],v=c.v,p=c.p,m=S&&S[n],t=0,k=0,r;if(F[n]&&v.indexOf(F[n])>-1){A[n]=F[n];if(S){S[n]=[F[n],c.n];S._f=1;}continue;}
 if(c.off||!S||(c.pg&&c.pg.indexOf(page)<0&&c.pg.indexOf('*')<0))continue;if(m&&m[1]===c.n&&v.indexOf(m[0])>-1){A[n]=m[0];continue;}
@@ -35,7 +35,7 @@ A[n]=v[k];S[n]=[v[k],c.n];}
 if(S){try{w.localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
 for(n in A)h.setAttribute('data-ab-'+n,A[n]);w.acAB={v:A,c:C,force:!S||!!S._f};})(window,document.documentElement);</script>
   <script src="assets/js/suivi.js?v=036dc06d1c" defer></script>
-  <script src="assets/js/main.js?v=d2e9bf950a" defer></script>
+  <script src="assets/js/main.js?v=88fe3ebc67" defer></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://www.andyconstruct.ch/mentions-legales.html#page","url":"https://www.andyconstruct.ch/mentions-legales.html","name":"Mentions légales | Andy Construct","inLanguage":"fr-CH","isPartOf":{"@id":"https://www.andyconstruct.ch/#site"},"publisher":{"@id":"https://www.andyconstruct.ch/#entreprise"},"breadcrumb":{"@id":"https://www.andyconstruct.ch/mentions-legales.html#fil"}},{"@type":"BreadcrumbList","@id":"https://www.andyconstruct.ch/mentions-legales.html#fil","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://www.andyconstruct.ch/"},{"@type":"ListItem","position":2,"name":"Mentions légales","item":"https://www.andyconstruct.ch/mentions-legales.html"}]}]}</script>
 </head>
 <body>
@@ -65,43 +65,46 @@ for(n in A)h.setAttribute('data-ab-'+n,A[n]);w.acAB={v:A,c:C,force:!S||!!S._f};}
   </header>
   <main id="contenu">
     <section class="page-head" aria-labelledby="titre-page">
-      <div class="container page-head__grid">
-        <div class="page-head__text">
-          <nav class="breadcrumb" aria-label="Fil d'Ariane"><ol><li><a href="index.html">Accueil</a></li><li aria-current="page">Mentions légales</li></ol></nav>
-          <h1 id="titre-page">Mentions légales</h1>
-          <p class="lead">Qui édite ce site, qui l'héberge et à qui appartiennent ses contenus.</p>
-        </div>
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Fil d'Ariane"><ol><li><a href="index.html">Accueil</a></li><li aria-current="page">Mentions légales</li></ol></nav>
+        <h1 id="titre-page">Mentions légales</h1>
+        <span class="laser laser--court" aria-hidden="true"></span>
+        <p class="lead">Qui édite ce site, qui l'héberge et à qui appartiennent ses contenus.</p>
       </div>
     </section>
     <section class="section">
-      <div class="container prose">
-        <h2>Éditeur du site</h2>
+      <div class="container legal">
+        <nav class="legal__som" aria-label="Sommaire"><p class="legal__som-t">Sur cette page</p><ol><li><a href="#editeur-du-site">Éditeur du site</a></li><li><a href="#hebergement">Hébergement</a></li><li><a href="#propriete-des-contenus">Propriété des contenus</a></li><li><a href="#references-citees">Références citées</a></li><li><a href="#informations-et-prix">Informations et prix</a></li><li><a href="#liens-vers-d-autres-sites">Liens vers d'autres sites</a></li><li><a href="#credits">Crédits</a></li><li><a href="#donnees">Protection des données</a></li><li><a href="#droit-applicable">Droit applicable</a></li></ol></nav>
+        <div class="prose">
+                <h2 id="editeur-du-site">Éditeur du site</h2>
         <dl><dt>Raison sociale</dt><dd>Andy Construct, Chanton & Cie</dd><dt>Forme juridique</dt><dd>société en nom collectif</dd><dt>Associés</dt><dd>Adnan Bajrami, Caroline Chanton Bajrami</dd><dt>Siège</dt><dd>Route des Acacias 48, 1227 Carouge (Genève), Suisse</dd><dt>Numéro IDE</dt><dd>CHE-113.706.162 · Registre du commerce du canton de Genève, inscription en 2007</dd><dt>Numéro TVA</dt><dd>CHE-113.706.162 TVA</dd><dt>Téléphone</dt><dd><a href="tel:+41227712015" data-suivi-numero="fixe">+41 22 771 20 15</a></dd><dt>E-mail</dt><dd><a href="mailto:contact@andyconstruct.ch">contact@andyconstruct.ch</a></dd></dl>
-        <h2>Hébergement</h2>
+        <h2 id="hebergement">Hébergement</h2>
         <p>Conception et réalisation : Harbor Digital.</p>
-        <h2>Propriété des contenus</h2>
+        <h2 id="propriete-des-contenus">Propriété des contenus</h2>
         <p>Les textes, le logo et les photos de chantiers publiés sur ce site appartiennent à Andy Construct, Chanton & Cie. Leur reproduction demande un accord écrit.</p>
         <p>Les photos montrent des chantiers réalisés par l'entreprise. Les personnes et les lieux reconnaissables sont publiés avec l'accord des intéressés.</p>
-        <h2>Références citées</h2>
+        <h2 id="references-citees">Références citées</h2>
         <p>Les noms des maîtres d'ouvrage cités sur ce site indiquent des travaux réalisés pour eux. Ils ne signifient ni partenariat ni recommandation. Les logos sont reproduits avec l'accord écrit de leurs titulaires ; les armoiries publiques et les emblèmes d'organisations internationales ne sont jamais reproduits.</p>
-        <h2>Informations et prix</h2>
+        <h2 id="informations-et-prix">Informations et prix</h2>
         <p>Les informations de ce site sont générales. Elles ne remplacent pas une visite ni un conseil adapté à votre situation. Les prix indicatifs éventuels ne constituent pas une offre : seule l'offre écrite remise après la visite engage l'entreprise.</p>
-        <h2>Liens vers d'autres sites</h2>
+        <h2 id="liens-vers-d-autres-sites">Liens vers d'autres sites</h2>
         <p>Les liens vers des sites tiers (carte, registre du commerce, réseaux sociaux) ouvrent des sites soumis à leurs propres conditions et à leur propre politique de confidentialité.</p>
-        <h2>Crédits</h2>
-        <p>Polices de caractères : Montserrat et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Carte de la zone d'intervention : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
+        <h2 id="credits">Crédits</h2>
+        <p>Polices de caractères : Archivo et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Carte de la zone d'intervention : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
+        <p>Certaines images, signalées « Illustration », proviennent d'Unsplash et de Pexels, sous leurs licences respectives. Elles ne montrent pas des chantiers d'Andy Construct. Crédits détaillés sur demande.</p>
         <h2 id="donnees">Protection des données</h2>
         <p>La façon dont nous traitons les données transmises par le formulaire et les statistiques du site est décrite dans notre politique de confidentialité. <a href="confidentialite.html">Lire la politique de confidentialité</a></p>
-        <h2>Droit applicable</h2>
+        <h2 id="droit-applicable">Droit applicable</h2>
         <p>Ce site et son utilisation sont soumis au droit suisse.</p>
         <p class="maj">Dernière mise à jour : 31 octobre 2026</p>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer on-dark" data-suivi-zone="pied">
     <div class="container footer-refs">
-      <p class="footer-refs__title">Ils nous ont confié des travaux</p><ul class="pills"><li class="pill"><img class="logo e140" src="assets/img/references/couleur/ville-de-geneve.svg" width="169" height="100" alt="Ville de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/conservatoire-musique-geneve.svg" width="436" height="100" alt="Conservatoire de musique de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/head-geneve.png" width="488" height="240" alt="HEAD – Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e105" src="assets/img/references/couleur/omc.png" width="795" height="240" alt="OMC" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/ubs.svg" width="282" height="100" alt="UBS" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/piaget.svg" width="256" height="100" alt="Piaget" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e115" src="assets/img/references/couleur/plan-les-ouates.svg" width="174" height="100" alt="Salle communale de Plan-les-Ouates" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e070" src="assets/img/references/couleur/collonge-bellerive.png" width="1532" height="240" alt="Salle communale de Collonge-Bellerive" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e130" src="assets/img/references/couleur/j-safra-sarasin.png" width="562" height="240" alt="J. Safra Sarasin" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e075" src="assets/img/references/couleur/labcorp.svg" width="376" height="100" alt="Labcorp (ex-Covance)" loading="lazy" decoding="async"></li></ul><p class="footer-refs__part">et des particuliers de toute la région. <a href="professionnels.html#references">Toutes nos références</a></p>
+      <p class="footer-refs__title">Ils nous ont confié des travaux</p><ul class="pills"><li class="pill"><img class="logo e190 logo--large" src="assets/img/references/couleur/ville-de-geneve.svg" width="172" height="100" alt="Ville de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/conservatoire-musique-geneve.svg" width="436" height="100" alt="Conservatoire de musique de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/head-geneve.png" width="488" height="240" alt="HEAD – Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e105" src="assets/img/references/couleur/omc.png" width="795" height="240" alt="OMC" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/ubs.svg" width="282" height="100" alt="UBS" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/piaget.svg" width="256" height="100" alt="Piaget" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e115" src="assets/img/references/couleur/plan-les-ouates.svg" width="174" height="100" alt="Salle communale de Plan-les-Ouates" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e100 logo--large" src="assets/img/references/couleur/collonge-bellerive.png" width="1532" height="240" alt="Salle communale de Collonge-Bellerive" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e130" src="assets/img/references/couleur/j-safra-sarasin.png" width="562" height="240" alt="J. Safra Sarasin" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e075" src="assets/img/references/couleur/labcorp.svg" width="376" height="100" alt="Labcorp (ex-Covance)" loading="lazy" decoding="async"></li></ul><p class="footer-refs__part">et des particuliers de toute la région. <a href="professionnels.html#references">Toutes nos références</a></p>
       <ul class="badges badges--pied" aria-label="En bref"><li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path class="accent" d="M9 14l2.5 2.5L16 12"/></svg><span><b><a href="https://www.zefix.ch/fr/search/entity/list?name=CHE-113.706.162" rel="noopener">Registre du commerce</a></b> Inscrite, vérifiable sur Zefix</span></li><li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16v14H4z"/><path d="M4 10h16M8 3v5M16 3v5"/><path class="accent" d="M8 15h3"/></svg><span><b>Depuis 2007</b> 19 ans d'activité</span></li><li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle class="accent" cx="12" cy="10" r="2.2"/></svg><span><b><a href="contact.html#zone">Siège à Carouge</a></b> Toute la Suisse romande</span></li><li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 11h6"/></svg><span><b><a href="https://gge.ch/entreprises-2/andy-construct-chanton-cie/" rel="noopener">Membre du GGE</a></b> Entreprises genevoises du bâtiment</span></li></ul>
     </div>
     <div class="container footer-top">

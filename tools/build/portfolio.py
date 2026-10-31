@@ -143,7 +143,7 @@ def tags_html(services, marque_codes=None):
     return marque(marque_codes, h) if marque_codes else h
 
 
-def carte_projet(p, sizes, niveau='h3', cta=True, p_page=None, eager=False, ancre=True, grande=False):
+def carte_projet(p, sizes, niveau='h3', cta=True, p_page=None, eager=False, ancre=True, grande=False, img_html=None, cls=''):
     """Fiche projet (§8.2) : photo 3:2, titre, type de lieu, contrainte, étiquettes, badge, bouton contextuel."""
     photos = proj_photos(p)
     tags = proj_tags(p)
@@ -159,12 +159,13 @@ def carte_projet(p, sizes, niveau='h3', cta=True, p_page=None, eager=False, ancr
         bouton = ('<p class="projet__cta"><a class="link-arrow" href="contact.html%s#demande" data-suivi="devis_clic" data-suivi-emplacement="fiche_projet"%s>Un projet semblable ? Demander un devis</a></p>'
                   % (('?travaux=' + service) if service else '', (' data-suivi-service="%s"' % service) if service else ''))
     voir = ('Voir les %d photos du projet' % n) if n > 1 else 'Agrandir la photo'
-    return '''<article class="projet%(gr)s"%(id)s data-services="%(svc)s">
+    return '''<article class="projet%(gr)s%(cls)s"%(id)s data-services="%(svc)s">
             <div class="projet__media">
               %(img)s<button type="button" class="projet__btn" data-galerie aria-describedby="%(pid)s-t"><span class="projet__voir">%(voir)s</span></button>%(badge)s
               <ul class="projet__photos" hidden>%(autres)s</ul>
             </div>
             <div class="projet__body">
+              <span class="laser laser--court" aria-hidden="true"></span>
               <%(n)s class="projet__titre" id="%(pid)s-t">%(titre)s</%(n)s>
               <p class="projet__lieu">%(lieu)s</p>
               <p class="projet__contrainte">%(contrainte)s</p>
@@ -172,8 +173,8 @@ def carte_projet(p, sizes, niveau='h3', cta=True, p_page=None, eager=False, ancr
               %(bouton)s
             </div>
           </article>''' % dict(
-        gr=' projet--grand' if grande else '', id=(' id="%s"' % p['id']) if ancre else '', svc=' '.join(tags), pid=p['id'],
-        img=pic(photos[0], sizes, alt(photos[0]), eager=eager), voir=voir, badge=badge, autres=autres, n=niveau,
+        gr=' projet--grand' if grande else '', cls=(' ' + cls) if cls else '', id=(' id="%s"' % p['id']) if ancre else '', svc=' '.join(tags), pid=p['id'],
+        img=img_html or pic(photos[0], sizes, alt(photos[0]), eager=eager), voir=voir, badge=badge, autres=autres, n=niveau,
         titre=p['titre'], lieu=_txt(p['lieu']), contrainte=_txt(p['contrainte']), tags=tags_html(tags, codes_tags), bouton=bouton)
 
 
@@ -203,7 +204,7 @@ def paire_services(pid):
     return d if definitif('C26') else r
 
 
-def avant_apres(pid, niveau='h3', grande=False, legende_txt=None):
+def avant_apres(pid, niveau='h3', grande=False, legende_txt=None, sans_legende=False):
     """Deux photos avec les étiquettes « Avant » et « Après » en texte. Les paires au même format
     deviennent, avec JavaScript, un comparateur accessible (curseur et boutons) ; sinon côte à côte."""
     _, leg, _, _, alt_av, alt_ap, comp = PAIRE[pid]
@@ -215,8 +216,8 @@ def avant_apres(pid, niveau='h3', grande=False, legende_txt=None):
               <div class="aa__img aa__img--avant"><p class="aa__lbl">Avant</p>%(av)s</div>
               <div class="aa__img aa__img--apres"><p class="aa__lbl">Après</p>%(ap)s</div>
             </div>
-            <figcaption><%(n)s class="aa__titre">%(leg)s</%(n)s>%(tags)s</figcaption>
-          </figure>''' % dict(
+            <figcaption%(fc)s><%(n)s class="aa__titre">%(leg)s</%(n)s>%(tags)s</figcaption>
+          </figure>''' % dict(fc=' class="visually-hidden"' if sans_legende else '',
         cmp=' aa--comparable' if comp else '', gr=' aa--grand' if grande else '', id=pid, svc=' '.join(svcs),
         data=' data-comparateur' if comp else '', av=aa_pic(pid, 'avant', sizes, alt_av), ap=aa_pic(pid, 'apres', sizes, alt_ap),
-        n=niveau, leg=marque('C26', legende_txt or leg), tags=tags)
+        n='p' if sans_legende else niveau, leg=marque('C26', legende_txt or leg), tags='' if sans_legende else tags)

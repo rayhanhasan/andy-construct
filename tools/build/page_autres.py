@@ -19,52 +19,106 @@ def merci():
     filtres = [s for s in SERVICES if any(pf.proj_ok(x) and s in pf.proj_tags(x) for x in pf.PROJETS)
                or any(s in pf.paire_services(x[0]) for x in pf.PAIRES)]
     noms = {s: ctx.fr(svc_nom(s, html=False)).lower() for s in SERVICES}
-    corps = '''    <section class="section merci" data-suivi-zone="merci" data-filtres="%(filtres)s" data-noms="%(noms)s">
-      <div class="container narrow">
-        <div data-variante="devis">
-          <h1 id="titre-page">Merci, votre demande est bien arrivée</h1>
-          <p class="merci__ref" hidden>Référence de votre demande : <b data-ref></b></p>
-          <div class="merci__recap" hidden>
-            <p>Vous nous avez demandé un devis pour : <b data-travaux></b><span data-commune-bloc>, à <b data-commune></b></span>.</p>
-            <p data-pref-bloc>Vous préférez être recontacté(e) : <b data-pref></b>.</p>
+    etapes = [('Nous vous rappelons', T('C01', 'Le jour même ou le jour ouvrable suivant, depuis le +41 22 771 20 15.',
+                                        'Pendant nos heures de bureau, depuis le +41 22 771 20 15.')),
+              ('Nous venons voir', T('C41', 'Une visite convenue ensemble, <b>en général dans la semaine</b>.', 'Une date de visite <b>convenue ensemble</b>.')),
+              ('Vous recevez l\'offre', T('C08', 'Notre <b>offre écrite</b>, après la visite.', 'Notre <b>offre écrite</b>, après la visite.'))]
+    corps = '''    <section class="merci" data-suivi-zone="merci" data-filtres="%(filtres)s" data-noms="%(noms)s">
+      <div data-variante="devis">
+        <div class="page-head page-head--merci">
+          <div class="container">
+            <svg class="merci__ok" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="24" cy="24" r="22"/><path d="M14 24.5l7 7 13-14"/></svg>
+            <h1 id="titre-page">Merci, votre demande est bien arrivée</h1>
+            <span class="laser laser--court" aria-hidden="true"></span>
+            <p class="merci__ref" hidden>Référence de votre demande : <b data-ref></b></p>
+            <div class="merci__recap" hidden>
+              <p>Vous nous avez demandé un devis pour : <b data-travaux></b><span data-commune-bloc>, à <b data-commune></b></span>.</p>
+              <p data-pref-bloc>Vous préférez être recontacté(e) : <b data-pref></b>.</p>
+            </div>
+            <p class="merci__mail" data-si-email hidden>Un e-mail de confirmation vient de partir. Vous ne le voyez pas ? Regardez dans le dossier des courriers indésirables.</p>
           </div>
-          <h2>Et maintenant ?</h2>
-          <ol class="merci__etapes">
-            <li>%(e1)s</li>
-            <li>%(e2)s</li>
-            <li>%(e3)s</li>
-          </ol>
-          <p class="merci__mail" data-si-email hidden>Un e-mail de confirmation vient de partir. Vous ne le voyez pas ? Regardez dans le dossier des courriers indésirables.</p>
-          <h2>Pour gagner du temps à la visite</h2>
-          <ul class="ticks">
-            <li>Quelques photos des pièces concernées</li>
-            <li>Les dimensions approximatives</li>
-            <li>Les plans, si vous en avez</li>
-            <li>La date à laquelle les travaux doivent être finis</li>
-          </ul>
-          <p><a class="link-arrow" href="realisations.html" data-lien-service>En attendant, voir nos réalisations</a></p>
-          <p class="merci__urgence">%(urgence)s</p>
         </div>
-        <div data-variante="rappel" hidden>
-          <h1>Merci, nous vous rappelons</h1>
-          <p class="merci__ref" hidden>Référence : <b data-ref></b></p>
-          <p class="lead">%(rappel)s</p>
-          <p>Pour gagner du temps, notez la surface approximative, le délai souhaité et, si possible, prenez quelques photos.</p>
-          <p><a class="link-arrow" href="realisations.html">En attendant, voir nos réalisations</a></p>
-          <p class="merci__urgence">Une question urgente ? %(tel)s</p>
+        <div class="section">
+          <div class="container">
+            <h2 class="merci__h2">Et maintenant ?</h2>
+            <ol class="steps steps--3">%(etapes)s</ol>
+            <div class="merci__suite">
+              <div>
+                <h2 class="merci__h2">Pour gagner du temps à la visite</h2>
+                <ul class="ticks ticks--filets">
+                  <li>Quelques <b>photos</b> des pièces concernées</li>
+                  <li>Les <b>dimensions</b> approximatives</li>
+                  <li>Les <b>plans</b>, si vous en avez</li>
+                  <li>La <b>date</b> à laquelle les travaux doivent être finis</li>
+                </ul>
+              </div>
+              <div class="merci__liens">
+                <p><a class="link-arrow" href="realisations.html" data-lien-service>En attendant, voir nos réalisations</a></p>
+                <p><a class="link-arrow" href="entreprise.html#methode">Comment se passe un chantier</a></p>
+                <p class="merci__urgence">%(urgence)s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-variante="rappel" hidden>
+        <div class="page-head page-head--merci">
+          <div class="container">
+            <svg class="merci__ok" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="24" cy="24" r="22"/><path d="M14 24.5l7 7 13-14"/></svg>
+            <h1>Merci, nous vous rappelons</h1>
+            <span class="laser laser--court" aria-hidden="true"></span>
+            <p class="merci__ref" hidden>Référence : <b data-ref></b></p>
+            <p class="lead">%(rappel)s</p>
+          </div>
+        </div>
+        <div class="section">
+          <div class="container">
+            <p>Pour gagner du temps, notez la <b>surface</b> approximative, le <b>délai</b> souhaité et, si possible, prenez quelques <b>photos</b>.</p>
+            <p><a class="link-arrow" href="realisations.html">En attendant, voir nos réalisations</a></p>
+            <p class="merci__urgence">Une question urgente ? %(tel)s</p>
+          </div>
         </div>
       </div>
     </section>
 ''' % dict(filtres=' '.join(filtres), noms=e('|'.join('%s=%s' % (s, noms[s]) for s in SERVICES)),
-           e1=T('C01', 'Nous vous rappelons le jour même ou le jour ouvrable suivant, depuis le +41 22 771 20 15.',
-                'Nous vous rappelons pendant nos heures de bureau, depuis le +41 22 771 20 15.'),
-           e2=T('C41', 'Ensemble, nous convenons d\'une visite, en général dans la semaine.', 'Ensemble, nous convenons d\'une date de visite.'),
-           e3=T('C08', 'Vous recevez ensuite notre offre écrite.', 'Vous recevez ensuite notre offre écrite.'),
-           urgence=urgence,
+           etapes=''.join('<li><h3>%s</h3><p>%s</p></li>' % x for x in etapes), urgence=urgence,
            rappel=T('C01', 'Nous vous rappelons<span data-creneau></span>, le jour même ou le jour ouvrable suivant, depuis le +41 22 771 20 15.',
                     'Nous vous rappelons pendant nos heures de bureau, depuis le +41 22 771 20 15.'),
            tel=tel_link(emplacement='merci'))
     page(p, corps)
+
+
+def avec_sommaire(texte):
+    """Textes légaux : identifiants sur les titres et sommaire collant à gauche (ordinateur), pour une lecture facile."""
+    import re, unicodedata
+    vus, items = set(), []
+
+    def slug(t):
+        t = unicodedata.normalize('NFKD', re.sub(r'<[^>]+>', '', t)).encode('ascii', 'ignore').decode().lower()
+        t = re.sub(r'[^a-z0-9]+', '-', t).strip('-')[:40].strip('-')
+        base, i = t, 2
+        while t in vus:
+            t, i = '%s-%d' % (base, i), i + 1
+        vus.add(t)
+        return t
+
+    def rempl(m):
+        attrs, titre = m.group(1), m.group(2)
+        ident = re.search(r'id="([^"]+)"', attrs)
+        ident = ident.group(1) if ident else slug(titre)
+        items.append((ident, titre))
+        return '<h2 id="%s">%s</h2>' % (ident, titre)
+    texte = re.sub(r'<h2([^>]*)>(.*?)</h2>', rempl, texte)
+    som = ''.join('<li><a href="#%s">%s</a></li>' % x for x in items)
+    return '''    <section class="section">
+      <div class="container legal">
+        <nav class="legal__som" aria-label="Sommaire"><p class="legal__som-t">Sur cette page</p><ol>%s</ol></nav>
+        <div class="prose">
+        %s
+        </div>
+      </div>
+    </section>
+''' % (som, texte)
 
 
 def heberg_ligne():
@@ -89,9 +143,7 @@ def mentions():
         lignes.append(('Numéro TVA', T('C35', 'CHE-113.706.162 TVA')))
     lignes += [('Téléphone', tel_link()), ('E-mail', mail_html())]
     corps = page_head('Mentions légales', 'Mentions légales', 'Qui édite ce site, qui l\'héberge et à qui appartiennent ses contenus.')
-    corps += '''    <section class="section">
-      <div class="container prose">
-        <h2>Éditeur du site</h2>
+    corps += avec_sommaire('''        <h2>Éditeur du site</h2>
         <dl>%(lignes)s</dl>
         <h2>Hébergement</h2>
         %(heberg)s<p>Conception et réalisation : Harbor Digital.</p>
@@ -105,18 +157,16 @@ def mentions():
         <h2>Liens vers d'autres sites</h2>
         <p>Les liens vers des sites tiers (carte, registre du commerce, réseaux sociaux) ouvrent des sites soumis à leurs propres conditions et à leur propre politique de confidentialité.</p>
         <h2>Crédits</h2>
-        <p>Polices de caractères : Montserrat et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Carte de la zone d'intervention : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
+        <p>Polices de caractères : Archivo et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Carte de la zone d'intervention : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
+        <p>Certaines images, signalées « Illustration », proviennent d'Unsplash et de Pexels, sous leurs licences respectives. Elles ne montrent pas des chantiers d'Andy Construct. Crédits détaillés sur demande.</p>
         <h2 id="donnees">Protection des données</h2>
         <p>La façon dont nous traitons les données transmises par le formulaire et les statistiques du site est décrite dans notre politique de confidentialité. <a href="confidentialite.html">Lire la politique de confidentialité</a></p>
         <h2>Droit applicable</h2>
         <p>Ce site et son utilisation sont soumis au droit suisse.</p>
-        <p class="maj">Dernière mise à jour : %(date)s</p>
-      </div>
-    </section>
-''' % dict(lignes=''.join('<dt>%s</dt><dd>%s</dd>' % x for x in lignes),
+        <p class="maj">Dernière mise à jour : %(date)s</p>''' % dict(lignes=''.join('<dt>%s</dt><dd>%s</dd>' % x for x in lignes),
            heberg=heberg_ligne(),
            photos=T('C25', '<p>Les photos montrent des chantiers réalisés par l\'entreprise. Les personnes et les lieux reconnaissables sont publiés avec l\'accord des intéressés.</p>', ''),
-           date=DATE)
+           date=DATE))
     page(p, corps)
 
 
@@ -201,12 +251,7 @@ def confidentialite():
         mail=mail_html(), tel=tel_link(), stats=stats, heberg=heberg, date=DATE,
         messagerie=marque('V02', 'notre fournisseur de messagerie'),
         journaux=marque('C34', 'durée fixée par l\'hébergeur'))
-    corps += """    <section class="section">
-      <div class="container prose">
-        %s
-      </div>
-    </section>
-""" % texte
+    corps += avec_sommaire(texte)
     page(p, corps)
 
 
@@ -214,20 +259,28 @@ def page_404():
     p = dict(fichier='404.html', index=False, base=ctx.prod(), canonical=False, title='Page introuvable | Andy Construct',
              desc='Cette page n\'existe pas ou a été déplacée. Retrouvez nos prestations, nos réalisations et notre numéro de téléphone.')
     h = T('C03', ', du lundi au vendredi, de 7 h à 18 h', '')
-    liens = [('placo.html', 'Placo : cloisons, doublages, faux-plafonds'), ('peinture.html', 'Peinture intérieure'),
-             ('isolation-acoustique.html', 'Isolation acoustique'), ('cloisons-isothermes.html', svc_nom('cloisons-isothermes')),
-             ('realisations.html', 'Nos réalisations'), ('contact.html', 'Contact et demande de devis')]
-    corps = '''    <section class="section notfound" data-suivi-zone="404">
-      <div class="container">
-        <p class="notfound__code" aria-hidden="true">404</p>
-        <h1 id="titre-page">Cette page n'existe pas, ou elle a changé d'adresse</h1>
-        <p class="lead">Notre site a été refait : certaines adresses ont changé. Voici les pages les plus consultées :</p>
-        <ul>%s</ul>
-        <p class="notfound__call">Vous pouvez aussi nous appeler : %s%s.</p>
-        <p><a class="btn" href="index.html">Retour à l'accueil</a></p>
+    liens = [('placo.html', 'Placo', 'Cloisons, doublages, faux-plafonds'), ('peinture.html', 'Peinture', 'Murs et plafonds, à l\'intérieur'),
+             ('isolation-acoustique.html', 'Isolation acoustique', 'Contre le bruit et l\'écho'),
+             ('cloisons-isothermes.html', svc_nom('cloisons-isothermes'), 'Caves, garages, combles'),
+             ('realisations.html', 'Réalisations', 'Nos chantiers, avant et après'), ('contact.html', 'Contact', 'Demande de devis en 3 étapes')]
+    corps = '''    <section class="notfound" data-suivi-zone="404">
+      <div class="page-head page-head--404">
+        <div class="container">
+          <p class="notfound__code" aria-hidden="true">404</p>
+          <span class="laser" aria-hidden="true"></span>
+          <h1 id="titre-page">Cette page n'existe pas, ou elle a changé d'adresse</h1>
+          <p class="lead">Notre site a été refait : certaines adresses ont changé. Voici les pages les plus consultées.</p>
+        </div>
+      </div>
+      <div class="section">
+        <div class="container">
+          <ul class="notfound__liens">%s</ul>
+          <p class="notfound__call">Vous pouvez aussi nous appeler : %s%s.</p>
+          <p data-cta-principal><a class="btn" href="index.html">Retour à l'accueil</a></p>
+        </div>
       </div>
     </section>
-''' % (''.join('<li><a href="%s">%s</a></li>' % x for x in liens), tel_link(emplacement='404'), h)
+''' % (''.join('<li><a href="%s"><b>%s</b><span>%s</span></a></li>' % x for x in liens), tel_link(emplacement='404'), h)
     page(p, corps)
 
 

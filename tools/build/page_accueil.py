@@ -134,21 +134,23 @@ def hero_media():
 
 
 def hero(p):
+    """Mobile : titre, phrase et boutons d'abord (premier écran de 390 × 844), puis la photo en bande, puis les badges.
+    Ordinateur : la photo sort du flux et occupe les colonnes 8 à 12 jusqu'au bord droit (DA §5)."""
     texte = ('Régies, architectes, communes ou particuliers : nous venons voir, puis remettons une <b>offre écrite</b>%s.'
              % T('C06', ' détaillée', ''))
     return '''    <section class="hero" aria-labelledby="titre-page" data-suivi-zone="heros">
-      <div class="hero__media">%s</div>
       <div class="container hero__grid">
         <div class="hero__panel">
           <h1 id="titre-page" class="hero__titre">%s</h1>
           <span class="laser" aria-hidden="true"></span>
           <p class="hero__text">%s</p>
-          <div class="hero__actions">%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>
+          <div class="hero__actions" data-cta-principal>%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>
+          <div class="hero__media">%s</div>
           %s
         </div>
       </div>
     </section>
-''' % (hero_media(), hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL,
+''' % (hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, hero_media(),
        c.badges(['B1', 'B2', 'B3', '|B13|B6|B7|B8']))
 
 
@@ -232,22 +234,6 @@ def projets():
     return ''.join(cartes)
 
 
-# ---------------------------------------------------------------- H5 · chiffres clés
-def chiffres():
-    """Valeurs finales dans le HTML (lues sans JavaScript, jamais « 0 »), comptées une fois à l'apparition."""
-    items = [(c.ans_activite(), 'ans d\'activité'), (c.nb_refs(), 'références, publiques et privées'), (4, 'métiers intérieurs')]
-    items.append((1, marque('C01', 'jour ouvrable, au plus, pour vous rappeler')) if definitif('C01') else (7, 'cantons et régions romands'))
-    lis = ''.join('<li><span class="chiffre" aria-hidden="true" data-count="%d">%d</span><span class="chiffre__lbl">'
-                  '<span class="visually-hidden">%d </span>%s</span></li>' % (n, n, n, l) for n, l in items)
-    return '''    <section class="section section--dark on-dark chiffres" aria-labelledby="chiffres-titre">
-      <div class="container">
-        <h2 id="chiffres-titre" class="visually-hidden">Andy Construct en chiffres</h2>
-        <ul class="chiffres__list" data-reveal="cells">%s</ul>
-      </div>
-    </section>
-''' % lis
-
-
 # ---------------------------------------------------------------- H6 · méthode (vraie séquence : numérotée)
 def methode():
     etapes = [('Visite', 'Mesures et écoute, sur place.'),
@@ -328,7 +314,7 @@ def build():
         <div class="faq__list">%(faq)s</div>
       </div>
     </section>
-''' % dict(flag=flag_ordre, services=services, cartes=projets(), chiffres=chiffres(), methode=methode(),
+''' % dict(flag=flag_ordre, services=services, cartes=projets(), chiffres=c.chiffres(), methode=methode(),
            devis2=devis_btn(p, 'realisations', cls='btn', texte='Un projet semblable ? Demander un devis'), pdf=lien_pdf,
            avis=(('    <section class="section section--tight"><div class="container">%s</div></section>\n' % c.avis_ligne()) if c.avis_ligne() else ''),
            temoignages=c.temoignages(), tel_uri=TEL_URI, tel=TEL, faq=faq_html)

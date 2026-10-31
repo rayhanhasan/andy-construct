@@ -363,23 +363,42 @@ def footer(p):
 
 
 # ---------------------------------------------------------------- en-tête de page secondaire (composant page-head)
-def fil(nom):
-    return ('<nav class="breadcrumb" aria-label="Fil d\'Ariane"><ol><li><a href="index.html">Accueil</a></li>'
-            '<li aria-current="page">%s</li></ol></nav>' % nom)
+def fil(nom, cls=''):
+    return ('<nav class="breadcrumb%s" aria-label="Fil d\'Ariane"><ol><li><a href="index.html">Accueil</a></li>'
+            '<li aria-current="page">%s</li></ol></nav>' % ((' ' + cls) if cls else '', nom))
 
 
 def page_head(crumb, h1, lead, extra='', photo='', cls=''):
-    media = ('\n        <div class="page-head__media">%s</div>' % photo) if photo else ''
+    """En-tête sobre (pages légales, merci, 404) : fond plâtre, titre, trait de niveau court, chapeau."""
     return '''    <section class="page-head%s" aria-labelledby="titre-page">
-      <div class="container page-head__grid">
-        <div class="page-head__text">
-          %s
-          <h1 id="titre-page">%s</h1>
-          <p class="lead">%s</p>%s
-        </div>%s
+      <div class="container">
+        %s
+        <h1 id="titre-page">%s</h1>
+        <span class="laser laser--court" aria-hidden="true"></span>
+        <p class="lead">%s</p>%s
       </div>
     </section>
-''' % ((' page-head--media' if photo else '') + (' ' + cls if cls else ''), fil(crumb), h1, lead, extra, media)
+''' % ((' ' + cls) if cls else '', fil(crumb), h1, lead, extra)
+
+
+def hero_page(crumb, h1, lead, actions='', media='', badges='', extra='', cls=''):
+    """En-tête de page v3, au niveau de l'accueil : panneau anthracite (fil d'Ariane, titre, trait de niveau, chapeau,
+    boutons, badges) et grande image nette jusqu'au bord droit (ordinateur) ; sur mobile, titre et boutons d'abord,
+    puis l'image en bande, puis les badges. Sans image : panneau seul (contact)."""
+    med = ('\n          <div class="hero__media">%s</div>' % media) if media else ''
+    act = ('\n          <div class="hero__actions" data-cta-principal>%s</div>' % actions) if actions else ''
+    return '''    <section class="hero hero--page%s" aria-labelledby="titre-page" data-suivi-zone="entete_page">
+      <div class="container hero__grid">
+        <div class="hero__panel">
+          %s
+          <h1 id="titre-page" class="hero__titre">%s</h1>
+          <span class="laser" aria-hidden="true"></span>
+          <p class="hero__text">%s</p>%s%s%s
+          %s
+        </div>
+      </div>
+    </section>
+''' % (('' if media else ' hero--seul') + ((' ' + cls) if cls else ''), fil(crumb, 'breadcrumb--sombre'), h1, lead, extra, act, med, badges)
 
 
 def ld_page(fichier, nom, crumb, typ='WebPage', extra=None):

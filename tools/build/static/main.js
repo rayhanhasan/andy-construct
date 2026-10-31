@@ -420,6 +420,7 @@
     });
     var aa = $('#avant-apres');
     if (aa) aa.hidden = !$$('.aa[data-services]:not([hidden])', aa).length;
+    if (zone) zone.classList.toggle('is-filtre', s !== 'tous');
     if (compteur) compteur.textContent = n + (n > 1 ? ' projets affichés' : ' projet affiché');
   };
   if (zone) {
@@ -554,6 +555,23 @@
       $$('[data-count]', g).forEach(function (el) { el.textContent = '0'; });
       io.observe(g);
     });
+    $$('[data-trait]').forEach(function (g) { io.observe(g); });
+  }
+
+  /* 9b. Barre fixe mobile : cachée tant que les boutons de l'en-tête de page sont visibles (aucun bouton recouvert au
+     chargement, jamais deux « Demander un devis » à l'écran) ; devant le bloc de demande, seul « Appeler » reste. */
+  var cb = $('.callbar');
+  if (cb && w.IntersectionObserver) {
+    var cbv = { cta: false, dem: false }, cta = $('[data-cta-principal]'), dem = $('#demande');
+    var majCb = function () { cb.classList.toggle('is-cache', cbv.cta); cb.classList.toggle('is-appel', !cbv.cta && cbv.dem); };
+    if (cta) {
+      var r0 = cta.getBoundingClientRect();
+      cbv.cta = r0.bottom > 0 && r0.top < w.innerHeight; majCb();
+      new IntersectionObserver(function (es) { cbv.cta = es[0].isIntersecting; majCb(); }).observe(cta);
+    }
+    if (dem) new IntersectionObserver(function (es) {
+      var x = es[0]; cbv.dem = x.isIntersecting && (x.intersectionRatio >= 0.3 || x.intersectionRect.height > w.innerHeight * 0.3); majCb();
+    }, { threshold: [0, 0.1, 0.2, 0.3, 0.5] }).observe(dem);
   }
 
   /* 10. Bande des logos : défilement continu (~40 px/s) si le mouvement est permis ; pause au survol et au bouton */

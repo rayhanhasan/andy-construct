@@ -120,15 +120,11 @@ def logo_img(rid, nom=None, alt=None, lazy=True, fond='clair'):
     f = fichier_logo(rid, fond) if logo_affiche(rid) else None
     if f:
         w, h = _dims(f)
-        return ('<img class="logo %s" src="assets/img/references/%s" width="%d" height="%d" alt="%s"%s decoding="async">'
-                % (echelle_cls(l.get('echelle', 1) or 1), f, w, h, e((nom or nom_ref(rid)) if alt is None else alt), ' loading="lazy"' if lazy else ''))
+        # Logos très allongés (≥ 4,5 : 1) ou très aérés (Ville de Genève) : toute la largeur utile de la cellule
+        large = ' logo--large' if (w / h >= 4.5 or rid == 'ville-de-geneve') else ''
+        return ('<img class="logo %s%s" src="assets/img/references/%s" width="%d" height="%d" alt="%s"%s decoding="async">'
+                % (echelle_cls(l.get('echelle', 1) or 1), large, f, w, h, e((nom or nom_ref(rid)) if alt is None else alt), ' loading="lazy"' if lazy else ''))
     return wordmark(rid, nom)
-
-
-def ref_item(rid, blanc=False, nom=None):
-    """Élément de liste de références : logo (si autorisé dans ce mode) ou nom typographique."""
-    inner = logo_img(rid, nom=nom, fond='sombre' if blanc else 'clair')
-    return '<li class="ref %s">%s</li>' % ('ref--logo' if inner.startswith('<img') else 'ref--nom', inner)
 
 
 def _sub(rid):
@@ -147,7 +143,6 @@ DEFILE = MUR[:4] + ['alhambra'] + MUR[4:] + ['energestion', 'dipan', 'harmonie-n
 def nb_refs():
     """Nombre de noms publiables dans ce mode (17 en production tant que l'accord écrit de l'OMC manque)."""
     return len(LOGOS) - (0 if definitif('C22') else 1)
-BANDEAU = MUR[:8]
 
 
 def _ids(ids):
@@ -165,7 +160,8 @@ def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux'):
     6 × 2 (ordinateur), 3 × 4 (tablette), 2 × 4 (mobile) ; logos en couleur ou wordmarks selon le mode."""
     part = T('C04', 'Et des <b>particuliers</b>, pour une cloison, un plafond ou une pièce à repeindre.',
              'Et des <b>particuliers</b>, à Genève et dans toute la région.')
-    cells = ''.join('<li class="logo-cell">%s</li>' % logo_img(rid) for rid in _ids(MUR))
+    # Sur mobile, la première cellule (Ville de Genève) occupe toute la rangée : son texte reste lisible (chef de projet)
+    cells = ''.join('<li class="logo-cell%s">%s</li>' % (' logo-cell--une' if i == 0 else '', logo_img(rid)) for i, rid in enumerate(_ids(MUR)))
     accords = ('<p class="logos__accord">Références citées avec l\'accord des maîtres d\'ouvrage.</p>'
                if ctx.prod() and ctx.confirme('C22') else '')
     return '''    <section class="logos" aria-labelledby="%s" data-suivi-zone="references">
@@ -176,11 +172,6 @@ def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux'):
       </div>
     </section>
 ''' % (titre_id, titre_id, h2, marque('C22', '<ul class="logo-wall" data-reveal="cells">%s</ul>' % cells, bloc=True), part, nb_refs(), accords)
-
-
-def refs_bandeau(p):
-    """Compatibilité v2 : le bandeau sous le héro est devenu le mur de logos."""
-    return mur_logos()
 
 
 def bande_logos(titre='Ils nous ont confié des travaux', titre_id='defile-titre', cls=''):
@@ -212,9 +203,60 @@ def refs_pied():
             '<a href="professionnels.html#references">Toutes nos références</a></p>' % items)
 
 
-def refs_service(ids):
-    """« Réalisé notamment pour » : petite rangée de logos ou de noms."""
-    return '<ul class="refs refs--svc">%s</ul>' % ''.join(ref_item(r) for r in ids)
+# Liste canonique moyenne (cro-v3 §2.3, règle 7) : pages services sans C23, contact, entreprise
+MOYENNE = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'alhambra', 'plan-les-ouates', 'collonge-bellerive']
+# Références à citer par service (proposées pour C23, cro-v3 §6.1) : présentées comme propres au service seulement si C23
+PAR_SERVICE = {'placo': ['ville-de-geneve', 'conservatoire-musique-geneve', 'energestion'],
+               'isolation-acoustique': ['conservatoire-musique-geneve', 'head-geneve', 'collonge-bellerive']}
+
+
+def bande_refs(service=None, titre='Ils nous ont confié des travaux', titre_id='bande-refs-titre', cls=''):
+    """Bande de 6 logos en couleur (cellules du mur) sous un en-tête de page. Titre générique et liste canonique moyenne
+    (honnête dans tous les modes) ; si C23 confirme les références d'un service, elles passent en tête, avec une ligne
+    « En placo, notamment pour… » (marquée en vérification)."""
+    ids = list(MOYENNE)
+    propre = ''
+    if service in PAR_SERVICE and definitif('C23'):
+        sp = PAR_SERVICE[service]
+        ids = (sp + [x for x in MOYENNE if x not in sp])[:6]
+        noms = [nom_ref(x) for x in sp]
+        propre = marque('C23', 'En %s, notamment pour %s et %s.' % (
+            ctx.fr(svc_nom(service, html=False)).lower(), ', '.join(noms[:-1]), noms[-1]))
+    cells = ''.join('<li class="logo-cell">%s</li>' % logo_img(rid) for rid in _ids(ids))
+    pied = (propre + ' ' if propre else '') + 'Et des <b>particuliers</b> de toute la région.'
+    return '''    <section class="rband%s" aria-labelledby="%s" data-suivi-zone="references">
+      <div class="container">
+        <div class="rband__head"><h2 id="%s">%s</h2><a class="link-arrow" href="professionnels.html#references">Voir les %d références</a></div>
+        <ul class="logo-wall logo-wall--bande" data-reveal="cells">%s</ul>
+        <p class="rband__pied">%s</p>
+      </div>
+    </section>
+''' % ((' ' + cls) if cls else '', titre_id, titre_id, titre, nb_refs(), cells, pied)
+
+
+def mur_complet(par_secteur=False):
+    """Mur complet des références (réalisations, professionnels) : toutes en cellules, logos en couleur (wordmarks en
+    production tant que l'accord manque). par_secteur : ordre par secteur, secteur écrit sous chaque cellule."""
+    if par_secteur:
+        ordre = [(rid, titre) for titre, ids in SECTEURS for rid in ids]
+        ordre = [(_sub(r), t) for r, t in ordre if not (r == 'omc' and not definitif('C22'))]
+        vus, cells = set(), ''
+        for rid, t in ordre:
+            if rid in vus:
+                continue
+            vus.add(rid)
+            inner = logo_img(rid)
+            if rid == 'omc':
+                inner = marque('C22', inner)
+            cells += '<li class="logo-cell logo-cell--leg">%s<span class="logo-cell__sec">%s</span></li>' % (inner, SECTEUR_COURT[t])
+        n = len(vus)
+    else:
+        ids = _ids(DEFILE)
+        cells = ''.join('<li class="logo-cell">%s</li>' % logo_img(rid) for rid in ids)
+        n = len(ids)
+    if n % 6:
+        cells += ('<li class="logo-cell logo-cell--part"><span>Et des <b>particuliers</b>, à Genève et dans toute la région</span></li>')
+    return '<ul class="logo-wall logo-wall--complet" data-reveal="cells">%s</ul>' % cells
 
 
 SECTEURS = [
@@ -223,34 +265,8 @@ SECTEURS = [
     ('Entreprises', ['piaget', 'ubs', 'j-safra-sarasin', 'de-grisogono', 'celgene', 'labcorp', 'dipan', 'energestion']),
     ('Hôtellerie et domaines', ['everness', 'domaine-des-perrieres']),
 ]
-NOMS_GRILLE = {'j-safra-sarasin': 'J. Safra Sarasin (anciennement Bank Sarasin)', 'labcorp': 'Labcorp (anciennement Covance), Meyrin',
-               'dipan': 'Dipan, Nyon', 'energestion': 'Energestion, ingénieurs-conseils, Les Acacias',
-               'everness': 'Everness Hotel & Resort, Chavannes-de-Bogis', 'domaine-des-perrieres': 'Domaine des Perrières, Coppet'}
-
-
-def refs_grille():
-    """Grille complète des 18 références par secteur (professionnels.html#references)."""
-    cols = ''
-    for titre, ids in SECTEURS:
-        items = ''
-        for rid in ids:
-            if rid == 'omc':
-                if definitif('C22'):
-                    items += re.sub(r'^<li class="([^"]*)">(.*)</li>$', lambda m: '<li class="%s">%s</li>' % (m.group(1), marque('C22', m.group(2))), ref_item(rid))
-                continue
-            if rid == 'everness' and not definitif('C22'):
-                items += ref_item(rid, nom='Hôtel à Chavannes-de-Bogis')
-                continue
-            nom = NOMS_GRILLE.get(rid)
-            if logo_affiche(rid):
-                # le nom est écrit sous le logo : l'image devient décorative (pas de nom lu deux fois)
-                items += re.sub(r'alt="[^"]*"', 'alt=""', ref_item(rid)).replace('</li>', '<span class="ref__legende">%s</span></li>' % insec(e(nom or LOGOS[rid]['nom_affiche'])))
-            else:
-                items += ref_item(rid, nom=nom)
-        cols += '<div class="refs-grid__col"><h3>%s</h3><ul class="refs refs--grid">%s</ul></div>' % (titre, items)
-    return '<div class="refs-grid">%s</div>' % cols
-
-
+SECTEUR_COURT = {'Collectivités et institutions': 'Collectivité', 'Culture et formation': 'Culture et formation',
+                 'Entreprises': 'Entreprise', 'Hôtellerie et domaines': 'Hôtellerie'}
 # ---------------------------------------------------------------- badges de confiance (cro-v3 §4) : rendus selon confirmations.json
 def ans_activite():
     """Années révolues depuis l'inscription au registre du commerce (1.6.2007)."""
@@ -267,6 +283,7 @@ I_BADGE = {
     'groupe': '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 11h6"/>',
     'assurance': '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 12l2 2 4-4"/>',
     'rappel': '<path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/><path class="accent" d="M15 3.5a5.5 5.5 0 0 1 5.5 5.5"/>',
+    'personne': '<circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c.8-3.9 3.6-6.2 7-6.2s6.2 2.3 7 6.2"/><path class="accent" d="M9 20.5h6"/>',
     'etoile': '<path class="accent" d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
 }
 
@@ -299,6 +316,10 @@ def badge(cle):
         return _badge('assurance', 'Assurance responsabilité civile', 'Attestation sur demande', codes='C12') if definitif('C12') else ''
     if cle == 'B9':
         return _badge('rappel', 'Rappel le jour même', 'Ou le jour ouvrable suivant', codes='C01') if definitif('C01') else ''
+    if cle == 'B11':
+        return _badge('personne', 'Un seul interlocuteur', 'De la pose à la peinture', codes='C05') if definitif('C05') else ''
+    if cle == 'B10':
+        return _badge('offre', 'Attestations à jour', 'AVS, LPP, impôts, sur demande', codes='C13') if definitif('C13') else ''
     if cle == 'B13':
         if (a.get('nombre') or 0) >= 5 and a.get('note'):
             return _badge('etoile', '%s sur 5' % str(a['note']).replace('.', ','), '%d avis Google' % a['nombre'], a.get('url') or None, ext=True)
@@ -320,38 +341,132 @@ def badges(cles, cls='', label='En bref'):
 
 
 
-# ---------------------------------------------------------------- méthode en 4 étapes (texte unique)
-def methode(complete=True, titre_id='methode-titre', h2=None, lien=True, surtitre=True):
-    if complete:
-        etapes = [
-            ('Visite', 'Nous venons voir les lieux, prenons les mesures et écoutons votre besoin.'),
-            ('Offre écrite', T('C06', 'Détaillée poste par poste, en CHF, avec la durée des travaux et ce qui n\'est pas compris.',
-                               'Nous vous remettons une offre écrite.')),
-            ('Chantier protégé', T('C07', 'Sols, meubles et passages protégés. Nettoyage chaque soir, et à fond le dernier jour.',
-                                   'Les lieux sont protégés pendant les travaux.')),
-            ('Réception', T('C32', 'Nous faisons le tour des finitions avec vous. Une retouche ? Nous revenons.',
-                            'Nous contrôlons les finitions avec vous.')),
-        ]
-        lis = ''.join('<li><h3>%s</h3><p>%s</p></li>' % (t, d) for t, d in etapes)
-        eng = T('C06', 'Aucun travail supplémentaire sans votre accord écrit et chiffré.', '')
-        eng = ('<p class="engagement">%s</p>' % eng) if eng else ''
-        return '<ol class="steps">%s</ol>%s' % (lis, eng)
-    etapes = ['Visite : mesures et conseils sur place.',
-              T('C06', 'Offre écrite : poste par poste, en CHF.', 'Offre écrite.'),
-              T('C07', 'Chantier protégé, nettoyé chaque soir.', 'Chantier protégé.'),
-              'Réception : le tour des finitions, ensemble.']
-    return '<ol class="steps steps--short">%s</ol>' % ''.join('<li><p>%s</p></li>' % x for x in etapes)
-
-
-def section_methode_courte(cls='section'):
-    return '''    <section class="%s" aria-labelledby="chantier-titre">
+# ---------------------------------------------------------------- chiffres clés (accueil, professionnels, entreprise)
+def chiffres(titre_id='chiffres-titre'):
+    """Bande anthracite (cro-v3 §2.2 H5) : valeurs finales dans le HTML (lues sans JavaScript, jamais « 0 »),
+    comptées une fois à l'apparition."""
+    items = [(ans_activite(), 'ans d\'activité'), (nb_refs(), 'références, publiques et privées'), (4, 'métiers intérieurs')]
+    items.append((1, marque('C01', 'jour ouvrable, au plus, pour vous rappeler')) if definitif('C01') else (7, 'cantons et régions romands'))
+    lis = ''.join('<li><span class="chiffre" aria-hidden="true" data-count="%d">%d</span><span class="chiffre__lbl">'
+                  '<span class="visually-hidden">%d </span>%s</span></li>' % (n, n, n, l) for n, l in items)
+    return '''    <section class="section section--dark on-dark chiffres" aria-labelledby="%s">
       <div class="container">
-        <h2 id="chantier-titre">Comment se passe un chantier</h2>
-        %s
-        <p class="section-foot"><a class="link-arrow" href="entreprise.html#methode">Notre méthode en détail</a></p>
+        <h2 id="%s" class="visually-hidden">Andy Construct en chiffres</h2>
+        <ul class="chiffres__list" data-reveal="cells">%s</ul>
       </div>
     </section>
-''' % (cls, methode(False))
+''' % (titre_id, titre_id, lis)
+
+
+# ---------------------------------------------------------------- images des pages v3 : vraies photos, illustrations signalées
+def media(kind, ident, sizes, fmt='16x9', eager=False, alt=None):
+    """Image d'un bloc. kind : « photo » (vraie photo, recadrage fmt), « ill » (illustration sous licence, mention
+    « Illustration » toujours visible), « aa » (ident = (paire, état), photo avant / après réelle)."""
+    if kind == 'photo':
+        import portfolio as pf
+        return pic_crop(ident, fmt, sizes, alt or pf.alt(ident), eager=eager)
+    if kind == 'aa':
+        import portfolio as pf
+        paire, etat = ident
+        return aa_pic(paire, etat, sizes, alt or pf.PAIRE[paire][5 if etat == 'apres' else 4])
+    import illustrations
+    it = illustrations.trouver(ident=ident)
+    return illustrations.picture(it, sizes, lazy=not eager) if it else ''
+
+
+def _srcset_crop(pid, fmt):
+    r = RECADRAGES.get(pid, {}).get(fmt)
+    if not r:
+        return None
+    return ', '.join('%s-%d.webp %dw' % (r['base'], x, x) for x in r['largeurs'] if x <= 1600), r['base']
+
+
+def hero_image(kind, ident, alt=None):
+    """Image de l'en-tête de page (grande, à droite sur ordinateur ; sous les boutons sur mobile) et son préchargement.
+    Vraie photo : recadrage 4:5 sur ordinateur, 16:9 sur mobile. Illustration : un seul fichier, mention « Illustration »."""
+    sz_b, sz_m = '(min-width: 1440px) 600px, 42vw', '100vw'
+    if kind == 'photo':
+        import portfolio as pf
+        b45, b169 = _srcset_crop(ident, '4x5') or _srcset_crop(ident, '16x9'), _srcset_crop(ident, '16x9')
+        html = ('<picture><source media="(min-width: 900px)" type="image/webp" srcset="%s" sizes="%s">'
+                '<source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="1600" height="900" alt="%s" fetchpriority="high"></picture>'
+                % (b45[0], sz_b, b169[0], sz_m, b169[1], e(alt or pf.alt(ident))))
+        pre = ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="%s" media="(min-width: 900px)">\n'
+               '  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="%s" media="(max-width: 899.98px)">\n'
+               % (b45[0], sz_b, b169[0], sz_m))
+        return html, pre
+    if kind == 'aa':
+        import portfolio as pf
+        paire, etat = ident
+        m = AA[paire][etat]
+        srcset = ', '.join('%s-%d.webp %dw' % (m['base'], w, w) for w in m['largeurs'])
+        html = ('<picture><source type="image/webp" srcset="%s" sizes="(min-width: 900px) 42vw, 100vw"><img src="%s-%d.jpg" width="%d" height="%d" alt="%s" fetchpriority="high"></picture>'
+                % (srcset, m['base'], m['largeurs'][-1], m['largeur'], m['hauteur'], e(alt or pf.PAIRE[paire][5 if etat == 'apres' else 4])))
+        pre = '  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="(min-width: 900px) 42vw, 100vw">\n' % srcset
+        return html, pre
+    import illustrations
+    it = illustrations.trouver(ident=ident)
+    srcset, src, w, h = illustrations._src(it)
+    html = ('<picture><source type="image/webp" srcset="%s" sizes="(min-width: 1440px) 600px, (min-width: 900px) 42vw, 100vw">'
+            '<img src="%s" width="%d" height="%d" alt="%s" fetchpriority="high"></picture><span class="ill__tag">Illustration</span>'
+            % (srcset, src, w, h, e(it.get('alt') or '')))
+    pre = ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="(min-width: 1440px) 600px, (min-width: 900px) 42vw, 100vw">\n' % srcset)
+    return html, pre
+
+
+# ---------------------------------------------------------------- blocs v3 : damier texte / image, rangée texte + grande image
+def damier(items, cls=''):
+    """Damier (pages services) : chaque élément = image + texte court ; sur ordinateur, deux par rangée, l'image passe
+    à droite une rangée sur deux. items : (ancre ou None, titre, texte HTML, image HTML). Un texte vide masque l'élément
+    (repli de production) ; son ancre reste dans la page (cible des redirections 301)."""
+    lis, ancres = '', ''
+    for ancre, titre, texte, img in items:
+        if not texte:
+            if ancre:
+                ancres += '<span id="%s"></span>' % ancre
+            continue
+        lis += ('<li class="damier__item"%s><div class="damier__media">%s</div><div class="damier__txt"><h3>%s</h3><p>%s</p></div></li>'
+                % ((' id="%s"' % ancre) if ancre else '', img, titre, texte))
+    return '%s<ul class="damier%s" data-trait>%s</ul>' % (ancres, (' ' + cls) if cls else '', lis)
+
+
+def feat(titre_id, h2, contenu, img, inverse=False, cls='', legende=''):
+    """Rangée texte + grande image (alternance) ; le trait de niveau part du titre et entre dans l'image."""
+    fig = '<figure class="feat__media">%s%s</figure>' % (img, ('<figcaption>%s</figcaption>' % legende) if legende else '')
+    return '''    <section class="section feat%s%s" aria-labelledby="%s" data-trait>
+      <div class="container feat__grid">
+        <div class="feat__txt">
+          <h2 id="%s">%s</h2>
+          <span class="laser laser--feat" aria-hidden="true"></span>
+          %s
+        </div>
+        %s
+      </div>
+    </section>
+''' % (' feat--inverse' if inverse else '', (' ' + cls) if cls else '', titre_id, titre_id, h2, contenu, fig)
+
+
+def points(items):
+    """Liste courte (3 points au plus), mots clés en gras."""
+    return '<ul class="ticks ticks--filets">%s</ul>' % ''.join('<li>%s</li>' % x for x in items if x)
+
+
+# ---------------------------------------------------------------- méthode en 4 étapes (texte unique)
+def methode(complete=True, titre_id='methode-titre', h2=None, lien=True, surtitre=True):
+    """Méthode complète en 4 étapes (entreprise.html#methode) ; les pages services ont leur version courte."""
+    etapes = [
+        ('Visite', 'Nous venons voir les lieux, prenons les mesures et écoutons votre besoin.'),
+        ('Offre écrite', T('C06', 'Détaillée poste par poste, en CHF, avec la durée des travaux et ce qui n\'est pas compris.',
+                           'Nous vous remettons une offre écrite.')),
+        ('Chantier protégé', T('C07', 'Sols, meubles et passages protégés. Nettoyage chaque soir, et à fond le dernier jour.',
+                               'Les lieux sont protégés pendant les travaux.')),
+        ('Réception', T('C32', 'Nous faisons le tour des finitions avec vous. Une retouche ? Nous revenons.',
+                        'Nous contrôlons les finitions avec vous.')),
+    ]
+    lis = ''.join('<li><h3>%s</h3><p>%s</p></li>' % (t, d) for t, d in etapes)
+    eng = T('C06', 'Aucun travail supplémentaire sans votre accord écrit et chiffré.', '')
+    eng = ('<p class="engagement">%s</p>' % eng) if eng else ''
+    return '<ol class="steps">%s</ol>%s' % (lis, eng)
 
 
 # ---------------------------------------------------------------- FAQ

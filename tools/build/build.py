@@ -202,9 +202,10 @@ def main():
     if out != os.path.abspath(ctx.SITE):
         copier_site(out, r.mode)
     taille_css, taille_js = ressources(out)
-    # Budgets v3 (non compressés ; ~13 Ko et ~10 Ko une fois compressés) : le mouvement et les nouveaux composants ont un coût mesuré
-    if taille_css > 64 * 1024 or taille_js > 32 * 1024:
-        raise SystemExit('Budget dépassé : CSS %d o (max 64 Ko), JS %d o (max 32 Ko)' % (taille_css, taille_js))
+    # Budgets v3 (non compressés ; ~16 Ko et ~10 Ko une fois compressés) : toutes les pages au niveau de l'accueil
+    # (damier, rangées image, mini-cas, grille éditoriale, frise, murs complets) ont un coût mesuré
+    if taille_css > 80 * 1024 or taille_js > 32 * 1024:
+        raise SystemExit('Budget dépassé : CSS %d o (max 80 Ko), JS %d o (max 32 Ko)' % (taille_css, taille_js))
     import page_accueil, page_services, page_realisations, page_professionnels, page_entreprise, page_contact, page_autres, seo
     page_accueil.build()
     page_services.build()

@@ -10,7 +10,10 @@ Ce script :
 - recadre `plafond-placo-ilot-ovale-01` pour masquer le slogan visible au mur (architecture §8.4, n° 18) ;
 - refait l'image Open Graph (1200 × 630) à partir de l'héro ;
 - réduit les logos de l'en-tête et du pied de page à leur taille d'affichage (× 2) ;
-- optimise les paires avant / après (WebP + JPG, 400 px et taille d'origine, sans métadonnées EXIF).
+- optimise les paires avant / après (WebP + JPG, 400 px et taille d'origine, sans métadonnées EXIF) ;
+- avec --couvertures : rend la première page des PDF téléchargeables (assets/docs/) en vignettes
+  (assets/img/docs/<nom>-couverture-{320,640}.webp et -640.jpg), montrées sur la page Professionnels (v3).
+  Demande pypdfium2 (par exemple : python3.13 tools/build/images.py --couvertures).
 Aucune image n'est agrandie : les originaux de l'ancien site font 800 px au plus.
 """
 import json, os, sys
@@ -109,7 +112,26 @@ def avant_apres(dossier):
         f.write('\n')
 
 
+def couvertures():
+    """Vignettes de la première page des documents PDF (v3, professionnels.html : documents mis en avant)."""
+    import pypdfium2
+    sortie = os.path.join(SITE, 'assets/img/docs')
+    os.makedirs(sortie, exist_ok=True)
+    for nom in ('andy-construct-references', 'checklist-chantier-site-occupe', 'guide-reduire-le-bruit'):
+        src = os.path.join(SITE, 'assets/docs', nom + '.pdf')
+        if not os.path.exists(src):
+            continue
+        page = pypdfium2.PdfDocument(src)[0]
+        im = page.render(scale=1280 / page.get_width()).to_pil().convert('RGB')
+        for w in (320, 640):
+            enregistrer(im, os.path.join(sortie, nom + '-couverture'), w, jpg=(w == 640), q_webp=80)
+
+
 if __name__ == '__main__':
+    if '--couvertures' in sys.argv:
+        couvertures()
+        print('couvertures prêtes')
+        sys.exit(0)
     portfolio()
     logos()
     if '--avant-apres' in sys.argv:
