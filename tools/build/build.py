@@ -109,7 +109,8 @@ def empreinte(contenu):
 
 def ressources(out):
     import common, composants
-    css = open(os.path.join(ICI, 'static/styles.css'), encoding='utf-8').read() + '\n/* échelles des logos (logos.json) */\n' + composants.echelles()
+    css = (open(os.path.join(ICI, 'static/styles.css'), encoding='utf-8').read() + '\n/* échelles des logos (logos.json) */\n'
+           + composants.echelles() + '\n/* drapeaux A/B (config.json) */\n' + common.drapeaux_css())
     css = min_css(css)
     js = min_js(open(os.path.join(ICI, 'static/main.js'), encoding='utf-8').read())
     suivi = open(os.path.join(ctx.SITE, 'assets/js/suivi.js'), 'rb').read()
@@ -133,7 +134,7 @@ def copier_site(out, mode):
     if mode == 'production':
         for rid, l in composants.LOGOS.items():
             if not composants.logo_affiche(rid):
-                exclus_logos.update(x for x in (l.get('fichier'), l.get('fichier_blanc')) if x)
+                exclus_logos.update(os.path.basename(x) for x in (l.get('fichier'), l.get('fichier_blanc'), l.get('fichier_couleur')) if x)
         exclus_photos = set(portfolio.RETIREES) | {pid for pid in portfolio.PHOTOS if not portfolio.photo_ok(pid)}
     for dossier, sous, fichiers in os.walk(ctx.SITE):
         rel = os.path.relpath(dossier, ctx.SITE)
@@ -147,7 +148,8 @@ def copier_site(out, mode):
                 continue
             if r in ('api/config.php', 'assets/css/styles.css', 'assets/js/main.js', 'assets/js/suivi.js') or f == '.DS_Store':
                 continue
-            if rel == os.path.join('assets', 'img', 'references') and (f in exclus_logos or (mode == 'production' and f == 'logos.json')):
+            if rel in (os.path.join('assets', 'img', 'references'), os.path.join('assets', 'img', 'references', 'couleur')) and (
+                    f in exclus_logos or (mode == 'production' and f.endswith('.json'))):
                 continue
             if rel == os.path.join('assets', 'img', 'portfolio') and any(f.startswith(pid + '-') for pid in exclus_photos):
                 continue
@@ -200,8 +202,9 @@ def main():
     if out != os.path.abspath(ctx.SITE):
         copier_site(out, r.mode)
     taille_css, taille_js = ressources(out)
-    if taille_css > 50 * 1024 or taille_js > 25 * 1024:
-        raise SystemExit('Budget dépassé : CSS %d o (max 50 Ko), JS %d o (max 25 Ko)' % (taille_css, taille_js))
+    # Budgets v3 (non compressés ; ~13 Ko et ~10 Ko une fois compressés) : le mouvement et les nouveaux composants ont un coût mesuré
+    if taille_css > 62 * 1024 or taille_js > 32 * 1024:
+        raise SystemExit('Budget dépassé : CSS %d o (max 62 Ko), JS %d o (max 32 Ko)' % (taille_css, taille_js))
     import page_accueil, page_services, page_realisations, page_professionnels, page_entreprise, page_contact, page_autres, seo
     page_accueil.build()
     page_services.build()

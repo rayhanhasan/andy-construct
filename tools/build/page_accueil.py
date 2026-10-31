@@ -2,7 +2,7 @@
 """Accueil (architecture §4.1, copy deck §B)."""
 import ctx
 from ctx import e, T, V, definitif, marque, PROD
-from common import (page, TEL, TEL_URI, devis_btn, horaires, svc_nom, svc_url, SERVICES, mail, LEGAL, IDE, STREET, MOB,
+from common import (page, TEL, TEL_URI, devis_btn, horaires, svc_nom, svc_url, SERVICES, mail, LEGAL, IDE, STREET, MOB, AUJOURDHUI,
                     LINKEDIN, LOCALCH, GGE)
 import composants as c
 import portfolio as pf
@@ -12,17 +12,18 @@ HERO = 'faux-plafond-placo-gorge-lumineuse-01'
 H = 'assets/img/portfolio/' + HERO
 
 
+HERO_SIZES = '(min-width: 900px) 50vw, 100vw'      # bureau : moitié droite de l'écran ; mobile : pleine largeur, 4:3
+
+
 def hero_preload():
-    return ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s-portrait-600.webp 600w, %s-portrait-900.webp 900w" imagesizes="100vw" media="(max-width: 699.98px)">\n'
-            '  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s-800.webp 800w, %s-1200.webp 1200w, %s-1600.webp 1600w" imagesizes="100vw" media="(min-width: 700px)">\n'
-            % (H, H, H, H, H))
+    return ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s-800.webp 800w, %s-1200.webp 1200w, %s-1600.webp 1600w" imagesizes="%s">\n'
+            % (H, H, H, HERO_SIZES))
 
 
 def hero_pic():
-    return ('<picture><source media="(max-width: 699.98px)" type="image/webp" srcset="%s-portrait-600.webp 600w, %s-portrait-900.webp 900w" sizes="100vw">'
-            '<source type="image/webp" srcset="%s-800.webp 800w, %s-1200.webp 1200w, %s-1600.webp 1600w" sizes="100vw">'
+    return ('<picture><source type="image/webp" srcset="%s-800.webp 800w, %s-1200.webp 1200w, %s-1600.webp 1600w" sizes="%s">'
             '<img src="%s-800.jpg" width="1600" height="1200" alt="%s" fetchpriority="high"></picture>'
-            % (H, H, H, H, H, H, e(pf.alt(HERO))))
+            % (H, H, H, HERO_SIZES, H, e(pf.alt(HERO))))
 
 
 def business():
@@ -90,19 +91,123 @@ def faq():
     return [q for q in qs if q]
 
 
-def carte_service(s, titre, phrase, pour, lien):
-    return ('<li class="service"><span class="service__icon">%s</span><h3>%s</h3><p>%s</p><p class="service__pour">%s</p>'
-            '<a class="link-arrow service__link" href="%s">%s</a></li>' % (ICONS[s], titre, phrase, pour, svc_url(s), lien))
 
 
-def carte_accueil(href, img, titre, lieu, contrainte, tags, badge=False):
-    return '''<li class="hcard">
+# ---------------------------------------------------------------- héro v3 : panneau anthracite + photo nette, trait laser
+def titre_lignes(lignes):
+    """Chaque ligne dans un masque : la séquence d'entrée la fait monter (CSS, aucune dépendance au JavaScript)."""
+    return ''.join('<span class="l"><span>%s</span></span>' % x for x in lignes)
+
+
+def hero_titre():
+    """Titre du héro ; variantes du drapeau « hero-titre » (une seule visible, choisie avant le premier rendu)."""
+    a = titre_lignes(['Placo, peinture', 'et isolation', 'en Suisse romande'])
+    b = titre_lignes(['De la plaque', 'de plâtre à la', 'dernière couche'])
+    dr = ((ctx.CONFIG.get('ab') or {}).get('drapeaux') or {}).get('hero-titre') or {}
+    if not (ctx.CONFIG.get('ab') or {}).get('actif') or not dr.get('actif', True):
+        return a
+    return '<span data-flag="hero-titre" data-variant="a">%s</span><span data-flag="hero-titre" data-variant="b">%s</span>' % (a, b)
+
+
+I_BADGE = {
+    'registre': '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path class="accent" d="M9 14l2.5 2.5L16 12"/>',
+    'lieu': '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle class="accent" cx="12" cy="10" r="2.2"/>',
+    'visite': '<path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/><path class="accent" d="M10 20v-5h4v5"/>',
+    'assurance': '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 12l2 2 4-4"/>',
+    'groupe': '<path d="M4 20V9l5-3 5 3v11"/><path d="M14 20v-8h6v8M3 20h18"/><path class="accent" d="M7 12h4M7 16h4"/>',
+    'pros': '<path d="M4 8h16v12H4z"/><path d="M9 8V5h6v3"/><path class="accent" d="M4 13h16"/>',
+}
+
+
+def badge(icone, titre, sous):
+    return ('<li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false">%s</svg>'
+            '<span><b>%s</b> %s</span></li>' % (I_BADGE[icone], titre, sous))
+
+
+def badges():
+    """Badges de confiance (brief v3 §2) : faits vérifiables, et badges à confirmer rendus selon confirmations.json."""
+    out = [badge('registre', 'Depuis 2007', 'inscrite au registre du commerce'),
+           badge('lieu', 'Siège à Carouge', 'chantiers dans toute la Suisse romande')]
+    if definitif('C02'):
+        out.append(marque('C02', badge('visite', 'Visite et devis gratuits', 'sans engagement')))
+    else:
+        out.append(badge('pros', 'Particuliers et professionnels', 'régies, architectes, communes'))
+    if definitif('C11'):
+        out.append(marque('C11', badge('groupe', 'Membre du GGE', 'entreprises genevoises du bâtiment')))
+    elif definitif('C12'):
+        out.append(marque('C12', badge('assurance', 'Assurée en RC', 'attestation sur demande')))
+    else:
+        out.append(badge('groupe', 'Références publiques', 'Ville de Genève, Conservatoire, HEAD'))
+    return '<ul class="badges" aria-label="En bref">%s</ul>' % ''.join(out)
+
+
+def hero(p):
+    texte = T('C05', 'Cloisons, plafonds, isolation contre le bruit et peinture : <b>un seul interlocuteur</b>, de la pose des plaques à la dernière couche.',
+              'Cloisons, plafonds, isolation contre le bruit et peinture, pour les <b>particuliers</b> et les <b>professionnels</b>.')
+    return '''    <section class="hero" aria-labelledby="titre-page" data-suivi-zone="heros">
+      <div class="hero__media">%s</div>
+      <div class="container hero__grid">
+        <div class="hero__panel">
+          <h1 id="titre-page" class="hero__titre">%s</h1>
+          <span class="laser" aria-hidden="true"></span>
+          <p class="hero__text">%s</p>
+          <div class="hero__actions">%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>
+          %s
+        </div>
+      </div>
+    </section>
+''' % (hero_pic(), hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, badges())
+
+
+# ---------------------------------------------------------------- prestations : 4 cartes avec image
+SVC_PHOTO = {'placo': 'habillage-placo-niches-arrondies-01', 'isolation-acoustique': 'panneaux-acoustiques-muraux-01'}
+
+
+def svc_media(s):
+    """Image d'une prestation : illustration sous licence (signalée), sinon vraie photo publiable, sinon pictogramme."""
+    import illustrations
+    ill = illustrations.pour_service(s, '(min-width: 1100px) 300px, (min-width: 700px) 45vw, 100vw')
+    if ill:
+        return ill
+    pid = SVC_PHOTO.get(s)
+    if pid and pf.photo_ok(pid):
+        return c.pic(pid, '(min-width: 1100px) 300px, (min-width: 700px) 45vw, 100vw', pf.alt(pid))
+    return '<span class="svc__picto">%s</span>' % ICONS[s]
+
+
+def carte_service(s, titre, phrase, lien):
+    return ('<li class="svc"><a class="svc__link" href="%s"><span class="svc__media">%s</span>'
+            '<span class="svc__titre">%s</span><span class="svc__txt">%s</span><span class="svc__more link-arrow">%s</span></a></li>'
+            % (svc_url(s), svc_media(s), titre, phrase, lien))
+
+
+def carte_accueil(href, img, titre, lieu, contrainte, tags, badge=False, cls=''):
+    return '''<li class="hcard%s">
             <a class="hcard__link" href="%s">
               <span class="hcard__media">%s%s</span>
               <span class="hcard__body"><span class="hcard__titre">%s</span><span class="hcard__lieu">%s</span><span class="hcard__txt">%s</span></span>
             </a>
             %s
-          </li>''' % (href, img, '<span class="badge">Pendant les travaux</span>' if badge else '', titre, lieu, contrainte, tags)
+          </li>''' % ((' ' + cls) if cls else '', href, img, '<span class="badge">Pendant les travaux</span>' if badge else '', titre, lieu, contrainte, tags)
+
+
+def chiffres():
+    """Bande des chiffres : valeurs finales dans le HTML (lues sans JavaScript), comptées une fois à l'apparition."""
+    nb_refs = len(c.LOGOS) - (0 if definitif('C22') else 1)      # OMC citée seulement avec l'accord (D4)
+    ans = AUJOURDHUI.year - 2007 - (1 if (AUJOURDHUI.month, AUJOURDHUI.day) < (6, 1) else 0)
+    items = [(ans, 'ans d\'activité, depuis le 1<sup>er</sup> juin 2007'),
+             (nb_refs, 'maîtres d\'ouvrage publics et privés cités en référence'),
+             (4, 'métiers : placo, peinture, isolation acoustique, %s' % svc_nom('cloisons-isothermes').lower()),
+             (7, 'cantons et régions de Suisse romande')]
+    lis = ''.join('<li><span class="chiffre" aria-hidden="true" data-count="%d">%d</span><span class="chiffre__lbl">'
+                  '<span class="visually-hidden">%d </span>%s</span></li>' % (n, n, n, l) for n, l in items)
+    return '''    <section class="section section--dark on-dark chiffres" aria-labelledby="chiffres-titre">
+      <div class="container">
+        <h2 id="chiffres-titre" class="chiffres__titre">Une entreprise de Carouge, inscrite au registre du commerce depuis 2007</h2>
+        <ul class="chiffres__list" data-reveal="cells">%s</ul>
+      </div>
+    </section>
+''' % lis
 
 
 def build():
@@ -120,96 +225,70 @@ def build():
          'isPartOf': {'@id': PROD + '#site'}, 'about': {'@id': PROD + '#entreprise'}}]},
         c.faq_ld(PROD, faq_ld)]
 
-    h = horaires()
-    fait3 = (marque('C02', '<strong>Visite et devis gratuits</strong><span>Offre écrite, sans engagement</span>') if definitif('C02')
-             else '<strong>Particuliers et professionnels</strong><span>Régies, architectes, communes</span>')
-    hero = '''    <section class="hero" aria-labelledby="titre-page" data-suivi-zone="heros">
-      <div class="hero__media">%s</div>
-      <div class="container hero__inner">
-        <div class="hero__content">
-          <p class="eyebrow">Carouge · depuis 2007</p>
-          <h1 id="titre-page">Placo, peinture et isolation en Suisse romande</h1>
-          <p class="hero__text">%s</p>
-          <div class="hero__actions">%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>%s
-        </div>
-        <ul class="hero__facts" aria-label="En bref">
-          <li><strong>Depuis 2007</strong><span>Inscrite au registre du commerce</span></li>
-          <li><strong>Siège à Carouge</strong><span>Chantiers dans toute la Suisse romande</span></li>
-          <li>%s</li>
-        </ul>
-      </div>
-    </section>
-''' % (hero_pic(),
-       T('C05', 'Cloisons, plafonds, isolation contre le bruit et peinture : un seul interlocuteur, de la pose des plaques à la dernière couche.',
-         'Cloisons, plafonds, isolation contre le bruit et peinture, pour les particuliers et les professionnels.'),
-       devis_btn(p, 'heros'), TEL_URI, TEL,
-       ('\n          <p class="hero__hours">%s</p>' % T('C03', 'Du lundi au vendredi, de 7 h à 18 h.', '')) if definitif('C03') else '',
-       fait3)
-
     isol = svc_nom('cloisons-isothermes')
     services = ''.join([
-        carte_service('placo', 'Placo', 'Cloisons, doublages et faux-plafonds en plaques de plâtre.', 'Pour : logements, bureaux, commerces, salles.', 'Voir le placo'),
-        carte_service('peinture', 'Peinture', 'Murs et plafonds préparés, peints, et la pièce rendue propre.', 'Pour : appartements, fins de bail, cages d\'escalier, bureaux.', 'Voir la peinture'),
-        carte_service('isolation-acoustique', 'Isolation acoustique', 'Vous entendez vos voisins ? Nous isolons murs et plafonds.', 'Pour : logements, bureaux, salles communales.', 'Voir l\'isolation acoustique'),
-        carte_service('cloisons-isothermes', isol, 'Une pièce froide contre un garage ou une cave ? Nous l\'isolons.', 'Pour : villas, immeubles, locaux d\'activité.',
+        carte_service('placo', 'Placo', 'Cloisons, doublages et <b>faux-plafonds</b> en plaques de plâtre.', 'Voir le placo'),
+        carte_service('peinture', 'Peinture', 'Murs et plafonds préparés, peints, et la pièce <b>rendue propre</b>.', 'Voir la peinture'),
+        carte_service('isolation-acoustique', 'Isolation acoustique', 'Vous entendez vos voisins ? Nous isolons <b>murs et plafonds</b>.', 'Voir l\'isolation acoustique'),
+        carte_service('cloisons-isothermes', isol, 'Une pièce froide contre un garage ou une cave ? <b>Nous l\'isolons.</b>',
                       T('C16', 'Voir les cloisons isolantes', 'Voir les cloisons isothermes')),
     ])
 
-    # Réalisations : P1 (photo n° 9, l'héro montre déjà la n° 6), P2, AA6 (qualité vérifiée)
-    sizes = '(min-width: 1100px) 360px, (min-width: 700px) 45vw, 100vw'
+    # Réalisations : une grande carte (hall, gorge lumineuse) et deux cartes empilées
     p1, p2 = pf.PROJ['projet-hall-gorge-lumineuse'], pf.PROJ['projet-grande-salle-ossature']
-    c1 = carte_accueil('realisations.html#' + p1['id'], c.pic('faux-plafond-placo-gorge-lumineuse-02', sizes, pf.alt('faux-plafond-placo-gorge-lumineuse-02')),
-                       p1['titre'], pf._txt(p1['lieu']), pf._txt(p1['contrainte']),
-                       pf.tags_html(pf.proj_tags(p1), 'C25' if not ctx.confirme('C25') else None))
+    tag = lambda codes: codes if not ctx.confirme(codes) else None
+    c1 = carte_accueil('realisations.html#' + p1['id'],
+                       c.pic('faux-plafond-placo-gorge-lumineuse-02', '(min-width: 1100px) 720px, 100vw', pf.alt('faux-plafond-placo-gorge-lumineuse-02')),
+                       p1['titre'], pf._txt(p1['lieu']), pf._txt(p1['contrainte']), pf.tags_html(pf.proj_tags(p1), tag('C25')), cls='hcard--grand')
     ph2 = pf.proj_photos(p2)[0]
-    c2 = carte_accueil('realisations.html#' + p2['id'], c.pic(ph2, sizes, pf.alt(ph2)), p2['titre'], pf._txt(p2['lieu']),
-                       pf._txt(p2['contrainte']), pf.tags_html(pf.proj_tags(p2), 'C25' if not ctx.confirme('C25') else None), badge=True)
+    c2 = carte_accueil('realisations.html#' + p2['id'], c.pic(ph2, '(min-width: 1100px) 260px, (min-width: 700px) 45vw, 100vw', pf.alt(ph2)),
+                       p2['titre'], pf._txt(p2['lieu']), pf._txt(p2['contrainte']), pf.tags_html(pf.proj_tags(p2), tag('C25')), badge=True)
     split = ('<span class="hcard__split"><span>%s<span class="hcard__lbl">Avant</span></span><span>%s<span class="hcard__lbl">Après</span></span></span>'
-             % (c.aa_pic('aa6', 'avant', '(min-width: 1100px) 180px, 50vw', pf.PAIRE['aa6'][4]),
-                c.aa_pic('aa6', 'apres', '(min-width: 1100px) 180px, 50vw', pf.PAIRE['aa6'][5])))
+             % (c.aa_pic('aa6', 'avant', '(min-width: 1100px) 160px, 50vw', pf.PAIRE['aa6'][4]),
+                c.aa_pic('aa6', 'apres', '(min-width: 1100px) 160px, 50vw', pf.PAIRE['aa6'][5])))
     c3 = carte_accueil('realisations.html#avant-apres-aa6', split, 'Séjour : faux-plafond et spots, avant et après',
                        T('C26', 'Appartement', 'Appartement'), T('C26', 'Un plafond redessiné, l\'éclairage intégré.', 'Un plafond redessiné, l\'éclairage intégré.'),
-                       pf.tags_html(pf.paire_services('aa6'), 'C26' if not ctx.confirme('C26') else None))
+                       pf.tags_html(pf.paire_services('aa6'), tag('C26')))
 
-    corps = hero + c.refs_bandeau(p) + '''
-    <section class="section" id="prestations" aria-labelledby="prestations-titre">
+    ordre = (ctx.CONFIG.get('ab') or {}).get('actif') and (((ctx.CONFIG.get('ab') or {}).get('drapeaux') or {}).get('ordre-sections') or {}).get('actif', True)
+    flag_ordre = ' data-flag="ordre-sections"' if ordre else ''
+    corps = hero(p) + c.mur_logos() + '''
+    <section class="section" id="prestations" aria-labelledby="prestations-titre" data-ordre="prestations"%(flag)s>
       <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Nos quatre métiers</p>
+        <div class="section-head section-head--row">
           <h2 id="prestations-titre">Quatre métiers, souvent sur le même chantier</h2>
+          <p>Vous hésitez ? Décrivez votre besoin : nous vous orientons.</p>
         </div>
-        <ul class="services">%(services)s</ul>
-        <div class="section-foot"><p>Vous hésitez ? Décrivez votre besoin : nous vous orientons.</p>%(devis1)s</div>
+        <ul class="svcs">%(services)s</ul>
       </div>
     </section>
 
-    <section class="section section--mist" aria-labelledby="realisations-titre">
+    <section class="section section--mist" aria-labelledby="realisations-titre" data-ordre="realisations">
       <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Réalisations</p>
+        <div class="section-head section-head--row">
           <h2 id="realisations-titre">Des chantiers réels, photographiés par notre équipe</h2>
+          <a class="link-arrow" href="realisations.html">Toutes les réalisations</a>
         </div>
-        <ul class="hcards">%(cartes)s</ul>
-        <div class="section-foot"><a class="link-arrow" href="realisations.html">Voir toutes les réalisations</a>%(devis2)s</div>
+        <ul class="hcards hcards--asym" data-reveal="cells">%(cartes)s</ul>
+        <div class="section-foot">%(devis2)s</div>
       </div>
     </section>
-
+%(chiffres)s
     <section class="section" aria-labelledby="methode-titre">
       <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Comment nous travaillons</p>
+        <div class="section-head section-head--row">
           <h2 id="methode-titre">De la visite à la réception, quatre étapes</h2>
+          <a class="link-arrow" href="entreprise.html#methode">Notre méthode en détail</a>
         </div>
         %(methode)s
-        <p class="section-foot"><a class="link-arrow" href="entreprise.html#methode">Notre méthode en détail</a></p>
       </div>
     </section>
 %(temoignages)s
-    <section class="section section--mist section--tight" aria-label="Professionnels et zone d'intervention">
+    <section class="section section--tight duo-band" aria-label="Professionnels et zone d'intervention">
       <div class="container duo">
         <div class="duo__item">
           <h3>Régies, architectes, communes</h3>
-          <p>Immeubles habités, offres sur plans et descriptifs, dossier de références à télécharger.</p>
+          <p>Immeubles habités, offres sur plans et descriptifs, <b>dossier de références</b> à télécharger.</p>
           <a class="link-arrow" href="professionnels.html">Espace professionnels</a>
         </div>
         <div class="duo__item">
@@ -223,16 +302,15 @@ def build():
     <section class="section faq" aria-labelledby="faq-titre">
       <div class="container split split--48">
         <div class="faq__head">
-          <p class="eyebrow">Vos questions</p>
           <h2 id="faq-titre">Questions fréquentes</h2>
           <p>Une autre question ? Appelez le <a href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="faq">%(tel)s</a>.</p>
         </div>
         <div class="faq__list">%(faq)s</div>
       </div>
     </section>
-''' % dict(services=services, devis1=devis_btn(p, 'prestations'), cartes=c1 + c2 + c3,
-           devis2=devis_btn(p, 'realisations', texte='Un projet semblable ? Demander un devis'),
+''' % dict(flag=flag_ordre, services=services, cartes=c1 + c2 + c3, chiffres=chiffres(),
+           devis2=devis_btn(p, 'realisations', cls='btn btn--ghost', texte='Un projet semblable ? Demander un devis'),
            methode=c.methode(True), temoignages=c.temoignages(), tel_uri=TEL_URI, tel=TEL, faq=faq_html)
-    # Exposition 3 : ligne de références près du formulaire (remplacée par les témoignages quand ils existent)
-    corps += c.bloc_demande(p, refs=not ctx.TEMOIGNAGES, source='accueil')
+    # Rappel des références juste avant la demande (bande défilante), puis le bloc de demande
+    corps += c.bande_logos(cls='defile--avant-demande') + c.bloc_demande(p, refs=False, source='accueil', surtitre=False)
     page(p, corps)

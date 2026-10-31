@@ -8,10 +8,22 @@ from common import (TEL, TEL_URI, MOB, MOB_URI, tel_link, horaires, mob_label, m
                     devis_btn, ICON_PHONE)
 from icons import ICONS, INFO
 
-# ---------------------------------------------------------------- références et logos
+# ---------------------------------------------------------------- références et logos (v3 : logos officiels en couleur)
+# Ordre de préférence d'un fichier : fichier_couleur (assets/img/references/couleur/) → fichier (version sombre) ; aucun
+# fichier, ou logo non autorisé dans ce mode → nom en « wordmark » typographique homogène (Archivo élargie).
 LOGOS_DIR = os.path.join(ctx.SITE, 'assets/img/references')
 LOGOS = {l['id']: l for l in json.load(open(os.path.join(LOGOS_DIR, 'logos.json'), encoding='utf-8'))}
-TEXTE_SEUL = {'de-grisogono'}   # logos-references.md §4.4 : nom en texte seulement
+TEXTE_SEUL = {'de-grisogono'}   # logos-references.md §4.4 : nom en texte seulement (titulaire de la marque ≠ client)
+
+
+def _chemin_logo(nom):
+    """Chemin relatif à assets/img/references/ d'un fichier déclaré (« ubs.svg » ou « couleur/ubs.svg »), ou None."""
+    if not nom:
+        return None
+    for rel in (nom, 'couleur/' + os.path.basename(nom)):
+        if os.path.exists(os.path.join(LOGOS_DIR, rel)):
+            return rel
+    return None
 
 
 def _dims(fichier):
@@ -20,8 +32,18 @@ def _dims(fichier):
         with open(chemin, 'rb') as f:
             w, h = struct.unpack('>II', f.read(24)[16:24])
         return w, h
-    vb = re.search(r'viewBox="([\d.\s-]+)"', open(chemin, encoding='utf-8').read()).group(1).split()
-    w, h = float(vb[2]), float(vb[3])
+    if fichier.endswith('.webp'):
+        b = open(chemin, 'rb').read(30)
+        if b[12:16] == b'VP8X':
+            return 1 + int.from_bytes(b[24:27], 'little'), 1 + int.from_bytes(b[27:30], 'little')
+        return 400, 200
+    svg = open(chemin, encoding='utf-8').read(4000)
+    vb = re.search(r'viewBox="\s*([\d.eE+-]+)[\s,]+([\d.eE+-]+)[\s,]+([\d.eE+-]+)[\s,]+([\d.eE+-]+)', svg)
+    if vb:
+        w, h = float(vb.group(3)), float(vb.group(4))
+    else:
+        w = float(re.search(r'\swidth="([\d.]+)', svg).group(1))
+        h = float(re.search(r'\sheight="([\d.]+)', svg).group(1))
     return round(w * 100 / h), 100
 
 
@@ -31,70 +53,123 @@ def echelle_cls(v):
 
 def echelles():
     """Classes CSS des échelles optiques (pas d'attribut style : CSP stricte)."""
-    vals = sorted({l['echelle'] for l in LOGOS.values()})
+    vals = sorted({l.get('echelle', 1) or 1 for l in LOGOS.values()})
     return ''.join('.%s{--e:%s}' % (echelle_cls(v), ('%g' % v)) for v in vals)
+
+
+def fichier_logo(rid, fond='clair'):
+    """Fichier à afficher : en couleur d'abord (sur fond clair ou sur pastille blanche), sinon la version sombre.
+    fond='sombre' (sans pastille) : version blanche. None si aucun fichier n'existe."""
+    l = LOGOS[rid]
+    if fond == 'sombre':
+        return _chemin_logo(l.get('fichier_blanc'))
+    return _chemin_logo(l.get('fichier_couleur')) or _chemin_logo(l.get('fichier'))
 
 
 def logo_affiche(rid):
     l = LOGOS[rid]
-    if rid in TEXTE_SEUL or not l.get('fichier'):
+    if rid in TEXTE_SEUL or not fichier_logo(rid):
         return False
     if l['statut'] == 'autorise':
         return True
     return l['statut'] == 'a_autoriser' and not ctx.prod()
 
 
-def ref_item(rid, blanc=False, nom=None):
-    """Logo (si autorisé dans ce mode) ou nom typographique."""
+def logo_img(rid, nom=None, alt=None, lazy=True, fond='clair'):
+    """<img> du logo (classe d'échelle optique), ou wordmark <span> si le logo n'est pas affichable."""
     l = LOGOS[rid]
     nom = nom or l['nom_affiche']
-    if logo_affiche(rid):
-        f = l['fichier_blanc'] if blanc else l['fichier']
+    f = fichier_logo(rid, fond) if logo_affiche(rid) else None
+    if f:
         w, h = _dims(f)
-        return ('<li class="ref ref--logo %s"><img src="assets/img/references/%s" width="%d" height="%d" alt="%s" loading="lazy"></li>'
-                % (echelle_cls(l['echelle']), f, w, h, e(nom)))
-    return '<li class="ref ref--nom"><span>%s</span></li>' % insec(e(nom))
+        return ('<img class="logo %s" src="assets/img/references/%s" width="%d" height="%d" alt="%s"%s decoding="async">'
+                % (echelle_cls(l.get('echelle', 1) or 1), f, w, h, e(nom if alt is None else alt), ' loading="lazy"' if lazy else ''))
+    return '<span class="wordmark">%s</span>' % insec(e(nom))
 
 
-BANDEAU = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'omc', 'ubs', 'piaget', 'plan-les-ouates', 'collonge-bellerive']
+def ref_item(rid, blanc=False, nom=None):
+    """Élément de liste de références : logo (si autorisé dans ce mode) ou nom typographique."""
+    inner = logo_img(rid, nom=nom, fond='sombre' if blanc else 'clair')
+    return '<li class="ref %s">%s</li>' % ('ref--logo' if inner.startswith('<img') else 'ref--nom', inner)
 
 
-def _liste_bandeau(blanc=False):
-    items = []
-    for rid in BANDEAU:
-        if rid == 'omc' and not definitif('C22'):
-            items.append(ref_item('alhambra', blanc))      # décision D4
-        else:
-            items.append(ref_item(rid, blanc))
-    return ''.join(items)
+def _sub(rid):
+    """OMC : remplacée par l'Alhambra tant que l'accord pour le nom n'est pas confirmé (décision D4)."""
+    return 'alhambra' if rid == 'omc' and not definitif('C22') else rid
+
+
+# Mur de logos de l'accueil (12, du plus fort au moins connu) et bande défilante (toutes les références)
+MUR = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'omc', 'ubs', 'piaget',
+       'plan-les-ouates', 'collonge-bellerive', 'j-safra-sarasin', 'labcorp', 'everness', 'celgene']
+DEFILE = ['ville-de-geneve', 'piaget', 'conservatoire-musique-geneve', 'ubs', 'head-geneve', 'plan-les-ouates', 'j-safra-sarasin',
+          'alhambra', 'labcorp', 'collonge-bellerive', 'everness', 'omc', 'celgene', 'harmonie-nautique', 'dipan', 'energestion',
+          'domaine-des-perrieres', 'de-grisogono']
+BANDEAU = MUR[:8]
+
+
+def _ids(ids):
+    vus, out = set(), []
+    for rid in ids:
+        r = _sub(rid)
+        if r not in vus:
+            vus.add(r)
+            out.append(r)
+    return out
+
+
+def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux', intro=None):
+    """Section « mur de logos » juste sous le héro : grille de cellules blanches séparées par des filets."""
+    if intro is None:
+        intro = T('C04', 'Collectivités, institutions et entreprises, et des particuliers pour une cloison, un plafond ou une pièce à repeindre.',
+                  'Collectivités, institutions et entreprises, et des particuliers de toute la région.')
+    cells = ''.join('<li class="logo-cell" data-ref="%s">%s</li>' % (rid, logo_img(rid)) for rid in _ids(MUR))
+    accords = ('<p class="logos__accord">Références citées avec l\'accord des maîtres d\'ouvrage.</p>'
+               if ctx.prod() and ctx.confirme('C22') else '')
+    return '''    <section class="logos" aria-labelledby="%s" data-suivi-zone="references">
+      <div class="container">
+        <div class="logos__head">
+          <h2 id="%s">%s</h2>
+          <p>%s</p>
+          <a class="link-arrow" href="professionnels.html#references">Toutes nos références</a>
+        </div>
+        %s%s
+      </div>
+    </section>
+''' % (titre_id, titre_id, h2, intro, marque('C22', '<ul class="logo-wall" data-reveal="cells">%s</ul>' % cells, bloc=True), accords)
 
 
 def refs_bandeau(p):
-    """Bandeau sous le héro (accueil) : 8 références, phrase « particuliers », lien."""
-    particuliers = T('C04', 'Et des particuliers, pour une cloison, un plafond ou une pièce à repeindre.',
-                     'Et des particuliers, à Genève et dans toute la région.')
-    accords = ('<p class="refs-band__accord">Références citées avec l\'accord des maîtres d\'ouvrage.</p>'
-               if ctx.prod() and ctx.confirme('C22') else '')
-    return '''    <section class="refs-band" aria-labelledby="refs-titre">
-      <div class="container">
-        <h2 id="refs-titre" class="refs-band__title">Ils nous ont confié des travaux</h2>
-        %s
-        <div class="refs-band__foot"><p>%s</p><a class="link-arrow" href="professionnels.html#references">Voir toutes nos références</a></div>%s
+    """Compatibilité v2 : le bandeau sous le héro est devenu le mur de logos."""
+    return mur_logos()
+
+
+def bande_logos(titre='Ils nous ont confié des travaux', titre_id='defile-titre', cls=''):
+    """Bande défilante (rappel avant un appel à l'action) : logos en couleur, pause au survol, au focus et au bouton.
+    Sans JavaScript ou en mouvement réduit : une rangée statique. La copie qui assure la boucle est créée par main.js."""
+    items = ''.join('<li class="mq__item">%s</li>' % logo_img(rid) for rid in _ids(DEFILE))
+    return '''    <section class="defile%s" aria-labelledby="%s">
+      <div class="container defile__head">
+        <h2 id="%s" class="defile__titre">%s</h2>
+        <button type="button" class="defile__pause js-only" aria-pressed="false" data-mq-pause>Mettre en pause</button>
       </div>
+      <div class="mq" data-mq><ul class="mq__track">%s</ul></div>
     </section>
-''' % (marque('C22', '<ul class="refs refs--band">%s</ul>' % _liste_bandeau(), bloc=True), particuliers, accords)
+''' % ((' ' + cls) if cls else '', titre_id, titre_id, titre, items)
 
 
 def refs_ligne(cls=''):
-    """Ligne courte (près des formulaires, contact) : texte du copy deck §A.6."""
-    return ('<p class="refs-line%s"><b>Ils nous ont confié des travaux :</b> Ville de Genève · Conservatoire de musique de Genève · '
-            'HEAD – Genève · Mairie de <span class="nowrap">Plan-les-Ouates</span> · Salle communale de <span class="nowrap">Collonge-Bellerive</span> · '
-            'et des particuliers de toute la région.</p>' % ((' ' + cls) if cls else ''))
+    """Rappel compact près des formulaires : 6 logos en couleur, puis « et des particuliers »."""
+    items = ''.join('<li>%s</li>' % logo_img(rid) for rid in _ids(['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'ubs', 'piaget', 'plan-les-ouates']))
+    return ('<div class="refs-line%s"><p><b>Ils nous ont confié des travaux</b></p><ul class="refs-line__logos">%s</ul>'
+            '<p class="refs-line__part">et des particuliers de toute la région.</p></div>' % ((' ' + cls) if cls else '', items))
 
 
 def refs_pied():
+    """Pied de page sombre : logos en couleur sur pastilles blanches."""
+    items = ''.join('<li class="pill">%s</li>' % logo_img(rid) for rid in _ids(MUR[:10]))
     return ('<p class="footer-refs__title">Ils nous ont confié des travaux</p>'
-            '<ul class="refs refs--pied">%s<li class="ref ref--nom ref--part"><span>et des particuliers de toute la région</span></li></ul>' % _liste_bandeau(blanc=True))
+            '<ul class="pills">%s</ul><p class="footer-refs__part">et des particuliers de toute la région. '
+            '<a href="professionnels.html#references">Toutes nos références</a></p>' % items)
 
 
 def refs_service(ids):

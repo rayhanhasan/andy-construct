@@ -110,8 +110,42 @@ def doc(cle):
 # ---------------------------------------------------------------- ressources versionnées (remplies par build.py)
 ASSETS = {'css': 'assets/css/styles.css', 'js': 'assets/js/main.js', 'suivi': 'assets/js/suivi.js'}
 
-EARLY_JS = ("(function(d){d.className=d.className.replace('no-js','js');"
+def _ab_config():
+    """Configuration des drapeaux A/B (donnees/config.json → ab), réduite à ce dont le navigateur a besoin."""
+    ab = ctx.CONFIG.get('ab') or {}
+    if not ab.get('actif'):
+        return None
+    dr = {n: {'v': c['variantes'], 'p': c.get('poids') or [1] * len(c['variantes'])}
+          for n, c in (ab.get('drapeaux') or {}).items() if c.get('actif', True) and len(c.get('variantes') or []) > 1}
+    return dr or None
+
+
+def drapeaux_css():
+    """N'affiche que la variante attribuée (attribut data-ab-<drapeau> posé sur <html> avant le premier rendu).
+    Sans attribution (JavaScript coupé, tests désactivés, pas de stockage) : la variante « a »."""
+    out = []
+    for n, c in ((ctx.CONFIG.get('ab') or {}).get('drapeaux') or {}).items():
+        for v in c.get('variantes') or []:
+            sel = '[data-flag="%s"][data-variant="%s"]' % (n, v)
+            if v == 'a':
+                out.append('html[data-ab-%s]:not([data-ab-%s="a"]) %s{display:none!important}' % (n, n, sel))
+            else:
+                out.append('html:not([data-ab-%s="%s"]) %s{display:none!important}' % (n, v, sel))
+    return ''.join(out)
+
+
+def _early_js():
+    base = ("(function(d){d.className=d.className.replace('no-js','js');"
             "try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}})(document.documentElement);")
+    cfg = _ab_config()
+    if not cfg:
+        return base
+    from build import min_js
+    src = open(os.path.join(ctx.ICI, 'static/drapeaux.js'), encoding='utf-8').read()
+    return base + 'window.AC_AB=' + json.dumps(cfg, separators=(',', ':')) + ';' + min_js(src).strip()
+
+
+EARLY_JS = _early_js()
 
 
 # ---------------------------------------------------------------- <head>
@@ -154,8 +188,8 @@ def head(p):
             '  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">\n',
             '  <link rel="manifest" href="site.webmanifest">\n',
             p.get('preload', ''),
-            '  <link rel="preload" href="assets/fonts/source-sans-3-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>\n',
-            '  <link rel="preload" href="assets/fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>\n',
+            '  <link rel="preload" href="assets/fonts/archivo-v3-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>\n',
+            '  <link rel="preload" href="assets/fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>\n',
             '  <link rel="stylesheet" href="%s">\n' % ASSETS['css'],
             '  <script>%s</script>\n' % EARLY_JS,
             '  <script src="%s" defer></script>\n' % ASSETS['suivi'],
@@ -209,10 +243,21 @@ def devis_href(p):
     return '#demande' if p.get('formulaire') else 'contact.html#demande'
 
 
-def devis_btn(p, emplacement, cls='btn', texte='Demander un devis', service=None):
+def libelle_devis(defaut='Demander un devis'):
+    """Libellé du bouton de demande. Si le drapeau « cta-libelle » est configuré (avec ses textes), les variantes sont
+    toutes dans le HTML et la feuille de style n'affiche que celle attribuée au visiteur."""
+    d = ((ctx.CONFIG.get('ab') or {}).get('drapeaux') or {}).get('cta-libelle') or {}
+    textes = d.get('textes') or {}
+    if not (ctx.CONFIG.get('ab') or {}).get('actif') or not d.get('actif', True) or len(textes) < 2:
+        return defaut
+    return ''.join('<span data-flag="cta-libelle" data-variant="%s">%s</span>' % (v, e(textes[v]))
+                   for v in d.get('variantes', []) if v in textes)
+
+
+def devis_btn(p, emplacement, cls='btn', texte=None, service=None):
     s = service or p.get('service')
     return '<a class="%s" href="%s" data-suivi="devis_clic" data-suivi-emplacement="%s"%s>%s</a>' % (
-        cls, devis_href(p), emplacement, (' data-suivi-service="%s"' % s) if s else '', texte)
+        cls, devis_href(p), emplacement, (' data-suivi-service="%s"' % s) if s else '', texte or libelle_devis())
 
 
 def header(p):
@@ -223,7 +268,7 @@ def header(p):
         for s in SERVICES)
     svc_actif = ' is-current' if actif in [svc_url(s) for s in SERVICES] else ''
     items = ''.join('<li><a href="%s"%s>%s</a></li>' % (h, ' aria-current="page"' if h == actif else '', l) for h, l in NAV)
-    h_small = horaires(long=False) or 'Appelez-nous'
+    # Une ligne sur la grille : logo (col. 1-2) · navigation (dès la col. 3) · téléphone et bouton (à droite). Pas d'horaires ici.
     return '''  <header class="site-header" data-suivi-zone="entete">
     <div class="container site-header__inner">
       <a class="brand" href="index.html"><img src="assets/img/brand/logo-andy-construct-352.png" width="352" height="128" alt="Andy Construct, page d'accueil"></a>
@@ -231,17 +276,19 @@ def header(p):
         <ul class="nav-list">
           <li class="nav-svc"><details class="nav-drop%(svc_actif)s"><summary>Prestations</summary><ul class="nav-drop__panel">%(svc_items)s</ul></details></li>
           %(items)s
-          <li class="nav-extra"><a class="btn btn--ghost" href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="menu">Appeler le %(tel)s</a>%(devis)s</li>
+          <li class="nav-extra"><a class="btn btn--ghost" href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="menu">%(icon)s Appeler le %(tel)s</a>%(devis)s</li>
         </ul>
       </nav>
-      <a class="header-phone" href="%(tel_uri)s" data-suivi-numero="fixe"><small>%(h_small)s</small><span>%(tel)s</span></a>
-      %(cta)s
+      <div class="header-actions">
+        <a class="header-phone" href="%(tel_uri)s" data-suivi-numero="fixe">%(icon)s<span>%(tel)s</span></a>
+        %(cta)s
+      </div>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span class="nav-toggle__icon" aria-hidden="true"><span></span></span><span class="nav-toggle__label">Menu</span></button>
     </div>
   </header>
-''' % dict(svc_items=svc_items, svc_actif=svc_actif, items=items, tel_uri=TEL_URI, tel=TEL, h_small=h_small,
+''' % dict(svc_items=svc_items, svc_actif=svc_actif, items=items, tel_uri=TEL_URI, tel=TEL, icon=ICON_PHONE,
            devis='' if p.get('sans_devis') else devis_btn(p, 'menu'),
-           cta='' if p.get('sans_devis') else devis_btn(p, 'entete', cls='btn header-cta'))
+           cta='' if p.get('sans_devis') else devis_btn(p, 'entete', cls='btn btn--sm header-cta'))
 
 
 # ---------------------------------------------------------------- pied de page
@@ -256,6 +303,9 @@ def footer(p):
   </div>''' % (' callbar--seul' if p.get('sans_devis') else '', TEL_URI, ICON_PHONE, '' if p.get('sans_devis') else devis_btn(p, 'barre_mobile'))
     return '''
   <footer class="site-footer on-dark" data-suivi-zone="pied">
+    <div class="container footer-refs">
+      %(refs)s
+    </div>
     <div class="container footer-top">
       <div class="footer-brand">
         <img src="assets/img/brand/logo-andy-construct-blanc-380.png" width="380" height="138" alt="Andy Construct" loading="lazy">
@@ -280,9 +330,6 @@ def footer(p):
           %(pdf)s
         </ul>
       </nav>
-    </div>
-    <div class="container footer-refs">
-      %(refs)s
     </div>
     <div class="footer-bottom">
       <div class="container">

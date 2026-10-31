@@ -1,5 +1,30 @@
 {
   "umami_src": "",
   "umami_id": "",
-  "_aide": "umami_src : URL du script Umami (ex. https://stats.andyconstruct.ch/script.js) ; umami_id : identifiant du site. Vides : aucun script de mesure n'est chargé."
+  "_aide": "umami_src : URL du script Umami (ex. https://stats.andyconstruct.ch/script.js) ; umami_id : identifiant du site. Vides : aucun script de mesure n'est chargé.",
+  "ab": {
+    "actif": true,
+    "_aide": "Drapeaux de test A/B (docs/v3/direction-artistique.md §9). actif=false : tout le monde voit la variante « a », aucun événement. Par drapeau : actif, variantes (la première, « a », est le témoin), poids (répartition), textes éventuels. Recette : ?flag=hero-titre:b ; ?flag=reset. Mesure Umami : exposition_variante {flag, variante}.",
+    "drapeaux": {
+      "hero-titre": {
+        "actif": true,
+        "variantes": ["a", "b"],
+        "poids": [50, 50],
+        "description": "Titre du héro de l'accueil : métiers et région (a) contre preuve par les références (b)."
+      },
+      "cta-libelle": {
+        "actif": true,
+        "variantes": ["a", "b"],
+        "poids": [50, 50],
+        "textes": {"a": "Demander un devis", "b": "Demander une visite"},
+        "description": "Libellé de tous les boutons de demande (en-tête, héro, sections, barre mobile)."
+      },
+      "ordre-sections": {
+        "actif": true,
+        "variantes": ["a", "b"],
+        "poids": [50, 50],
+        "description": "Accueil : prestations puis réalisations (a) contre réalisations puis prestations (b)."
+      }
+    }
+  }
 }
