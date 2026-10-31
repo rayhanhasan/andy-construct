@@ -28,17 +28,20 @@ ITEMS = _charger()
 
 
 def _services(it):
-    s = it.get('services') or it.get('service') or it.get('usage') or []
-    return [s] if isinstance(s, str) else list(s)
+    s = it.get('services') or it.get('service') or it.get('usage') or it.get('usage_conseille') or []
+    s = [s] if isinstance(s, str) else list(s)
+    return s + [x[len('service-'):] for x in s if x.startswith('service-')]
 
 
-def trouver(service=None, usage=None):
+def trouver(service=None, usage=None, ident=None):
     for it in ITEMS:
-        if it.get('statut') in ('retirer', 'refuse'):
+        if it.get('statut') in ('retirer', 'refuse') or it.get('type', 'image') != 'image':
             continue
-        if service and service in _services(it):
+        if ident and it.get('id') == ident:
             return it
-        if usage and usage in _services(it):
+        if not ident and service and service in _services(it):
+            return it
+        if not ident and usage and usage in _services(it):
             return it
     return None
 
@@ -48,14 +51,11 @@ def _src(it):
     base = it.get('base')
     w, h = it.get('largeur') or it.get('width') or 1200, it.get('hauteur') or it.get('height') or 800
     if base:
-        larg = it.get('largeurs') or [400, 800, 1200]
-        dispo = [x for x in larg if os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (base, x)))
-                 or os.path.exists(os.path.join(DIR, '%s-%d.webp' % (os.path.basename(base), x)))]
         b = base if base.startswith('assets/') else 'assets/img/illustrations/' + base
-        srcset = ', '.join('%s-%d.webp %dw' % (b, x, x) for x in (dispo or larg))
-        jpg = '%s-%d.jpg' % (b, (dispo or larg)[min(1, len(dispo or larg) - 1)])
-        if not os.path.exists(os.path.join(ctx.SITE, jpg)):
-            jpg = '%s-%d.webp' % (b, (dispo or larg)[-1])
+        larg = [x for x in (it.get('largeurs') or [400, 800, 1200]) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, x)))]
+        srcset = ', '.join('%s-%d.webp %dw' % (b, x, x) for x in larg)
+        jpgs = [x for x in (800, 1200, 400, 1600) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.jpg' % (b, x)))]
+        jpg = ('%s-%d.jpg' % (b, jpgs[0])) if jpgs else '%s-%d.webp' % (b, larg[0])
         return srcset, jpg, w, h
     f = it.get('fichier') or it.get('file')
     f = f if f.startswith('assets/') else 'assets/img/illustrations/' + f
@@ -70,6 +70,6 @@ def picture(it, sizes, cls='', lazy=True):
             % ((' ' + cls) if cls else '', source, src, w, h, e(it.get('alt') or ''), ' loading="lazy"' if lazy else ''))
 
 
-def pour_service(service, sizes):
-    it = trouver(service=service)
+def pour_service(service, sizes, ident=None):
+    it = trouver(service=service, ident=ident)
     return picture(it, sizes) if it else None

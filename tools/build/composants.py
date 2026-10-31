@@ -75,16 +75,54 @@ def logo_affiche(rid):
     return l['statut'] == 'a_autoriser' and not ctx.prod()
 
 
-def logo_img(rid, nom=None, alt=None, lazy=True, fond='clair'):
-    """<img> du logo (classe d'échelle optique), ou wordmark <span> si le logo n'est pas affichable."""
+# Noms en wordmark (cro-v3 §2.3) : générique en maigre au-dessus, nom propre en demi-gras ; noms longs coupés dans les données
+# (deux lignes au plus). Champs facultatifs de logos.json qui priment : « generique », « nom_lignes ».
+WORDMARKS = {
+    'ville-de-geneve': ('Ville de', ['Genève']),
+    'collonge-bellerive': ('Salle communale de', ['Collonge-Bellerive']),
+    'plan-les-ouates': ('Salle communale de', ['Plan-les-Ouates']),
+    'alhambra': ('Salle de', ['l\'Alhambra']),
+    'conservatoire-musique-geneve': (None, ['Conservatoire de musique', 'de Genève']),
+    'harmonie-nautique': (None, ['Harmonie Nautique', 'de Genève']),
+    'everness': (None, ['Everness', 'Hotel & Resort']),
+    'domaine-des-perrieres': ('Domaine des', ['Perrières']),
+    'labcorp': (None, ['Labcorp']),
+}
+
+
+def nom_ref(rid):
+    """Nom affiché, avec les replis d'exactitude (cro-v3 §2.2 H2) : Plan-les-Ouates « salle communale » à valider (C22),
+    Everness nommé seulement si C22 confirme qu'il s'agit bien de l'hôtel de Chavannes-de-Bogis."""
+    if rid == 'plan-les-ouates':
+        return V('C22', 'Salle communale de Plan-les-Ouates', LOGOS[rid]['nom_affiche'])
+    if rid == 'everness' and not definitif('C22'):
+        return 'Hôtel à Chavannes-de-Bogis'
+    return LOGOS[rid]['nom_affiche']
+
+
+def wordmark(rid, nom=None):
     l = LOGOS[rid]
-    nom = nom or l['nom_affiche']
+    if nom is None and rid == 'everness' and not definitif('C22'):
+        gen, lignes = 'Hôtel à', ['Chavannes-de-Bogis']
+    elif nom is None and rid == 'plan-les-ouates' and not definitif('C22'):
+        gen, lignes = 'Mairie de', ['Plan-les-Ouates']
+    elif nom is None and (l.get('nom_lignes') or rid in WORDMARKS):
+        gen, lignes = (l.get('generique'), l['nom_lignes']) if l.get('nom_lignes') else WORDMARKS[rid]
+    else:
+        gen, lignes = None, [nom or l['nom_affiche']]
+    g = ('<span class="wordmark__gen">%s</span>' % e(gen)) if gen else ''
+    return '<span class="wordmark">%s%s</span>' % (g, '<span class="wordmark__nom">%s</span>' % '<br>'.join(insec(e(x)) for x in lignes))
+
+
+def logo_img(rid, nom=None, alt=None, lazy=True, fond='clair'):
+    """<img> du logo (classe d'échelle optique), ou wordmark si le logo n'est pas affichable dans ce mode."""
+    l = LOGOS[rid]
     f = fichier_logo(rid, fond) if logo_affiche(rid) else None
     if f:
         w, h = _dims(f)
         return ('<img class="logo %s" src="assets/img/references/%s" width="%d" height="%d" alt="%s"%s decoding="async">'
-                % (echelle_cls(l.get('echelle', 1) or 1), f, w, h, e(nom if alt is None else alt), ' loading="lazy"' if lazy else ''))
-    return '<span class="wordmark">%s</span>' % insec(e(nom))
+                % (echelle_cls(l.get('echelle', 1) or 1), f, w, h, e((nom or nom_ref(rid)) if alt is None else alt), ' loading="lazy"' if lazy else ''))
+    return wordmark(rid, nom)
 
 
 def ref_item(rid, blanc=False, nom=None):
@@ -99,11 +137,16 @@ def _sub(rid):
 
 
 # Mur de logos de l'accueil (12, du plus fort au moins connu) et bande défilante (toutes les références)
+# Ordre canonique (cro-v3 §2.2 H2 et H9) : public en tête, communes au début de la 2e rangée, puis public et privé alternés.
+# En preview, l'OMC occupe la 4e cellule (D4) ; en production sans accord écrit, c'est la Salle de l'Alhambra.
 MUR = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'omc', 'ubs', 'piaget',
        'plan-les-ouates', 'collonge-bellerive', 'j-safra-sarasin', 'labcorp', 'everness', 'celgene']
-DEFILE = ['ville-de-geneve', 'piaget', 'conservatoire-musique-geneve', 'ubs', 'head-geneve', 'plan-les-ouates', 'j-safra-sarasin',
-          'alhambra', 'labcorp', 'collonge-bellerive', 'everness', 'omc', 'celgene', 'harmonie-nautique', 'dipan', 'energestion',
-          'domaine-des-perrieres', 'de-grisogono']
+DEFILE = MUR[:4] + ['alhambra'] + MUR[4:] + ['energestion', 'dipan', 'harmonie-nautique', 'domaine-des-perrieres', 'de-grisogono']
+
+
+def nb_refs():
+    """Nombre de noms publiables dans ce mode (17 en production tant que l'accord écrit de l'OMC manque)."""
+    return len(LOGOS) - (0 if definitif('C22') else 1)
 BANDEAU = MUR[:8]
 
 
