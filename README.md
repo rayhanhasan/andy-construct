@@ -16,6 +16,16 @@ Maquette de refonte du site d'**Andy Construct** (plafonds, cloisons, isolation,
 | `docs/source/` | Sources : contenu de l'ancien site, logo original, ancien logo 2016 (archivé), démo de référence |
 | `deploy/deploy_ftp.py` | Envoi FTP limité au dossier `res/` de harbor-digital.fr |
 
+## Générer le site (v2)
+
+```bash
+python3 tools/build/build.py                                   # preview (défaut) → site/
+python3 tools/build/build.py --mode verification --out /tmp/av # passages à confirmer soulignés, code Cxx en exposant
+python3 tools/build/build.py --mode production --out dist/     # textes de repli, logos « autorise » seulement, indexable
+```
+
+Les confirmations du client se cochent dans `tools/build/donnees/confirmations.json` (une entrée par code `Cxx`) ; la mesure Umami s'active dans `tools/build/donnees/config.json` (production seulement) ; témoignages et avis Google restent masqués tant que `donnees/temoignages.json` et `donnees/avis.json` sont vides. CSS et JS sources : `tools/build/static/` (minifiés et versionnés à la génération). Préparation des images (une fois) : `tools/build/images.py` (Pillow).
+
 ## Voir la maquette en local
 
 ```bash
