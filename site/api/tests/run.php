@@ -728,7 +728,7 @@ file_put_contents("$dossierPdf/plan.pdf", $objstm('<< /Type /Page /MediaBox [0 0
 egal(null, $err, 'PDF de plan ordinaire (flux d\'objets et dessin compressés) accepté');
 supprimer($dossierPdf);
 
-groupe('Sécurité : robustesse et en-têtes (S-12, S-14, S-15)');
+groupe('Sécurité : robustesse et en-têtes (S-09, S-19, S-20)');
 $r = $tr->executer(serveur(['REMOTE_ADDR' => '198.51.100.40']), [], ['formulaire' => ['x'], 'nom' => 'X'], [], $maintenantTr);
 egal(422, $r->statut, 'formulaire envoyé en tableau → 422, sans avertissement PHP');
 egal([['name' => 'a', 'tmp_name' => '', 'error' => UPLOAD_ERR_OK, 'size' => 0]], Televersement::aplatir(['fichier' => ['name' => 'a', 'tmp_name' => ['x'], 'error' => '0', 'size' => ['z']]]), 'structure $_FILES forgée : aucun avertissement, chemin vide');

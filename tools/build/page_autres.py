@@ -67,6 +67,15 @@ def merci():
     page(p, corps)
 
 
+def heberg_ligne():
+    """C34 : nom, adresse et pays de l'hébergeur à fournir ; repli : ligne masquée (jamais « en Suisse » sans confirmation)."""
+    nom = (ctx.CONF.get('C34') or {}).get('note', '').strip()
+    if nom and definitif('C34'):
+        return '<p>Le site est hébergé par %s.</p>' % e(nom)
+    ctx.M('C34')
+    return ''
+
+
 def mentions():
     p = dict(fichier='mentions-legales.html', title='Mentions légales | Andy Construct',
              desc='Mentions légales du site andyconstruct.ch : éditeur Andy Construct, Chanton & Cie à Carouge, IDE CHE-113.706.162, hébergement et crédits.')
@@ -85,8 +94,7 @@ def mentions():
         <h2>Éditeur du site</h2>
         <dl>%(lignes)s</dl>
         <h2>Hébergement</h2>
-        <p>%(heberg)s</p>
-        <p>Conception et réalisation : Harbor Digital.</p>
+        %(heberg)s<p>Conception et réalisation : Harbor Digital.</p>
         <h2>Propriété des contenus</h2>
         <p>Les textes, le logo et les photos de chantiers publiés sur ce site appartiennent à Andy Construct, Chanton & Cie. Leur reproduction demande un accord écrit.</p>
         %(photos)s
@@ -106,7 +114,7 @@ def mentions():
       </div>
     </section>
 ''' % dict(lignes=''.join('<dt>%s</dt><dd>%s</dd>' % x for x in lignes),
-           heberg=T('C34', 'Le site est hébergé en Suisse.', 'Le site est hébergé en Suisse.'),
+           heberg=heberg_ligne(),
            photos=T('C25', '<p>Les photos montrent des chantiers réalisés par l\'entreprise. Les personnes et les lieux reconnaissables sont publiés avec l\'accord des intéressés.</p>', ''),
            date=DATE)
     page(p, corps)
@@ -126,7 +134,7 @@ def confidentialite():
                  'il compte les pages vues et les clics sur le téléphone ou les boutons, sans vous identifier et sans conserver votre adresse IP. %s</p>' % session)
     else:
         stats = '<p>Notre site n\'utilise <strong>aucun cookie</strong> et ne mesure pas son audience. %s</p>' % session
-    heberg = marque('C34', 'l\'hébergeur du site, en Suisse,')   # nom de l'hébergeur à fournir (C34)
+    heberg = marque('C34', 'l\'hébergeur du site')   # nom et pays de l'hébergeur à fournir (C34)
     corps = page_head('Protection des données', 'Protection des données',
                       'Ce que nous faisons des informations que vous nous transmettez, combien de temps nous les gardons, et comment exercer vos droits.')
     texte = '''<h2>Qui est responsable</h2>

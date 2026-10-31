@@ -167,6 +167,8 @@ div.vc > .vc__code { position: absolute; top: -10px; right: -6px; font-size: 1re
   .site-nav .nav-extra .btn { width: 100%; min-height: 56px; font-size: 1.0625rem; }
 }
 .no-js .nav-toggle { display: none; }
+.no-js .site-header { position: relative; }
+@media (max-width: 1239.98px) { .no-js .nav-drop[open] .nav-drop__panel, .no-js .nav-drop__panel { display: block; } }
 @media (min-width: 900px) { .header-phone { display: flex; } .header-cta { display: inline-flex; } }
 @media (min-width: 1240px) {
   .nav-toggle { display: none; }

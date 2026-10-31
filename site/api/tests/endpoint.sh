@@ -150,6 +150,20 @@ verifier "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/fichier.php?id=$ID
 verifier "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/fichier.php?id=$ID&exp=$EXP&sig=${SIG/a/b}")" 403 "fichier.php : signature modifiée → 403"
 verifier "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/fichier.php?id=../config.php&exp=$EXP&sig=$SIG")" 403 "fichier.php : traversée de répertoire → 403"
 
+# 12. Sécurité (constats de docs/v2/qa/securite.md)
+php -r '$z = gzcompress("3 0 << /S /JavaScript /JS (app.alert(1)) >>"); echo "%PDF-1.5\n4 0 obj\n<< /Type /ObjStm /N 1 /First 4 /Filter /FlateDecode /Length " . strlen($z) . " >>\nstream\n$z\nendstream\nendobj\n%%EOF\n";' > "$TMP/objstm.pdf"
+R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F nom=Test \
+    -F telephone=0791234567 -F travaux=placo -F commune=Genève -F "form_t0=$J" \
+    -F "fichiers[]=@$TMP/objstm.pdf;type=application/pdf" "$BASE/api/demande.php")
+verifier "$(tail -n1 <<<"$R")" 422 "PDF avec JavaScript caché dans un flux d'objets compressé → 422"
+M0=$(nb_mails)
+R=$(curl -s -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=envoi_postal_guide -F guide=guide-reduire-le-bruit \
+    -F 'nom=Gagnant' --form-string 'adresse=https://evil.example/phish' -F npa=1227 -F localite=Carouge \
+    -F email=cible@exemple.org -F "form_t0=$J" "$BASE/api/demande.php")
+verifier "$(jq -r '[.ok, .ref] | map(tostring) | join(" ")' <<<"$R")/$(nb_mails)" "true null/$M0" "lien dans l'adresse d'envoi du guide → leurre, aucun e-mail (relais)"
+curl -s -D - -o /dev/null "$BASE/api/demande.php?jeton" | grep -qi '^X-Powered-By' && rouge "X-Powered-By retiré" || vert "X-Powered-By retiré (version de PHP non divulguée)"
+verifier "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/tests/run.php")" 404 "tests/run.php inexécutable depuis le web (même sans .htaccess)"
+
 # 11. Journal sans données personnelles
 if grep -rqE 'Dupont|079 123|francoise|127\.0\.0\.1|::1' "$TMP/stockage/journaux/"; then
     rouge "journal sans données personnelles"
@@ -225,6 +239,7 @@ CONF
         echo '<?php echo "EXECUTE";' > "$STOCK_APACHE/fichiers/test.php"
         C=$(curl -s "$BA/stockage-apache-test/fichiers/test.php")
         [ "$C" != "EXECUTE" ] && vert "aucun PHP exécuté dans le stockage" || rouge "PHP exécuté dans le stockage"
+        curl -s -D - -o /dev/null "$BA/demande.php?jeton" | grep -qi '^X-Powered-By' && rouge "X-Powered-By retiré (Apache)" || vert "X-Powered-By retiré (Apache + mod_php)"
         curl -s -D - -o /dev/null "$BA/demande.php?jeton" | grep -qi '^X-Frame-Options: DENY' && vert "en-têtes de sécurité (.htaccess, mod_headers)" || rouge "en-têtes de sécurité"
     else
         rouge "démarrage d'Apache" "$(cat "$TMP/apache-demarrage.log")"
