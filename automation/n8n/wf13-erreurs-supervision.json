@@ -1,0 +1,306 @@
+{
+  "name": "WF13 · Erreurs et supervision",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF13 · À définir comme « workflow d'erreur » de tous les autres\n\nParamètres de chaque workflow → Error workflow → « WF13 · Erreurs et supervision ». Toute erreur produit un e-mail et un SMS à l'agence, **sans donnée personnelle** (nom du workflow, étape, message nettoyé, lien vers l'exécution).\n\nEn option : appel de site/api/cron.php toutes les 10 minutes si l'hébergeur n'a pas de tâche planifiée (AC_CRON_URL).",
+        "height": 220,
+        "width": 640
+      },
+      "id": "4f7e48e8-dbfe-8f52-1440-8e4d84f07354",
+      "name": "WF13 · À définir comme « workflow d'erreur » de tous les autres",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8833db0b-7726-7cf1-285e-da98ef6814a1",
+      "name": "Erreur d'un workflow",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclenché par n8n quand un workflow lié échoue.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst nettoyer = (s) => String(s || '').replace(/[^\\s@<>\"]+@[^\\s@<>\"]+/g, '[e-mail]').replace(/\\+?\\d[\\d \\/.\\-]{7,}\\d/g, '[numéro]').slice(0, 400);\nconst wf = (e.workflow && e.workflow.name) || '?', noeud = (e.execution && e.execution.lastNodeExecuted) || '?';\nconst msg = nettoyer(e.execution && e.execution.error && e.execution.error.message);\nconst lien = (e.execution && e.execution.url) || '';\nconst heure = new Date().toLocaleTimeString('fr-CH', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' });\nconst texte = 'Workflow : ' + wf + '\\nÉtape : ' + noeud + '\\nMessage : ' + msg + '\\nExécution : ' + lien + '\\n';\nreturn [{ json: {\n  courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: $env.AC_AGENCE_EMAIL, repondre_a: $env.AC_EMAIL_EXPEDITEUR, sujet: '[n8n] Erreur : ' + wf, texte, html: '<pre>' + texte.replace(/</g, '&lt;') + '</pre>' },\n  sms: { a: $env.AC_AGENCE_MOBILE, texte: ('Andy Construct · n8n : erreur dans \"' + wf + '\" (étape ' + noeud + ') à ' + heure + '. Détails par e-mail, sans donnée personnelle.').slice(0, 300) },\n} }];\n"
+      },
+      "id": "583efc1a-6248-8bc1-77af-2881b3c319cf",
+      "name": "Masquer les données personnelles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Adresses et numéros masqués dans le message d'erreur.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "87231e33-095d-9cb9-cf08-3d8e3911a1de",
+      "name": "E-mail à l'agence",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -200
+      ],
+      "notes": "E-mail envoyé par le SMTP du domaine (SPF, DKIM, DMARC), texte et HTML, sans pixel de suivi.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "274e6594-6111-c668-62b9-b86df157d992",
+              "leftValue": "={{ !!$json.sms.a }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c4be580-1044-7c85-ba22-2fbfc2b41b1e",
+      "name": "Mobile de l'agence configuré ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        200
+      ],
+      "notes": "Condition : !!$json.sms.a. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "0e33e0e7-46d9-c4ab-33ad-7ce7b683945a",
+      "name": "SMS à l'agence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        200
+      ],
+      "notes": " Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/10 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "784bee88-8bc8-ddc3-597b-121bd5224c02",
+      "name": "Toutes les 10 minutes (option)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        600
+      ],
+      "notes": "Remplace la tâche planifiée de l'hébergeur si elle n'existe pas. Désactiver ce déclencheur si cron.php tourne déjà chez l'hébergeur.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "940da0a6-27d1-d59c-d743-123e9506c428",
+              "leftValue": "={{ !!$env.AC_CRON_URL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ecf09781-3a06-388a-daf7-feeef8bd35f5",
+      "name": "Relais cron configuré ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        600
+      ],
+      "notes": "AC_CRON_URL = https://www.andyconstruct.ch/api/cron.php?cle=…",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.AC_CRON_URL }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "922335d6-0b68-57d4-4e5d-a45ff0b43efd",
+      "name": "Appeler cron.php",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        600
+      ],
+      "notes": "Relance la file d'attente du PHP et purge les fichiers.",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Erreur d'un workflow": {
+      "main": [
+        [
+          {
+            "node": "Masquer les données personnelles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Masquer les données personnelles": {
+      "main": [
+        [
+          {
+            "node": "E-mail à l'agence",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mobile de l'agence configuré ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mobile de l'agence configuré ?": {
+      "main": [
+        [
+          {
+            "node": "SMS à l'agence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Toutes les 10 minutes (option)": {
+      "main": [
+        [
+          {
+            "node": "Relais cron configuré ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Relais cron configuré ?": {
+      "main": [
+        [
+          {
+            "node": "Appeler cron.php",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Supervision : alerte de l'agence (e-mail, SMS) sans donnée personnelle ; relais facultatif de cron.php."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "supervision"
+    }
+  ],
+  "versionId": "79be90e6-871b-e657-2cd8-324dbb42b037",
+  "id": "aea4e19af7d8f620"
+}

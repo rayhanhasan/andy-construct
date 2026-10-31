@@ -63,7 +63,7 @@ Les professionnels publient rarement des avis ; on demande plutôt l'autorisatio
 
 <!-- modele: reference-pro-j2 -->
 ```texte
-Objet : {{service}} à {{commune}} : merci, et une question
+Objet : {{service_majuscule}}{{#commune}} à {{commune}}{{/commune}} : merci, et une question
 
 {{salutation}},
 
@@ -114,7 +114,7 @@ Merci {{prenom_auteur}} d'avoir pris le temps de nous écrire. Nous prenons note
 
 <!-- modele: reponse-avis-negatif -->
 ```texte
-{{prenom_auteur}}, nous regrettons que notre travail ne vous ait pas donné satisfaction. Nous souhaitons comprendre ce qui s'est passé et trouver une solution : pouvez-vous nous appeler au 022 771 20 15, ou nous indiquer quand vous joindre ? {{prenom_associe}}, Andy Construct
+{{prenom_auteur}}, nous regrettons que notre travail ne vous ait pas donné satisfaction. Nous souhaitons comprendre ce qui s'est passé et voir ce que nous pouvons faire : pouvez-vous nous appeler au +41 22 771 20 15, ou nous indiquer quand vous joindre ? {{prenom_associe}}, Andy Construct
 ```
 
 Règles des réponses : jamais de détail privé (adresse, montant), jamais d'argument agressif, jamais de demande de suppression sans motif valable.

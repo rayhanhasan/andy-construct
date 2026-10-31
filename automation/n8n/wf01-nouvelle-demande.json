@@ -1,0 +1,1334 @@
+{
+  "name": "WF01 · Nouvelle demande (a)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF01 · Nouvelle demande\n\nReçoit chaque demande de `site/api/demande.php` (devis, rappel), vérifie la signature HMAC, crée la personne et l'affaire dans Pipedrive (score, priorité, échéance de rappel, source), joint les fichiers, puis prévient les associés par SMS (A et B) en respectant les heures.\n\n**Ne refait pas** le score : il vient du PHP (`site/api/data/scoring.json`). **N'envoie pas** l'e-mail interne ni l'accusé de réception : le PHP l'a déjà fait. Les boutons de l'e-mail interne pointent vers WF02.\n\n**Doublon** (même e-mail ou téléphone, affaire ouverte de moins de 30 jours) : note ajoutée à l'affaire existante, sans SMS (§2.5, règle 5).",
+        "height": 260,
+        "width": 640
+      },
+      "id": "fe11e017-041b-6fe2-b53d-00468662c2a6",
+      "name": "WF01 · Nouvelle demande",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ac-demande",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "3f229ee8-3573-a281-9a8b-930b10ce6b2b",
+      "name": "Demande reçue (POST /ac-demande)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Appelé par site/api/lib/Webhook.php. Corps brut conservé (option rawBody) pour vérifier la signature.",
+      "notesInFlow": false,
+      "webhookId": "f2738d32-9381-d927-35fd-ccbefc679682"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Vérifie la signature envoyée par site/api/lib/Webhook.php :\n// X-AC-Signature = \"sha256=\" + HMAC-SHA256(AC_HMAC_SECRET, X-AC-Timestamp + \".\" + corps brut), horodatage ± 5 min.\nconst crypto = require('crypto');\nconst secret = $env.AC_HMAC_SECRET || '';\nif (secret.length < 32) throw new Error('AC_HMAC_SECRET absent ou trop court');\nconst item = $input.first();\nconst h = item.json.headers || {};\nconst ts = String(h['x-ac-timestamp'] || '');\nconst sig = String(h['x-ac-signature'] || '');\nlet brut = '';\ntry {\n  brut = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\n} catch (e) {\n  const bin = item.binary && item.binary.data;\n  brut = bin && bin.data && !String(bin.data).startsWith('filesystem')\n    ? Buffer.from(bin.data, 'base64').toString('utf8')\n    : JSON.stringify(item.json.body); // repli : identique à json_encode (barres et Unicode non échappés)\n}\nconst attendue = 'sha256=' + crypto.createHmac('sha256', secret).update(ts + '.' + brut).digest('hex');\nconst frais = /^\\d{10}$/.test(ts) && Math.abs(Date.now() / 1000 - Number(ts)) <= 300;\nconst valide = frais && sig.length === attendue.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(attendue));\nlet demande = null;\nif (valide) { try { demande = JSON.parse(brut); } catch (e) { demande = item.json.body; } }\nreturn [{ json: { valide, raison: valide ? '' : (frais ? 'signature' : 'horodatage'), demande } }];\n"
+      },
+      "id": "34fe4a14-0e80-f86e-3815-c51adbac5da3",
+      "name": "Vérifier la signature HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Refuse toute requête dont la signature HMAC-SHA256 ou l'horodatage (± 5 min) ne correspond pas. Secret : variable AC_HMAC_SECRET (identique à secrets.hmac_webhook du PHP).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "8e711d48-6b14-2c19-ec3a-0cb01e6f5dd5",
+              "leftValue": "={{ $json.valide }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a2346abd-2df1-25f5-0b0a-0e66b41fdf0a",
+      "name": "Signature valable ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Vrai : on accuse réception tout de suite (le PHP n'attend que 5 s) puis on traite.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: false, raison: $json.raison }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "093596a2-ff37-2815-176c-b7eae644e205",
+      "name": "Refuser (401)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        200
+      ],
+      "notes": "Signature invalide : le PHP met la demande en file d'attente et réessaie ; l'agence est alertée après 1 h.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: true, ref: $json.demande.ref }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "dc7c1c0e-b6ff-ccf9-03a6-e5d3ec25e0f7",
+      "name": "Accuser réception au PHP (200)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Réponse immédiate : la suite du traitement ne retarde pas le visiteur.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Alphabet GSM 03.38 : remplace ce qui ferait passer le SMS à 70 caractères.\nfunction versGsm(t) {\n  const r = { 'ê': 'e', 'ë': 'e', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u', 'ç': 'c', 'À': 'A', 'Â': 'A', 'È': 'E', 'Ê': 'E', 'Î': 'I',\n    'Ô': 'O', 'Û': 'U', 'œ': 'oe', 'Œ': 'OE', '«': '\"', '»': '\"', '’': \"'\", '‘': \"'\", '“': '\"', '”': '\"', '–': '-', '—': '-', '…': '...', ' ': ' ', ' ': ' ' };\n  return String(t).replace(/[^\\n -~£¥èéùìòÇØøÅåÆæßÉÄÖÑÜ§¿äöñüà¡]/g, (c) => (r[c] !== undefined ? r[c] : c.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')));\n}\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"sms-nouvelle-demande\": {\n  \"sujet\": \"\",\n  \"corps\": \"Andy · Demande {{priorite}} · {{nom_court}}, {{commune}} · {{service}}{{#surface}}, {{surface}}{{/surface}}{{#delai}}, {{delai}}{{/delai}} · Tél. {{telephone}} · Rappeler avant {{echeance_hhmm}} · {{lien_action}}\"\n },\n \"sms-accuse\": {\n  \"sujet\": \"\",\n  \"corps\": \"Andy Construct : votre demande (réf. {{ref}}) est bien arrivée. {{associe_court}} vous rappelle {{promesse}}, depuis le +41 22 771 20 15 ou le +41 78 631 14 34.\"\n }\n};\n\nconst d = $input.first().json.demande;\nconst s = d.scoring || {};\nconst role = (d.attribution && d.attribution.role) || 'terrain';\nconst echeance = s.echeance ? DateTime.fromISO(s.echeance).setZone('Europe/Zurich') : null;\nconst hhmm = echeance ? echeance.toFormat(\"H 'h' mm\").replace(' h 00', ' h') : '';\nconst nomCourt = [d.contact.civilite === 'madame' ? 'Mme' : d.contact.civilite === 'monsieur' ? 'M.' : '', d.contact.nom].filter(Boolean).join(' ') || 'nom non indiqué';\nconst lien = lienAction({ a: 'menu', r: d.ref }, 7);\nconst vars = {\n  priorite: s.priorite === 'hors-cible' ? 'hors cible' : s.priorite, nom_court: nomCourt, commune: d.projet.commune || d.projet.npa || 'lieu ?',\n  service: d.projet.service_libelle || 'travaux ?', surface: d.projet.surface, delai: d.projet.delai,\n  telephone: d.contact.telephone_affiche || 'pas de tél.', echeance_hhmm: hhmm, lien_action: lien,\n  ref: d.ref, associe_court: ((d.attribution && d.attribution.associe) || '').split(' ')[0] || 'Un associé', promesse: s.promesse,\n};\nconst mobileAssocie = $env['AC_ASSOCIE_' + role.toUpperCase() + '_MOBILE'] || $env.AC_ASSOCIE_TERRAIN_MOBILE;\nconst titre = [d.projet.service_libelle || 'Demande', d.projet.commune, d.contact.nom].filter(Boolean).join(' · ') + ' (' + d.ref + ')';\nconst source = d.source || {};\nconst corpsAffaire = Object.assign({\n  title: titre,\n  pipeline_id: IDS.pipeline_demandes, stage_id: IDS.etape_nouvelle,\n  user_id: IDS['utilisateur_' + role],\n}, champs({\n  ref_demande: d.ref, canal: d.canal, source: source.categorie, source_detail: [source.utm_source, source.utm_medium, source.utm_campaign, source.utm_term].filter(Boolean).join(' / ') || source.libelle,\n  connu_par: d.projet.connu_par, type_client: d.projet.type_client, service: d.projet.service, surface: d.projet.surface,\n  delai: d.projet.delai, commune: d.projet.commune, zone: d.projet.zone, score: s.score, priorite: s.priorite,\n  sla_echeance: s.echeance, tentatives_appel: 0, relance_sla_niveau: 0, relance_offre_etape: 0,\n}));\nconst note = [\n  '<b>Demande ' + d.ref + '</b> (' + d.formulaire + ', ' + d.canal + ')',\n  d.projet.message ? '<p>' + d.projet.message.replace(/</g, '&lt;').replace(/\\n/g, '<br>') + '</p>' : '',\n  'Score ' + s.score + ' · priorité ' + s.priorite + ' · ' + (s.detail || []).map((l) => l.critere + ' ' + l.valeur + ' (' + l.points + ')').join(', '),\n  (s.regles || []).concat(s.hors_cible || []).join(' · '),\n  'Source : ' + (source.libelle || '') + (source.page_entree ? ' · entrée ' + source.page_entree : ''),\n].filter(Boolean).join('<br>');\nconst recherche = d.contact.email || d.contact.telephone;\nreturn [{ json: {\n  d, recherche, corps_affaire: corpsAffaire, note,\n  corps_personne: { name: [d.contact.prenom, d.contact.nom].filter(Boolean).join(' ') || d.contact.telephone_affiche || d.ref,\n    email: d.contact.email ? [{ value: d.contact.email, primary: true }] : [], phone: d.contact.telephone ? [{ value: d.contact.telephone, primary: true }] : [] },\n  sms_interne: { a: mobileAssocie, texte: versGsm(rendre(MODELES['sms-nouvelle-demande'].corps, vars)) },\n  sms_accuse: { a: d.contact.telephone, texte: versGsm(rendre(MODELES['sms-accuse'].corps, vars)) },\n  accuse_sms: !d.contact.email && d.contact.telephone_mobile && d.contact.telephone_suisse && d.canal === 'site',\n}}];\n"
+      },
+      "id": "e4755262-1efd-12ca-16ff-e9f6ff01bfc1",
+      "name": "Préparer la demande",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Assemble les données Pipedrive (champs personnalisés via AC_PD_CHAMPS), la note, les SMS. Le lien du SMS ouvre la page d'actions de WF02 (« J'ai eu la personne », « Pas de réponse », « Hors cible »).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/persons/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "term",
+              "value": "={{ $json.recherche }}"
+            },
+            {
+              "name": "fields",
+              "value": "email,phone"
+            },
+            {
+              "name": "exact_match",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a39d1364-f22b-8dac-7fee-622b162bcacb",
+      "name": "Chercher la personne (Pipedrive)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Recherche exacte par e-mail ou téléphone, pour la règle « doublon ».",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Préparer la demande').first().json;\nconst r = $input.first().json;\nconst items = (r.data && r.data.items) || [];\nreturn [{ json: { ...prep, person_id: items.length ? items[0].item.id : null } }];\n"
+      },
+      "id": "4de7a21a-bb54-cf48-d66d-29db10cb6ae0",
+      "name": "Personne trouvée ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "Retient l'identifiant de la personne si elle existe déjà.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "89c0e41e-4cb5-1cbe-417c-b77b965122f5",
+              "leftValue": "={{ !!$json.person_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7bdec031-923a-9197-4430-8a1b2f3ae6ee",
+      "name": "Personne déjà connue ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "Oui : on regarde ses affaires ouvertes (doublon possible). Non : on la crée.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $json.person_id + '/deals' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "open"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "f4937507-ba19-a676-f536-918ab422ad4e",
+      "name": "Affaires ouvertes de la personne",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        -200
+      ],
+      "notes": "Affaires ouvertes, pour détecter un doublon de moins de 30 jours.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Personne trouvée ?').first().json;\nconst affaires = ($input.first().json.data || []).filter((a) => a && a.add_time);\nconst limite = Date.now() - 30 * 86400000;\nconst recente = affaires.find((a) => new Date(a.add_time.replace(' ', 'T') + 'Z').getTime() >= limite);\nreturn [{ json: { ...prep, doublon: !!recente, deal_existant: recente ? recente.id : null } }];\n"
+      },
+      "id": "8f98217a-3109-5ae6-c750-9fffc415517e",
+      "name": "Doublon dans les 30 jours ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        -200
+      ],
+      "notes": "Règle 5 du §2.5 : même e-mail ou téléphone dans les 30 derniers jours → rattachement, pas de nouveau SMS.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "9bff2b95-95c8-eadc-b51e-ed3251cb8dab",
+              "leftValue": "={{ $json.doublon }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c7057f2b-1ecb-5fec-a304-b9be872037da",
+      "name": "Doublon ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -200
+      ],
+      "notes": "Vrai : note sur l'affaire existante. Faux : nouvelle affaire.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ deal_id: $json.deal_existant, content: '<b>Nouvelle demande (doublon) ' + $json.d.ref + '</b><br>' + $json.note }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "fd17defa-2647-4c0c-dc0f-9ee3cc090781",
+      "name": "Note sur l'affaire existante",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        -400
+      ],
+      "notes": "La nouvelle demande est ajoutée en note à l'affaire existante.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/persons",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.corps_personne }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "483dc0f2-19bb-1feb-bb20-3e5d9a41c869",
+      "name": "Créer la personne",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        200
+      ],
+      "notes": "Nouvelle personne (nom, e-mail, téléphone). Aucune autre donnée personnelle.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $('Personne trouvée ?').first().json;\nreturn [{ json: { ...prep, person_id: $input.first().json.data.id } }];\n"
+      },
+      "id": "21b57052-7af5-d7f8-3612-644883c0353f",
+      "name": "Retenir la personne créée",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        200
+      ],
+      "notes": "Fusionne l'identifiant de la personne créée avec les données préparées.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ ...$json.corps_affaire, person_id: $json.person_id }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "0cc8a785-47ee-ceff-14eb-1979c492c83a",
+      "name": "Créer l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        0
+      ],
+      "notes": "Affaire à l'étape « Nouvelle demande », attribuée à l'associé bureau (B2B) ou terrain (particuliers), avec score, priorité et échéance.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Doublon dans les 30 jours ?').isExecuted ? $('Doublon dans les 30 jours ?').first().json : $('Retenir la personne créée').first().json;\nreturn [{ json: { ...base, deal_id: $input.first().json.data.id } }];\n"
+      },
+      "id": "ebc24cbd-1d70-7410-f027-bbc4fc629e65",
+      "name": "Retenir l'affaire",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        0
+      ],
+      "notes": "Garde l'identifiant de la nouvelle affaire pour la suite.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ deal_id: $json.deal_id, content: $json.note }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "1504fac3-e82f-a7ce-1a9d-ae2bfb6c8900",
+      "name": "Ajouter le message en note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        -200
+      ],
+      "notes": "Message, score détaillé et source, en note sur l'affaire.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0d9281f9-3d19-e1f4-d579-51947de251de",
+              "leftValue": "={{ ($json.d.fichiers || []).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "226e5d53-3126-d8f4-6cb1-3393c489b661",
+      "name": "Fichiers à joindre ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        200
+      ],
+      "notes": "Photos ou plans envoyés avec le formulaire.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nreturn j.d.fichiers.map((f) => ({ json: { deal_id: j.deal_id, url: f.url, nom: f.nom } }));\n"
+      },
+      "id": "0a6182d7-4680-1436-5d1e-f4225bab8f62",
+      "name": "Un élément par fichier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        200
+      ],
+      "notes": "Les liens signés de fichier.php sont valables 24 h.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "5cc33038-b12e-b30a-daff-9b723ebf0b53",
+      "name": "Télécharger le fichier (fichier.php)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        200
+      ],
+      "notes": "Téléchargement par lien signé (site/api/fichier.php).",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "deal_id",
+              "value": "={{ $('Un élément par fichier').item.json.deal_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "78d8cf07-569a-f73a-432e-75bc3de7b0b8",
+      "name": "Joindre le fichier à l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        200
+      ],
+      "notes": "Le fichier rejoint l'affaire ; il est purgé du serveur web après 30 jours.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "269ca3e2-e947-7a0b-644c-5026ab86bca8",
+                    "leftValue": "={{ ['A','B'].includes($json.d.scoring.priorite) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "A ou B"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "b0370ee8-0554-7b65-b935-a7f7fb191a01",
+                    "leftValue": "={{ $json.d.scoring.priorite === 'C' }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "C"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "23a3e971-247c-02df-8762-ee8075b69be5",
+                    "leftValue": "={{ $json.d.scoring.priorite === 'hors-cible' }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hors cible"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "dfe28458-39c7-18f2-f7ea-e6108095cb4c",
+      "name": "Selon la priorité",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        3120,
+        600
+      ],
+      "notes": "A et B : SMS à l'associé. C : récapitulatif du soir (WF03). Hors cible : bouton de réorientation déjà dans l'e-mail interne.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nconst j = $input.first().json;\nlet t = maintenant();\nconst prioriteA = j.d.scoring.priorite === 'A';\n// Entre 20 h et 7 h : attendre 7 h ; samedi : seulement les A ; dimanche et jours fériés : jour ouvrable suivant.\nconst ok = (x) => (x.weekday <= 5 && estOuvrable(x)) || (x.weekday === 6 && prioriteA);\nlet envoi = t;\nif (t.hour >= 20 || t.hour < 7 || !ok(t)) {\n  envoi = (t.hour >= 20 ? t.plus({ days: 1 }) : t).set({ hour: 7, minute: 0, second: 0 });\n  for (let i = 0; i < 7 && !ok(envoi); i++) envoi = envoi.plus({ days: 1 }).set({ hour: 7, minute: 0 });\n}\nreturn [{ json: { ...j, attendre: envoi > t.plus({ minutes: 1 }), envoi: envoi.toISO(), sms: j.sms_interne } }];\n"
+      },
+      "id": "9315e14a-7e1f-51ef-bcd7-3203f3d51607",
+      "name": "Heure d'envoi du SMS interne",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        600
+      ],
+      "notes": "Règle du §5.7 (a) : pas de SMS la nuit, le samedi seulement pour les A, rien le dimanche.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1633ec25-25c8-ad21-afa1-a75cb305d690",
+              "leftValue": "={{ $json.attendre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f602a4f1-eafc-e99c-46d8-786b6848ef3c",
+      "name": "Attendre avant le SMS ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        600
+      ],
+      "notes": "Vrai : pause jusqu'à 7 h (exécution en attente, conservée en base).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $json.envoi }}"
+      },
+      "id": "1f722616-d179-19d5-0094-af9900d2acf5",
+      "name": "Attendre l'heure d'envoi",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3840,
+        400
+      ],
+      "notes": "Reprise automatique à l'heure calculée.",
+      "notesInFlow": false,
+      "webhookId": "781dc91c-6ca6-3c03-6cc1-d3896f101bf7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "e73e0802-15f1-e16a-9025-0f896d4ab1f9",
+      "name": "SMS aux associés",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        600
+      ],
+      "notes": "SMS interne (ASPSMS) à l'associé attribué. Lien complet vers WF02, jamais raccourci. Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {},
+      "id": "79631e03-2436-5765-c4e2-10433086be43",
+      "name": "C : récapitulatif du soir",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        800
+      ],
+      "notes": "Les demandes C apparaissent dans le récapitulatif de 17 h 30 (WF03) ; l'e-mail interne est déjà parti.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {},
+      "id": "d513059b-0ad2-1b29-5e83-5383dc960102",
+      "name": "Hors cible : validation humaine",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        1000
+      ],
+      "notes": "Le bouton « Envoyer la réponse de réorientation » est dans l'e-mail interne (PHP) ; rien n'est envoyé sans un associé.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "17c63f88-3cbb-8186-ae5b-13cb222e1a20",
+              "leftValue": "={{ $json.accuse_sms }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "41571717-5d13-13f0-5e1c-1a922fc0947d",
+      "name": "Accusé de réception par SMS ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        1200
+      ],
+      "notes": "Seulement sans e-mail, avec un mobile suisse, pour une demande du site. Texte sans lien (sms-prospects.md).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nconst j = $input.first().json;\nconst t = maintenant();\n// Prospects : en semaine 8 h - 19 h 30, samedi 9 h - 12 h, jamais le dimanche ni un jour férié.\nconst dansLaPlage = (x) => (x.weekday <= 5 && estOuvrable(x) && x.hour >= 8 && (x.hour < 19 || (x.hour === 19 && x.minute < 30)))\n  || (x.weekday === 6 && x.hour >= 9 && x.hour < 12);\nlet envoi = t;\nfor (let i = 0; i < 400 && !dansLaPlage(envoi); i++) envoi = envoi.plus({ minutes: 30 }).set({ second: 0 });\nreturn [{ json: { ...j, attendre: envoi > t.plus({ minutes: 1 }), envoi: envoi.toISO(), sms: j.sms_accuse } }];\n"
+      },
+      "id": "53f0a93f-118d-a39b-a4d4-0303309ed2cf",
+      "name": "Heure d'envoi de l'accusé SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        1200
+      ],
+      "notes": "Plage horaire des SMS aux prospects (sms-prospects.md).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "8bca35af-6e6d-5b98-ce3f-96fb8ac6b637",
+              "leftValue": "={{ $json.attendre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "98470ed4-6022-844c-015e-180d3ed9a94b",
+      "name": "Attendre avant l'accusé ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        1200
+      ],
+      "notes": "Vrai : pause jusqu'à la plage autorisée.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $json.envoi }}"
+      },
+      "id": "e7808a69-3f42-1718-9da5-4c612b35008f",
+      "name": "Attendre la plage d'envoi",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3840,
+        1400
+      ],
+      "notes": "Reprise automatique.",
+      "notesInFlow": false,
+      "webhookId": "ad1b83ae-f2bb-e074-ca31-513ff599594f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "cf7444f2-9b6f-1ff7-533b-ebdc447215a9",
+      "name": "SMS d'accusé au prospect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        1200
+      ],
+      "notes": "Texte sans lien : « votre demande est bien arrivée… ». Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Demande reçue (POST /ac-demande)": {
+      "main": [
+        [
+          {
+            "node": "Vérifier la signature HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier la signature HMAC": {
+      "main": [
+        [
+          {
+            "node": "Signature valable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature valable ?": {
+      "main": [
+        [
+          {
+            "node": "Accuser réception au PHP (200)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuser (401)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accuser réception au PHP (200)": {
+      "main": [
+        [
+          {
+            "node": "Préparer la demande",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer la demande": {
+      "main": [
+        [
+          {
+            "node": "Chercher la personne (Pipedrive)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher la personne (Pipedrive)": {
+      "main": [
+        [
+          {
+            "node": "Personne trouvée ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personne trouvée ?": {
+      "main": [
+        [
+          {
+            "node": "Personne déjà connue ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personne déjà connue ?": {
+      "main": [
+        [
+          {
+            "node": "Affaires ouvertes de la personne",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Créer la personne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affaires ouvertes de la personne": {
+      "main": [
+        [
+          {
+            "node": "Doublon dans les 30 jours ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Doublon dans les 30 jours ?": {
+      "main": [
+        [
+          {
+            "node": "Doublon ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Doublon ?": {
+      "main": [
+        [
+          {
+            "node": "Note sur l'affaire existante",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Créer l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer la personne": {
+      "main": [
+        [
+          {
+            "node": "Retenir la personne créée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retenir la personne créée": {
+      "main": [
+        [
+          {
+            "node": "Créer l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer l'affaire": {
+      "main": [
+        [
+          {
+            "node": "Retenir l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retenir l'affaire": {
+      "main": [
+        [
+          {
+            "node": "Ajouter le message en note",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fichiers à joindre ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Selon la priorité",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Accusé de réception par SMS ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fichiers à joindre ?": {
+      "main": [
+        [
+          {
+            "node": "Un élément par fichier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Un élément par fichier": {
+      "main": [
+        [
+          {
+            "node": "Télécharger le fichier (fichier.php)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Télécharger le fichier (fichier.php)": {
+      "main": [
+        [
+          {
+            "node": "Joindre le fichier à l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Selon la priorité": {
+      "main": [
+        [
+          {
+            "node": "Heure d'envoi du SMS interne",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "C : récapitulatif du soir",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hors cible : validation humaine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Heure d'envoi du SMS interne": {
+      "main": [
+        [
+          {
+            "node": "Attendre avant le SMS ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendre avant le SMS ?": {
+      "main": [
+        [
+          {
+            "node": "Attendre l'heure d'envoi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS aux associés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendre l'heure d'envoi": {
+      "main": [
+        [
+          {
+            "node": "SMS aux associés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accusé de réception par SMS ?": {
+      "main": [
+        [
+          {
+            "node": "Heure d'envoi de l'accusé SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Heure d'envoi de l'accusé SMS": {
+      "main": [
+        [
+          {
+            "node": "Attendre avant l'accusé ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendre avant l'accusé ?": {
+      "main": [
+        [
+          {
+            "node": "Attendre la plage d'envoi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS d'accusé au prospect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendre la plage d'envoi": {
+      "main": [
+        [
+          {
+            "node": "SMS d'accusé au prospect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (a) de la stratégie : réception d'une demande signée, CRM, SMS aux associés, accusé SMS sans lien."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "demandes"
+    },
+    {
+      "name": "scenario-a"
+    }
+  ],
+  "versionId": "88cbaffa-2633-3d7b-9836-06e89ea60e30",
+  "id": "df270592776419cc"
+}

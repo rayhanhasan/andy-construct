@@ -1,0 +1,967 @@
+{
+  "name": "WF02 · Actions en un clic",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF02 · Actions en un clic\n\nLiens signés (HMAC, AC_ACTION_SECRET) reçus par e-mail ou SMS. **GET** affiche une page avec un bouton ; seul le **POST** (clic sur le bouton) agit : un logiciel de messagerie qui prévisualise les liens ne déclenche donc rien.\n\nActions : `menu` (contact-etabli, pas-de-reponse, hors-cible), `envoyer-reorientation`, `offre-parler`, `offre-reporte`, `offre-autre`, `offre-clore`, `offre-prolonger`, `avis-recu`, `reserves-levees`, `entretien-passage`, `photos-*`, `simap-etudier`, `simap-ignorer`, `b2b-*`. Les actions irréversibles sont à usage unique (mémoire statique du workflow).",
+        "height": 280,
+        "width": 700
+      },
+      "id": "e30d9b68-7524-b9f8-5e0e-5170317851a3",
+      "name": "WF02 · Actions en un clic",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ac-action",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "372569fd-570d-e6e2-6a0e-f0bdf2ee7f7c",
+      "name": "Lien ouvert (GET /ac-action)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Affiche la page de confirmation ; ne modifie rien.",
+      "notesInFlow": false,
+      "webhookId": "e1a4a31d-7339-0ac8-cbea-8dfb086121ae"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\nfunction page(titre, corps) {\n  const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  return '<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">'\n    + '<meta name=\"robots\" content=\"noindex\"><title>' + e(titre) + ' · Andy Construct</title><style>'\n    + 'body{margin:0;font:18px/1.6 Arial,sans-serif;color:#1D1F22;background:#fff}main{max-width:36rem;margin:0 auto;padding:2rem 1rem}'\n    + 'h1{font-size:1.5rem;border-left:6px solid #E8000F;padding-left:.75rem}button{min-height:48px;margin:.4rem .4rem .4rem 0;padding:.7rem 1.2rem;'\n    + 'font:700 18px Arial,sans-serif;border:2px solid #1D1F22;border-radius:4px;background:#1D1F22;color:#fff;cursor:pointer}'\n    + 'button.secondaire{background:#fff;color:#1D1F22}a{color:#1D1F22}</style></head><body><main><h1>' + e(titre) + '</h1>'\n    + corps + '<p style=\"margin-top:2rem;font-size:15px;color:#44494F\">Andy Construct · +41 22 771 20 15</p></main></body></html>';\n}\n\nconst t = String(($input.first().json.query || {}).t || '');\nconst d = verifierJeton(t);\nif (!d) return [{ json: { html: page(\"Ce lien n'est plus valable\", \"<p>Le lien a expiré ou a déjà servi. Appelez-nous au +41 22 771 20 15 si besoin.</p>\"), code: 410 } }];\nconst LIBELLES = {\n  'contact-etabli': \"J'ai eu la personne\", 'pas-de-reponse': 'Pas de réponse', 'hors-cible': 'Hors cible',\n  'envoyer-reorientation': 'Envoyer la réponse de réorientation', 'offre-parler': 'Je souhaite en parler',\n  'offre-reporte': 'Le projet est reporté : recontactez-moi plus tard', 'offre-autre': \"J'ai fait un autre choix\",\n  'offre-clore': 'Clore cette offre', 'offre-prolonger': 'Garder ouverte 30 jours', 'avis-recu': 'Avis reçu',\n  'reserves-levees': 'Réserves levées', 'entretien-passage': 'Je souhaite un passage', 'photos-sans-nom': 'Photos sans nom',\n  'photos-commune': 'Photos avec la commune', 'photos-temoignage': 'Photos et quelques mots', 'photos-refus': 'Ne rien publier',\n  'simap-etudier': 'Étudier cet appel d\\'offres', 'simap-ignorer': 'Ignorer', 'b2b-interesse': 'Intéressé : envoyer le PDF',\n  'b2b-rappeler': 'Rappeler plus tard', 'b2b-pas-maintenant': 'Pas maintenant (12 mois)', 'b2b-ne-plus': 'Ne plus contacter',\n};\nconst choix = d.a === 'menu' ? ['contact-etabli', 'pas-de-reponse', 'hors-cible'] : [d.a];\nconst boutons = choix.map((c, i) => '<button name=\"choix\" value=\"' + c + '\"' + (i ? ' class=\"secondaire\"' : '') + '>' + LIBELLES[c] + '</button>').join('');\nconst titre = d.a === 'menu' ? 'Demande ' + d.r : 'Confirmer';\nconst corps = (d.r ? '<p>Référence : <strong>' + d.r + '</strong></p>' : '') + (d.t ? '<p>' + String(d.t).replace(/</g, '&lt;') + '</p>' : '')\n  + '<form method=\"post\" action=\"\"><input type=\"hidden\" name=\"t\" value=\"' + t + '\">' + boutons + '</form>';\nreturn [{ json: { html: page(titre, corps), code: 200 } }];\n"
+      },
+      "id": "e6f6001e-a5d3-873f-5768-150ff8927baa",
+      "name": "Page de confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Vérifie le jeton (signature, expiration) et propose le ou les boutons. Aucun effet tant qu'on ne clique pas.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              },
+              {
+                "name": "Content-Security-Policy",
+                "value": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c6c0d8c6-890f-3504-ec32-a8e85f6c0409",
+      "name": "Afficher la page",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Page HTML sobre, sans script, non indexée.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ac-action",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a151cbe9-8f38-2e68-39b1-0e14b7a48e13",
+      "name": "Bouton cliqué (POST /ac-action)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Formulaire de la page : t (jeton) et choix.",
+      "notesInFlow": false,
+      "webhookId": "8516d6e8-d2b8-6a6d-0def-eb82cf4254d2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\nconst b = $input.first().json.body || {};\nconst d = verifierJeton(b.t);\nconst choix = d && d.a === 'menu' ? String(b.choix || '') : (d ? d.a : '');\nconst autorises = d && d.a === 'menu' ? ['contact-etabli', 'pas-de-reponse', 'hors-cible'] : [d ? d.a : ''];\nconst valide = !!d && autorises.includes(choix);\n// Usage unique pour les actions irréversibles (la mémoire statique n'existe qu'en production, workflow actif).\nconst IRREVERSIBLES = ['pas-de-reponse', 'envoyer-reorientation', 'offre-clore', 'simap-etudier', 'entretien-passage', 'b2b-interesse'];\nlet dejaUtilise = false;\nif (valide && IRREVERSIBLES.includes(choix)) {\n  const memoire = $getWorkflowStaticData('global');\n  memoire.utilises = memoire.utilises || {};\n  const cle = d.n + ':' + choix;\n  dejaUtilise = !!memoire.utilises[cle];\n  memoire.utilises[cle] = Math.floor(Date.now() / 1000);\n  for (const [k, v] of Object.entries(memoire.utilises)) if (v < Date.now() / 1000 - 90 * 86400) delete memoire.utilises[k];\n}\nreturn [{ json: { valide: valide && !dejaUtilise, deja: dejaUtilise, jeton: d, choix } }];\n"
+      },
+      "id": "a7f06d99-0152-a82b-5a29-ac684d6e48f2",
+      "name": "Vérifier le jeton et l'usage unique",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "notes": "Refuse un jeton falsifié ou expiré, et un second clic sur une action irréversible.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ac3b000b-f7e8-3210-7602-1a1ca6a83f5b",
+              "leftValue": "={{ $json.valide }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "805019d3-e2f1-c149-ab12-e12162f8f327",
+      "name": "Action autorisée ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ],
+      "notes": "Faux : page « lien plus valable ».",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "function page(titre, corps) {\n  const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  return '<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">'\n    + '<meta name=\"robots\" content=\"noindex\"><title>' + e(titre) + ' · Andy Construct</title><style>'\n    + 'body{margin:0;font:18px/1.6 Arial,sans-serif;color:#1D1F22;background:#fff}main{max-width:36rem;margin:0 auto;padding:2rem 1rem}'\n    + 'h1{font-size:1.5rem;border-left:6px solid #E8000F;padding-left:.75rem}button{min-height:48px;margin:.4rem .4rem .4rem 0;padding:.7rem 1.2rem;'\n    + 'font:700 18px Arial,sans-serif;border:2px solid #1D1F22;border-radius:4px;background:#1D1F22;color:#fff;cursor:pointer}'\n    + 'button.secondaire{background:#fff;color:#1D1F22}a{color:#1D1F22}</style></head><body><main><h1>' + e(titre) + '</h1>'\n    + corps + '<p style=\"margin-top:2rem;font-size:15px;color:#44494F\">Andy Construct · +41 22 771 20 15</p></main></body></html>';\n}\n\nconst deja = $input.first().json.deja;\nreturn [{ json: { html: page(deja ? 'Déjà fait' : \"Ce lien n'est plus valable\", deja\n  ? '<p>Cette action a déjà été enregistrée. Rien d\\'autre à faire.</p>'\n  : '<p>Le lien a expiré. Appelez-nous au +41 22 771 20 15 si besoin.</p>') } }];\n"
+      },
+      "id": "925302f5-0493-508e-09fb-245ef958cf33",
+      "name": "Page de refus",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        600
+      ],
+      "notes": "Message neutre, sans détail technique.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              },
+              {
+                "name": "Content-Security-Policy",
+                "value": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e919917a-fe08-6fd4-790a-1666dfc2c496",
+      "name": "Afficher le refus",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        600
+      ],
+      "notes": "Statut 200 pour un affichage simple.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d30f67ed-9729-bb62-6ce0-218d85f41704",
+              "leftValue": "={{ !!$json.jeton.r || !!$json.jeton.d }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6cd41d42-469c-8e74-a94f-7c6be9bf540d",
+      "name": "Affaire existante ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        400
+      ],
+      "notes": "Les actions simap-etudier et b2b portent leur propre identifiant.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "term",
+              "value": "={{ $json.jeton.r || 'aucune-reference' }}"
+            },
+            {
+              "name": "fields",
+              "value": "custom_fields"
+            },
+            {
+              "name": "exact_match",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "0ee89718-0665-cba7-5c79-0fa6026b4904",
+      "name": "Trouver l'affaire (référence)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        200
+      ],
+      "notes": "Recherche de l'affaire par le champ « ref_demande » (ou par son identifiant).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + (($json.data && $json.data.items && $json.data.items[0]) ? $json.data.items[0].item.id : $('Vérifier le jeton et l\\'usage unique').first().json.jeton.d) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "09a30c3e-5b6b-e225-7cb3-d698a731ae76",
+      "name": "Lire l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        200
+      ],
+      "notes": "Détail complet : champs personnalisés, personne, associé.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Alphabet GSM 03.38 : remplace ce qui ferait passer le SMS à 70 caractères.\nfunction versGsm(t) {\n  const r = { 'ê': 'e', 'ë': 'e', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u', 'ç': 'c', 'À': 'A', 'Â': 'A', 'È': 'E', 'Ê': 'E', 'Î': 'I',\n    'Ô': 'O', 'Û': 'U', 'œ': 'oe', 'Œ': 'OE', '«': '\"', '»': '\"', '’': \"'\", '‘': \"'\", '“': '\"', '”': '\"', '–': '-', '—': '-', '…': '...', ' ': ' ', ' ': ' ' };\n  return String(t).replace(/[^\\n -~£¥èéùìòÇØøÅåÆæßÉÄÖÑÜ§¿äöñüà¡]/g, (c) => (r[c] !== undefined ? r[c] : c.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')));\n}\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\n\nfunction page(titre, corps) {\n  const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  return '<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">'\n    + '<meta name=\"robots\" content=\"noindex\"><title>' + e(titre) + ' · Andy Construct</title><style>'\n    + 'body{margin:0;font:18px/1.6 Arial,sans-serif;color:#1D1F22;background:#fff}main{max-width:36rem;margin:0 auto;padding:2rem 1rem}'\n    + 'h1{font-size:1.5rem;border-left:6px solid #E8000F;padding-left:.75rem}button{min-height:48px;margin:.4rem .4rem .4rem 0;padding:.7rem 1.2rem;'\n    + 'font:700 18px Arial,sans-serif;border:2px solid #1D1F22;border-radius:4px;background:#1D1F22;color:#fff;cursor:pointer}'\n    + 'button.secondaire{background:#fff;color:#1D1F22}a{color:#1D1F22}</style></head><body><main><h1>' + e(titre) + '</h1>'\n    + corps + '<p style=\"margin-top:2rem;font-size:15px;color:#44494F\">Andy Construct · +41 22 771 20 15</p></main></body></html>';\n}\nconst MODELES = {\n \"essai-appel-email\": {\n  \"sujet\": \"Nous avons essayé de vous joindre (réf. {{ref}})\",\n  \"corps\": \"{{salutation}},\\n\\nJ'ai essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}), sans parvenir à vous joindre.\\n\\nQuand puis-je vous rappeler ? Répondez simplement à ce message en indiquant un moment qui vous convient, ou appelez-nous au {{tel_fixe}}, du lundi au vendredi de 7 h à 18 h.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"cloture-sans-reponse\": {\n  \"sujet\": \"Votre demande {{ref}}\",\n  \"corps\": \"{{salutation}},\\n\\nNous avons essayé de vous joindre à plusieurs reprises au sujet de votre demande ({{service}}), sans succès.\\n\\nVotre demande reste enregistrée : si votre projet est toujours d'actualité, il suffit de répondre à ce message ou d'appeler le {{tel_fixe}}. Nous ne vous relancerons pas davantage.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"sms-essai-appel\": {\n  \"sujet\": \"\",\n  \"corps\": \"Andy Construct : {{associe_court}} a essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}). Vous pouvez nous rappeler au +41 22 771 20 15, du lundi au vendredi de 7 h à 18 h.\"\n },\n \"reorientation-service\": {\n  \"sujet\": \"Votre demande : ce que nous pouvons faire\",\n  \"corps\": \"{{salutation}},\\n\\nMerci pour votre demande. Pour être francs avec vous : {{travaux_demandes}} ne fait pas partie de nos métiers. Nous posons du placo (cloisons, doublages, faux-plafonds), nous peignons à l'intérieur, et nous isolons contre le bruit et contre le froid.\\n\\nPour ces travaux, une entreprise spécialisée vous servira mieux que nous. Si votre projet comprend aussi une partie qui relève de nos métiers, nous la chiffrons volontiers : il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"reorientation-zone\": {\n  \"sujet\": \"Votre demande{{#commune}} à {{commune}}{{/commune}}\",\n  \"corps\": \"{{salutation}},\\n\\nMerci pour votre demande. Nous intervenons dans toute la Suisse romande, mais {{commune}} est en dehors de la zone où nous pouvons organiser un chantier dans de bonnes conditions (déplacements, suivi, délais).\\n\\nNous préférons vous le dire tout de suite plutôt que de vous faire attendre. Une entreprise proche de chez vous sera plus réactive. Si nous nous sommes trompés sur le lieu des travaux, répondez simplement à ce message.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"page-offre-parler\": {\n  \"sujet\": \"\",\n  \"corps\": \"Merci. {{associe}} vous appelle dans les prochains jours ouvrables. Vous pouvez aussi nous joindre au +41 22 771 20 15.\"\n },\n \"page-offre-reporte\": {\n  \"sujet\": \"\",\n  \"corps\": \"C'est noté. Nous vous recontacterons une seule fois, dans six mois environ. Si votre projet avance plus tôt, appelez-nous au +41 22 771 20 15.\"\n },\n \"page-offre-autre\": {\n  \"sujet\": \"\",\n  \"corps\": \"Merci de nous avoir répondu, cela nous aide beaucoup. Nous ne vous relancerons pas. Si un autre projet se présente, nous restons à votre disposition au +41 22 771 20 15.\"\n }\n};\n\nconst v = $(\"Vérifier le jeton et l'usage unique\").first().json;\nconst jeton = v.jeton, choix = v.choix;\nconst deal = ($input.first().json && $input.first().json.data) || null;\nconst t = maintenant();\nconst personne = (deal && deal.person_id) || {};\nconst email = personne.email && personne.email[0] ? personne.email[0].value : '';\nconst tel = personne.phone && personne.phone[0] ? personne.phone[0].value : '';\nconst associe = (deal && deal.user_id && deal.user_id.name) || '';\nconst deEmail = (deal && deal.user_id && deal.user_id.email) || $env.AC_EMAIL_EXPEDITEUR;\nconst salutation = 'Bonjour ' + (personne.name || '');\nconst vars = { salutation, associe, associe_court: associe.split(' ')[0] || 'Un associé', heure: t.toFormat(\"H 'h' mm\"), service: serviceTexte(champ(deal, 'service')),\n  ref: champ(deal, 'ref_demande') || '', tel_fixe: '+41 22 771 20 15', signature: signature(associe), commune: champ(deal, 'commune') || '',\n  travaux_demandes: 'ce type de travaux' };\nconst r = { maj: null, activite: null, courriel: null, sms: null, creer: null, page: 'C\\'est noté. Merci.' };\nconst demain10 = () => { let x = t.plus({ days: 1 }).set({ hour: 10, minute: 0 }); while (!estOuvrable(x)) x = x.plus({ days: 1 }); return x; };\nconst mail = (id) => { const m = message(id, vars); return { de: deEmail, a: email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: deEmail }; };\nswitch (choix) {\n  case 'contact-etabli':\n    r.maj = { stage_id: IDS.etape_contact, ...champs({ date_premier_contact: t.toISO(), relance_sla_niveau: 9 }) };\n    r.page = 'Merci : la demande ' + vars.ref + ' passe à « Contact établi ».';\n    break;\n  case 'pas-de-reponse': {\n    const n = Number(champ(deal, 'tentatives_appel') || 0) + 1;\n    r.maj = champs({ tentatives_appel: n, relance_sla_niveau: 9 });\n    if (n >= 3) {\n      r.maj = { ...r.maj, status: 'lost', lost_reason: 'Sans réponse', ...champs({ motif_perte: 'sans réponse', recontact_autorise: 'non' }) };\n      if (email) r.courriel = mail('cloture-sans-reponse');\n      r.page = 'Troisième essai : la demande est close (« sans réponse »)' + (email ? ', et un message de clôture courtois est parti.' : '.');\n    } else {\n      r.activite = { subject: 'Rappeler ' + (personne.name || vars.ref) + ' (essai ' + (n + 1) + ')', type: 'call', due_date: demain10().toISODate(), due_time: '10:00', deal_id: deal.id };\n      if (n === 1 && email) r.courriel = mail('essai-appel-email');\n      else if (n === 1 && tel) r.sms = { a: tel, texte: versGsm(rendre(MODELES['sms-essai-appel'].corps, vars)) };\n      r.page = 'Noté (essai ' + n + '). ' + (n === 1 ? (email ? 'Un e-mail' : tel ? 'Un SMS' : 'Aucun message') + ' lui propose de nous rappeler. ' : '') + 'Tâche « Rappeler » créée pour demain 10 h.';\n    }\n    break;\n  }\n  case 'hors-cible':\n    r.maj = { ...champs({ priorite: 'hors-cible', relance_sla_niveau: 9 }) };\n    r.page = 'Classée « hors cible ». Le bouton de réorientation est dans l\\'e-mail interne.';\n    break;\n  case 'envoyer-reorientation':\n    if (email) { r.courriel = mail(String(champ(deal, 'zone')) === 'hors' ? 'reorientation-zone' : 'reorientation-service'); }\n    r.maj = { status: 'lost', lost_reason: 'Hors cible', ...champs({ motif_perte: 'hors cible', recontact_autorise: 'non' }) };\n    r.page = email ? 'La réponse de réorientation est partie depuis votre adresse.' : 'Pas d\\'e-mail : merci d\\'appeler la personne.';\n    break;\n  case 'offre-parler':\n    r.maj = champs({ a_repondu: 'oui' });\n    r.activite = { subject: 'Rappeler : souhaite parler de l\\'offre', type: 'call', due_date: t.toISODate(), deal_id: deal.id };\n    r.page = message('page-offre-parler', vars).texte;\n    break;\n  case 'offre-reporte':\n    r.maj = { status: 'lost', lost_reason: 'Reporté', ...champs({ a_repondu: 'oui', motif_perte: 'reporté', recontact_autorise: 'oui' }) };\n    r.page = message('page-offre-reporte', vars).texte;\n    break;\n  case 'offre-autre':\n    r.maj = { status: 'lost', lost_reason: 'Attribué ailleurs', ...champs({ a_repondu: 'oui', motif_perte: 'attribué ailleurs', recontact_autorise: 'non' }) };\n    r.page = message('page-offre-autre', vars).texte;\n    break;\n  case 'offre-clore':\n    r.maj = { status: 'lost', lost_reason: 'Sans réponse', ...champs({ motif_perte: 'sans réponse' }) };\n    r.page = 'Offre close (« sans réponse »).';\n    break;\n  case 'offre-prolonger':\n    r.maj = champs({ date_offre: t.minus({ days: 21 }).toISODate(), relance_offre_etape: 3 });\n    r.page = 'Offre gardée ouverte 30 jours de plus, sans nouvelle relance.';\n    break;\n  case 'avis-recu': r.maj = champs({ avis_recu: 'oui' }); r.page = 'Merci : avis noté.'; break;\n  case 'reserves-levees': r.maj = champs({ reserves_levees: 'oui' }); r.page = 'Réserves levées : la demande d\\'avis partira dans deux jours ouvrables.'; break;\n  case 'photos-sans-nom': case 'photos-commune': case 'photos-temoignage': case 'photos-refus':\n    r.maj = champs({ accord_publication: choix.replace('photos-', '') + ' (' + t.toISODate() + ')' });\n    r.page = choix === 'photos-refus' ? 'C\\'est noté : nous ne publierons rien. Merci de nous avoir répondu.' : 'Merci pour votre accord. Nous vous soumettrons le texte avant toute publication.';\n    break;\n  case 'entretien-passage':\n    r.creer = { title: 'Passage de contrôle · ' + (personne.name || ''), person_id: personne.value, pipeline_id: IDS.pipeline_demandes, stage_id: IDS.etape_nouvelle,\n      user_id: IDS.utilisateur_terrain, ...champs({ priorite: 'B', canal: 'site', source: 'client-existant' }) };\n    r.page = 'Merci. ' + (associe || 'Nous') + ' vous appelle dans les prochains jours ouvrables pour convenir d\\'un passage.';\n    break;\n  case 'simap-etudier':\n    r.creer = { title: 'AO · ' + (jeton.t || 'simap ' + jeton.s), pipeline_id: IDS.pipeline_ao, stage_id: IDS.etape_ao_etudie, user_id: IDS.utilisateur_bureau,\n      ...champs({ source: 'simap', source_detail: 'https://www.simap.ch/ (projet ' + jeton.s + ')' }) };\n    r.activite = { subject: 'AO : télécharger le dossier et noter les dates (questions, visite, dépôt)', type: 'task', due_date: t.toISODate() };\n    r.page = 'Affaire créée dans « Marchés publics », avec la première tâche.';\n    break;\n  case 'simap-ignorer': r.page = 'Ignoré. Rien d\\'autre à faire.'; break;\n  case 'b2b-interesse':\n    r.maj = { stage_id: IDS.etape_b2b_interesse };\n    r.activite = { subject: 'Envoyer le dossier de références et 2 fiches (e-mail individuel, voir le script)', type: 'email', due_date: t.toISODate(), deal_id: deal.id };\n    r.page = 'Noté : « Intéressé ». Tâche créée pour l\\'e-mail individuel (touche 3).';\n    break;\n  case 'b2b-rappeler':\n    r.activite = { subject: 'Rappeler (prospection)', type: 'call', due_date: t.plus({ days: 7 }).toISODate(), deal_id: deal.id };\n    r.page = 'Rappel planifié dans une semaine.';\n    break;\n  case 'b2b-pas-maintenant':\n    r.maj = { stage_id: IDS.etape_b2b_pas_maintenant, ...champs({ recontact_le: t.plus({ months: 12 }).toISODate() }) };\n    r.page = 'Noté : nouveau contact dans 12 mois.';\n    break;\n  case 'b2b-ne-plus':\n    r.maj = { stage_id: IDS.etape_b2b_ne_plus, status: 'lost', lost_reason: 'Ne plus contacter', ...champs({ ne_pas_relancer: 'oui' }) };\n    r.page = 'Noté : ce contact ne sera plus sollicité.';\n    break;\n}\nreturn [{ json: { ...r, deal_id: deal ? deal.id : null, html: page('C\\'est noté', '<p>' + r.page.replace(/</g, '&lt;').replace(/\\n/g, '<br>') + '</p>') } }];\n"
+      },
+      "id": "9c9e448f-a347-dae7-dcbd-8cdd5ede66a5",
+      "name": "Traduire l'action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        400
+      ],
+      "notes": "Traduit le bouton en mise à jour Pipedrive, tâche, e-mail ou SMS au prospect (modèles de automation/messages). Les e-mails partent de la boîte de l'associé de l'affaire.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              },
+              {
+                "name": "Content-Security-Policy",
+                "value": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5cc6e723-984e-4996-696b-bb3374a05ecd",
+      "name": "Afficher « C'est noté »",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "Réponse immédiate à la personne qui a cliqué.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "42802964-c120-0504-139e-b28b841355ba",
+              "leftValue": "={{ !!$json.maj && !!$json.deal_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2312bcc1-69ee-c0b8-0c89-a26b86425fd6",
+      "name": "Mettre à jour l'affaire ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        200
+      ],
+      "notes": "Étape, statut ou champs personnalisés.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "6b3c59a1-c4ff-69fb-3881-03a50ca2f35f",
+      "name": "Mettre à jour l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        200
+      ],
+      "notes": "Écrit la décision dans le CRM.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "62fb5c2d-2486-dac1-4963-e91eae883356",
+              "leftValue": "={{ !!$json.activite }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f0f77f28-ff86-09aa-f48c-80a8f9509374",
+      "name": "Créer une tâche ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        400
+      ],
+      "notes": "Tâche (activité) Pipedrive pour l'associé.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.activite }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "38f04f2e-e541-e81b-e94c-1974843dee53",
+      "name": "Créer la tâche",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        400
+      ],
+      "notes": "Rappel, envoi de dossier, etc.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1afdbafc-efa0-0e15-80e4-f033416021ad",
+              "leftValue": "={{ !!$json.creer }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8803c91f-0abe-7e90-5783-0c4bb4f3684b",
+      "name": "Créer une affaire ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        600
+      ],
+      "notes": "Passage d'entretien, appel d'offres à étudier.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.creer }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "b4e66c28-5975-f951-e9a7-66b3abb7a49e",
+      "name": "Créer la nouvelle affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        600
+      ],
+      "notes": "Nouvelle affaire liée.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ecbf5159-f006-9c04-bfea-eaaa33c20a37",
+              "leftValue": "={{ !!($json.courriel && $json.courriel.a) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8a249025-fe97-9fbe-b115-20577cd8b2f9",
+      "name": "E-mail au prospect ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        800
+      ],
+      "notes": "Message de service, depuis l'adresse de l'associé.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "b87d9100-4dea-93d1-0bf1-e5518001ee31",
+      "name": "Envoyer l'e-mail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        800
+      ],
+      "notes": "SMTP du domaine (SPF, DKIM, DMARC). Texte : automation/messages/.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b8f1d930-6e87-3214-9117-b90cb897dcf5",
+              "leftValue": "={{ !!($json.sms && $json.sms.a) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5101bf55-50d0-a893-14ba-0063248ed8f5",
+      "name": "SMS au prospect ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        1000
+      ],
+      "notes": "Seulement « nous avons essayé de vous joindre », sans lien.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "93643c74-555e-cec3-41a1-524f172de862",
+      "name": "Envoyer le SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        1000
+      ],
+      "notes": "SMS de service, sans lien. Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Lien ouvert (GET /ac-action)": {
+      "main": [
+        [
+          {
+            "node": "Page de confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Page de confirmation": {
+      "main": [
+        [
+          {
+            "node": "Afficher la page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bouton cliqué (POST /ac-action)": {
+      "main": [
+        [
+          {
+            "node": "Vérifier le jeton et l'usage unique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier le jeton et l'usage unique": {
+      "main": [
+        [
+          {
+            "node": "Action autorisée ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action autorisée ?": {
+      "main": [
+        [
+          {
+            "node": "Affaire existante ?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Page de refus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Page de refus": {
+      "main": [
+        [
+          {
+            "node": "Afficher le refus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affaire existante ?": {
+      "main": [
+        [
+          {
+            "node": "Trouver l'affaire (référence)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Traduire l'action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trouver l'affaire (référence)": {
+      "main": [
+        [
+          {
+            "node": "Lire l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire l'affaire": {
+      "main": [
+        [
+          {
+            "node": "Traduire l'action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Traduire l'action": {
+      "main": [
+        [
+          {
+            "node": "Afficher « C'est noté »",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mettre à jour l'affaire ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Créer une tâche ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Créer une affaire ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "E-mail au prospect ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS au prospect ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mettre à jour l'affaire ?": {
+      "main": [
+        [
+          {
+            "node": "Mettre à jour l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer une tâche ?": {
+      "main": [
+        [
+          {
+            "node": "Créer la tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Créer une affaire ?": {
+      "main": [
+        [
+          {
+            "node": "Créer la nouvelle affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail au prospect ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer l'e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS au prospect ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Liens en un clic des e-mails et SMS : page de confirmation (GET), action au clic (POST), usage unique."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "actions"
+    },
+    {
+      "name": "scenario-a"
+    },
+    {
+      "name": "scenario-b"
+    },
+    {
+      "name": "scenario-c"
+    },
+    {
+      "name": "scenario-d"
+    },
+    {
+      "name": "scenario-j"
+    }
+  ],
+  "versionId": "a5798b9d-18ee-dbc7-1b1c-7943290bc927",
+  "id": "d0cc317a463ba66b"
+}

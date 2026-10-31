@@ -69,8 +69,8 @@ final class Source
             };
             return ['categorie' => $categorie, 'libelle' => "lien depuis $referent"];
         }
-        if (($s['formulaire'] ?? '') === 'aimant') {
-            return ['categorie' => 'aimant', 'libelle' => 'aimant (accès direct)'];
+        if (($s['formulaire'] ?? '') === 'envoi_postal_guide') {
+            return ['categorie' => 'aimant', 'libelle' => 'guide (accès direct)'];
         }
         return ['categorie' => 'direct-inconnu', 'libelle' => 'direct / inconnu'];
     }

@@ -86,22 +86,19 @@ return [
     'entreprise' => [
         'nom' => 'Andy Construct',
         'adresse' => 'Route des Acacias 48, 1227 Carouge',
-        'tel_fixe' => '022 771 20 15',
-        'tel_mobile' => '078 631 14 34',
+        'tel_fixe' => '+41 22 771 20 15',
+        'tel_mobile' => '+41 78 631 14 34',
         'site' => 'www.andyconstruct.ch',
         'email' => 'contact@andyconstruct.ch',
         'horaires' => 'du lundi au vendredi, de 7 h à 18 h',
     ],
     // Numéros depuis lesquels les associés rappellent (dit au prospect pour qu'il décroche).
-    'numeros_appel_sortant' => 'le 022 771 20 15 ou le 078 631 14 34',
+    'numeros_appel_sortant' => 'le +41 22 771 20 15 ou le +41 78 631 14 34',
 
     'url_confidentialite' => 'https://www.andyconstruct.ch/confidentialite.html',
 
-    // Case « J'accepte que mes coordonnées servent uniquement à traiter ma demande » :
-    // exigée (true) au lancement. Peut passer à false après avis du juriste : la mention
-    // d'information sous le bouton suffit alors (nLPD art. 19 ; architecture-cro.md §6.3).
-    // La demande de rappel ne l'exige jamais.
-    'accord_obligatoire' => true,
+    // Aucune case de consentement n'est demandée (décision D2) : le formulaire affiche une
+    // mention d'information sous le bouton. Un champ « accord » envoyé est ignoré.
 
     // Facultatif : une fiche projet comparable citée dans l'accusé de réception, par service.
     'realisations_par_service' => [
@@ -111,7 +108,7 @@ return [
     // n8n (laisser vide tant que n8n n'est pas installé : le site fonctionne sans).
     'n8n' => [
         'url_demande' => '',        // ex. https://n8n.andyconstruct.ch/webhook/ac-demande
-        'url_aimant' => '',         // ex. https://n8n.andyconstruct.ch/webhook/ac-aimant
+        'url_guide' => '',          // ex. https://n8n.andyconstruct.ch/webhook/ac-guide
         'url_actions' => '',        // ex. https://n8n.andyconstruct.ch/webhook/ac-action
         'url_desinscription' => '', // ex. https://n8n.andyconstruct.ch/webhook/ac-stop
         'delai' => 5,               // secondes avant de basculer sur la file d'attente
@@ -122,13 +119,13 @@ return [
     'pages' => [
         'merci_devis' => '/merci.html',
         'merci_rappel' => '/merci.html',
-        'merci_aimant' => '/merci-guide.html',
+        'merci_envoi_postal_guide' => '/merci.html',
         'formulaire' => '/contact.html#formulaire',
     ],
 
     'anti_spam' => [
         // Délai minimal (secondes) entre l'affichage du formulaire et l'envoi.
-        'delai_min' => ['devis' => 4, 'rappel' => 2, 'aimant' => 2],
+        'delai_min' => ['devis' => 4, 'rappel' => 2, 'envoi_postal_guide' => 3],
         'jeton_validite_h' => 12,
         'limite_par_heure' => 5,        // demandes acceptées par IP et par heure
         'tentatives_par_heure' => 30,   // envois (y compris corrections) par IP et par heure
@@ -160,27 +157,30 @@ return [
     // false : « dans les meilleurs délais ». Ne promettre que ce que l'on tient.
     'promesse_delai' => true,
 
-    // Aimants à prospects (guides). Seuls les guides « actif » sont acceptés.
-    'aimants' => [
-        'guide-bruit' => [
-            'actif' => false,
-            'titre' => 'Réduire le bruit dans un appartement : ce qui marche vraiment',
-            'url' => 'https://www.andyconstruct.ch/guides/reduire-le-bruit.pdf',
-            'format' => 'PDF, 8 pages',
-            'lecture' => '10 minutes',
+    // Guides envoyables imprimés par la poste (formulaire « envoi_postal_guide », décision D3).
+    // Les PDF restent en téléchargement libre (site/assets/docs/, décision D7). Seuls les
+    // guides « actif » sont acceptés. liste_brevo : identifiant de la liste Brevo de la
+    // séquence de conseils (seulement si la personne l'a demandée).
+    'guides' => [
+        'guide-reduire-le-bruit' => [
+            'actif' => true,
+            'titre' => 'Réduire le bruit chez soi : ce qui marche vraiment',
+            'url' => 'https://www.andyconstruct.ch/assets/docs/guide-reduire-le-bruit.pdf',
             'liste_brevo' => 0,
         ],
-        'checklist-regie' => [
-            'actif' => false,
-            'titre' => 'Travaux en immeuble habité : la check-list de la régie',
-            'url' => 'https://www.andyconstruct.ch/guides/checklist-regie.pdf',
-            'format' => 'PDF, 2 pages',
-            'lecture' => '3 minutes',
+        'checklist-chantier-site-occupe' => [
+            'actif' => true,
+            'titre' => 'Travaux en immeuble habité : la liste de contrôle de la régie',
+            'url' => 'https://www.andyconstruct.ch/assets/docs/checklist-chantier-site-occupe.pdf',
+            'liste_brevo' => 0,
+        ],
+        'andy-construct-references' => [
+            'actif' => true,
+            'titre' => 'Dossier de références Andy Construct',
+            'url' => 'https://www.andyconstruct.ch/assets/docs/andy-construct-references.pdf',
             'liste_brevo' => 0,
         ],
     ],
-    // Notification interne des aimants : 'tous', 'b2b_et_poste' (profils pro ou envoi postal) ou 'aucun'.
-    'notifier_aimants' => 'b2b_et_poste',
 
     // Saisie express des appels reçus (canal=telephone) : clé exigée. Vide = désactivé.
     'cle_saisie_interne' => '',

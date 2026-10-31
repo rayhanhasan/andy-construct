@@ -1,0 +1,17 @@
+# Proxy HTTPS (certificats Let's Encrypt automatiques).
+{$N8N_DOMAINE} {
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+	reverse_proxy n8n:5678
+}
+
+{$UMAMI_DOMAINE} {
+	encode gzip
+	header -Server
+	reverse_proxy umami:3000
+}

@@ -1,0 +1,472 @@
+{
+  "name": "WF09 · Rapport mensuel (h)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF09 · Tableau de bord mensuel\n\n1er jour ouvrable du mois à 7 h : CRM (demandes, priorités, offres, signatures, délais de rappel, sources), Umami (visites, contacts web, événements), Google (note et nombre d'avis), Search Console (clics, impressions). Chaque source externe est facultative : en cas d'échec, le rapport part quand même avec la mention « indisponible ». L'agence ajoute 3 lignes de commentaire sous 48 h (§5.7 h).",
+        "height": 200,
+        "width": 680
+      },
+      "id": "f58116bb-d391-114f-e2ce-bbbb33d787ff",
+      "name": "WF09 · Tableau de bord mensuel",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 1-7 * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "55f8e28d-34a5-6402-e2e1-5a072ca78ad9",
+      "name": "Du 1er au 7 du mois à 7 h (lu-ve)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Le nœud suivant ne garde que le premier jour ouvrable.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nconst t = maintenant();\nlet premier = t.startOf('month');\nwhile (!estOuvrable(premier)) premier = premier.plus({ days: 1 });\nconst debut = t.minus({ months: 1 }).startOf('month'), fin = t.startOf('month');\nreturn [{ json: { ok: premier.toISODate() === t.toISODate(), debut: debut.toISO(), fin: fin.toISO(), debutMs: debut.toMillis(), finMs: fin.toMillis(), mois: debut.setLocale('fr-CH').toFormat('MMMM yyyy') } }];\n"
+      },
+      "id": "d50ba0b5-a4fe-8d24-5afe-31c757d00397",
+      "name": "Premier jour ouvrable ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Code JavaScript : premier jour ouvrable ?.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d934afcc-05c6-077f-09a3-a18512d3122b",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d59f713-55a1-f3d8-bd82-fdcd10607ff9",
+      "name": "Aujourd'hui ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Condition : $json.ok. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_toutes }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "89ced521-4426-5d7d-9ac5-18f67e1241be",
+      "name": "Affaires (Pipedrive)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Filtre « toutes les affaires du pipeline Demandes, 13 derniers mois ».",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.AC_UMAMI_URL + '/api/websites/' + $env.AC_UMAMI_SITE + '/stats' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "startAt",
+              "value": "={{ $('Premier jour ouvrable ?').first().json.debutMs }}"
+            },
+            {
+              "name": "endAt",
+              "value": "={{ $('Premier jour ouvrable ?').first().json.finMs }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "00caa72d-3f75-12cf-a7a3-36d5fb312b17",
+      "name": "Umami : statistiques",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Visites et pages vues du mois.",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-umami",
+          "name": "Umami (Authorization: Bearer)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.AC_UMAMI_URL + '/api/websites/' + $env.AC_UMAMI_SITE + '/metrics' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "event"
+            },
+            {
+              "name": "startAt",
+              "value": "={{ $('Premier jour ouvrable ?').first().json.debutMs }}"
+            },
+            {
+              "name": "endAt",
+              "value": "={{ $('Premier jour ouvrable ?').first().json.finMs }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "8be0d9ce-66d9-2a5e-f11b-3b8787edd4f4",
+      "name": "Umami : événements",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Clics tél., e-mail, formulaires envoyés…",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-umami",
+          "name": "Umami (Authorization: Bearer)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://places.googleapis.com/v1/places/' + $env.AC_GOOGLE_PLACE_ID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "rating,userRatingCount"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "08a020d0-6b36-e7c9-502a-9f13964b67ba",
+      "name": "Google : note et avis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "Places API (New) : rating, userRatingCount.",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-places",
+          "name": "Google Places (X-Goog-Api-Key)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://www.googleapis.com/webmasters/v3/sites/' + encodeURIComponent($env.AC_SEARCH_CONSOLE_SITE || 'sc-domain:andyconstruct.ch') + '/searchAnalytics/query' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ startDate: $('Premier jour ouvrable ?').first().json.debut.slice(0, 10), endDate: DateTime.fromISO($('Premier jour ouvrable ?').first().json.fin).minus({ days: 1 }).toISODate(), dimensions: ['query'], rowLimit: 30 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "911e0ebe-3f2d-c9e6-136c-a27f7e953b7c",
+      "name": "Search Console : requêtes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "Clics et impressions du mois (OAuth2 Google).",
+      "notesInFlow": false,
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "REMPLACER-google",
+          "name": "Google Search Console (OAuth2)"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\nconst p = $('Premier jour ouvrable ?').first().json;\nconst affaires = $('Affaires (Pipedrive)').first().json.data || [];\nconst dans = (d) => d && Date.parse(String(d).replace(' ', 'T') + 'Z') >= p.debutMs && Date.parse(String(d).replace(' ', 'T') + 'Z') < p.finMs;\nconst mois = affaires.filter((a) => dans(a.add_time));\nconst parPrio = (x) => mois.filter((a) => champ(a, 'priorite') === x).length;\nconst offres = affaires.filter((a) => dans(champ(a, 'date_offre') + ' 12:00:00')).length;\nconst gagnees = affaires.filter((a) => a.status === 'won' && dans(a.won_time));\nconst montant = gagnees.reduce((s, a) => s + Number(a.value || 0), 0);\nconst delais = mois.filter((a) => champ(a, 'date_premier_contact')).map((a) => (Date.parse(champ(a, 'date_premier_contact')) - Date.parse(a.add_time.replace(' ', 'T') + 'Z')) / 3600000).sort((x, y) => x - y);\nconst mediane = delais.length ? delais[Math.floor(delais.length / 2)].toFixed(1) + ' h' : 'n.d.';\nconst sources = {};\nfor (const a of mois) { const s = champ(a, 'source') || 'inconnue'; sources[s] = (sources[s] || 0) + 1; }\nconst umami = $('Umami : statistiques').first().json || {};\nconst ev = $('Umami : événements').first().json;\nconst evenements = Array.isArray(ev) ? ev.map((e) => e.x + ' : ' + e.y).join(', ') : 'indisponible';\nconst g = $('Google : note et avis').first().json || {};\nconst sc = $('Search Console : requêtes').first().json || {};\nconst clics = (sc.rows || []).reduce((s, r) => s + r.clicks, 0), impressions = (sc.rows || []).reduce((s, r) => s + r.impressions, 0);\nconst visites = umami.visits ? (umami.visits.value !== undefined ? umami.visits.value : umami.visits) : 'indisponible';\nconst lignes = [\n  'Andy Construct · tableau de bord de ' + p.mois, '',\n  'EN BREF',\n  '- Demandes : ' + mois.length + ' (A ' + parPrio('A') + ', B ' + parPrio('B') + ', C ' + parPrio('C') + ', hors cible ' + parPrio('hors-cible') + ')',\n  '- Offres envoyées : ' + offres,\n  '- Chantiers signés : ' + gagnees.length + ' (CHF ' + montant.toLocaleString('fr-CH') + ')',\n  '- Avis Google : ' + (g.userRatingCount !== undefined ? g.userRatingCount + ' (note ' + g.rating + ')' : 'indisponible'),\n  '- Délai médian de premier contact : ' + mediane, '',\n  'SOURCES DES DEMANDES', ...Object.entries(sources).sort((a, b) => b[1] - a[1]).map(([s, n]) => '- ' + s + ' : ' + n), '',\n  'SITE (Umami, sans cookie)', '- Visites : ' + visites, '- Événements : ' + evenements, '',\n  'RECHERCHE (Search Console)', '- Clics : ' + (sc.rows ? clics : 'indisponible') + ' · impressions : ' + (sc.rows ? impressions : 'indisponible'),\n  ...(sc.rows || []).slice(0, 10).map((r) => '  · ' + r.keys[0] + ' : ' + r.clicks + ' clics, position ' + r.position.toFixed(1)), '',\n  'Dépenses publicitaires (Google Ads, Meta, LinkedIn) : à compléter par l\\'agence, avec 3 actions pour le mois suivant.',\n];\nconst texte = lignes.join('\\n') + '\\n';\nreturn [{ json: { courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: [$env.AC_EMAILS_ASSOCIES, $env.AC_AGENCE_EMAIL].filter(Boolean).join(','), repondre_a: $env.AC_AGENCE_EMAIL || $env.AC_EMAIL_EXPEDITEUR,\n  sujet: 'Andy Construct · tableau de bord de ' + p.mois, texte, html: '<pre style=\"font:16px/1.5 Arial,sans-serif;white-space:pre-wrap\">' + texte.replace(/</g, '&lt;') + '</pre>' } } }];\n"
+      },
+      "id": "de535c3c-a9f9-3798-a4af-04facad5116c",
+      "name": "Calculer les indicateurs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ],
+      "notes": "Indicateurs du §6.5 de la stratégie (version de départ : à enrichir avec Google Ads).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "76ee0077-a3d3-dd25-4f91-c6e5aced09d1",
+      "name": "Envoyer le rapport",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        0
+      ],
+      "notes": "Associés et agence.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Du 1er au 7 du mois à 7 h (lu-ve)": {
+      "main": [
+        [
+          {
+            "node": "Premier jour ouvrable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Premier jour ouvrable ?": {
+      "main": [
+        [
+          {
+            "node": "Aujourd'hui ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aujourd'hui ?": {
+      "main": [
+        [
+          {
+            "node": "Affaires (Pipedrive)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affaires (Pipedrive)": {
+      "main": [
+        [
+          {
+            "node": "Umami : statistiques",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Umami : statistiques": {
+      "main": [
+        [
+          {
+            "node": "Umami : événements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Umami : événements": {
+      "main": [
+        [
+          {
+            "node": "Google : note et avis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google : note et avis": {
+      "main": [
+        [
+          {
+            "node": "Search Console : requêtes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Console : requêtes": {
+      "main": [
+        [
+          {
+            "node": "Calculer les indicateurs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculer les indicateurs": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (h) : rapport mensuel automatique (CRM, Umami, avis Google, Search Console)."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "rapport"
+    },
+    {
+      "name": "scenario-h"
+    }
+  ],
+  "versionId": "463e88a3-53c5-fb2c-4636-187004768af6",
+  "id": "78442aed05485963"
+}

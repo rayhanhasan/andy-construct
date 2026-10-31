@@ -1,0 +1,381 @@
+{
+  "name": "WF04e · Offres perdues : recontact à 6 mois (e)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF04e · Recontact à 6 mois\n\nChaque jour à 7 h 30 : affaires perdues depuis 182 jours avec `recontact_autorise = oui` et motif « reporté », « prix » ou « délai ». Jamais pour « sans réponse » ni « hors cible », ni marché public, ni personne en opposition. Plafond : un message marketing tous les 30 jours. Particuliers : un e-mail. Professionnels : tâche « Appeler ».",
+        "height": 180,
+        "width": 640
+      },
+      "id": "183d244e-ed22-169e-f24a-e3503ad8b157",
+      "name": "WF04e · Recontact à 6 mois",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "defefffe-9a6c-0d63-e8b1-d868fadff9c7",
+      "name": "Chaque jour à 7 h 30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclencheur planifié « 30 7 * * * » (cron, fuseau Europe/Zurich défini dans les paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_perdues }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "fd586140-257c-f40a-c12d-43c3087549ec",
+      "name": "Affaires perdues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Filtre « perdues, pipeline Demandes » (AC_PD_IDS.filtre_perdues).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"offre-perdue-6-mois\": {\n  \"sujet\": \"{{service_majuscule}}{{#commune}} à {{commune}}{{/commune}}\",\n  \"corps\": \"{{salutation}},\\n\\nIl y a six mois, vous nous aviez consultés pour {{service}} et souhaitiez être recontacté(e) plus tard. Comme convenu, je reviens vers vous une seule fois.\\n\\nLe projet est-il toujours d'actualité ? Si oui, nous pouvons mettre notre offre à jour ou proposer une réalisation par étapes. Une simple réponse à ce message suffit.\\n\\nSans nouvelle de votre part, nous ne vous écrirons plus à ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"tache-offre-perdue-pro\": {\n  \"sujet\": \"\",\n  \"corps\": \"Appeler {{nom}} ({{organisation}}) : offre {{service}} du {{date_offre}}, perdue pour « {{motif_perte}} », recontact accepté. Question : « Le projet est-il revenu à l'ordre du jour ? Souhaitez-vous une offre mise à jour ? » Résultat à saisir : intéressé (nouvelle affaire), plus tard, ne plus contacter.\"\n }\n};\n\nconst t = maintenant(), sortie = [];\nfor (const a of ($input.first().json.data || [])) {\n  if (String(a.pipeline_id) === String(IDS.pipeline_ao) || !a.lost_time || champ(a, 'relance_6m_le')) continue;\n  if (champ(a, 'recontact_autorise') !== 'oui' || !['reporté', 'prix', 'délai'].includes(champ(a, 'motif_perte'))) continue;\n  const jours = t.diff(DateTime.fromSQL(a.lost_time, { zone: 'utc' }), 'days').days;\n  if (jours < 182 || jours > 200) continue;\n  const p = a.person_id || {}, email = p.email && p.email[0] && p.email[0].value;\n  if (champ(p, 'opposition_marketing')) continue;\n  const dernier = champ(p, 'dernier_message_marketing');\n  if (dernier && t.diff(DateTime.fromISO(dernier), 'days').days < 30) continue;\n  const pro = ['regie', 'architecte', 'commune', 'entreprise'].includes(champ(a, 'type_client'));\n  const associe = (a.user_id && a.user_id.name) || '', deEmail = (a.user_id && a.user_id.email) || $env.AC_EMAIL_EXPEDITEUR;\n  const vars = { salutation: 'Bonjour ' + (p.name || ''), service: serviceTexte(champ(a, 'service')), service_majuscule: majuscule(serviceTexte(champ(a, 'service'))), commune: champ(a, 'commune') || '', signature: signature(associe),\n    url_desinscription: email ? lienStop(email) : '', nom: p.name || '', organisation: (a.org_id && a.org_id.name) || '', date_offre: champ(a, 'date_offre') || '', motif_perte: champ(a, 'motif_perte') };\n  const m = message(pro ? 'tache-offre-perdue-pro' : 'offre-perdue-6-mois', vars);\n  sortie.push({ json: { deal_id: a.id, person_id: p.value, pro: pro || !email,\n    courriel: { de: deEmail, a: email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: deEmail },\n    activite: { subject: 'Recontact à 6 mois (accepté) : ' + (p.name || a.title), type: 'call', due_date: t.toISODate(), deal_id: a.id, note: m.texte },\n    maj: champs({ relance_6m_le: t.toISODate() }), maj_personne: champs({ dernier_message_marketing: t.toISODate() }) } });\n}\nreturn sortie;\n"
+      },
+      "id": "c1cb5737-4a48-508b-9d01-b1dce8d781ef",
+      "name": "Recontacts dus",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Conditions de la stratégie §5.7 (e) et §9.2.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3a9f45aa-8d46-2664-e6c5-d4cebebbade0",
+              "leftValue": "={{ $json.pro }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5fc0f70d-760c-f3ab-7893-d98ffc71cc6e",
+      "name": "Professionnel ou sans e-mail ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Vrai : tâche d'appel. Faux : e-mail unique.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.activite }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "374cbf1b-adf7-6d7b-bf5e-92f1c25167bc",
+      "name": "Tâche « Appeler »",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        -200
+      ],
+      "notes": "5 minutes d'appel.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "aa65b21b-6061-5097-e5d5-0ca30424695e",
+      "name": "E-mail unique",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        200
+      ],
+      "notes": "« Le projet est-il toujours d'actualité ? » ; aucun autre message ensuite.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $('Recontacts dus').item.json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Recontacts dus').item.json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "06da468d-0845-ff41-94d8-91fe84203aef",
+      "name": "Noter le recontact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "relance_6m_le.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $('Recontacts dus').item.json.person_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Recontacts dus').item.json.maj_personne }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3c663c9a-be68-35cd-40a4-6c0c5cc76813",
+      "name": "Noter le dernier message marketing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "Plafond de pression (30 jours).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Chaque jour à 7 h 30": {
+      "main": [
+        [
+          {
+            "node": "Affaires perdues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affaires perdues": {
+      "main": [
+        [
+          {
+            "node": "Recontacts dus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recontacts dus": {
+      "main": [
+        [
+          {
+            "node": "Professionnel ou sans e-mail ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Professionnel ou sans e-mail ?": {
+      "main": [
+        [
+          {
+            "node": "Tâche « Appeler »",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E-mail unique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tâche « Appeler »": {
+      "main": [
+        [
+          {
+            "node": "Noter le recontact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail unique": {
+      "main": [
+        [
+          {
+            "node": "Noter le recontact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Noter le recontact": {
+      "main": [
+        [
+          {
+            "node": "Noter le dernier message marketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (e) : un seul recontact, 6 mois après, seulement si la personne l'a demandé."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "horloge"
+    },
+    {
+      "name": "scenario-e"
+    }
+  ],
+  "versionId": "a7c7a728-1beb-8831-79f9-35f9cc53505d",
+  "id": "7a548c0433346f74"
+}

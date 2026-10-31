@@ -8,13 +8,13 @@
 | Base légale | Demande expresse de la personne d'être recontactée (stratégie §9.2) |
 | Expéditeur | Associé d'origine |
 
-Variables : `salutation`, `service`, `commune`, `signature`, `url_desinscription`.
+Variables : `salutation`, `service` (« vos travaux de peinture »), `service_majuscule`, `commune`, `signature`, `url_desinscription`.
 
 ## E-mail (particuliers)
 
 <!-- modele: offre-perdue-6-mois -->
 ```texte
-Objet : Votre projet de {{service}}{{#commune}} à {{commune}}{{/commune}}
+Objet : {{service_majuscule}}{{#commune}} à {{commune}}{{/commune}}
 
 {{salutation}},
 

@@ -1,0 +1,459 @@
+{
+  "name": "WF03d · Demande d'avis après chantier J+2, J+9 (d)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF03d · Avis et accord de publication\n\nChaque jour ouvrable à 10 h : chantiers « Terminé » avec `reserves_levees = oui` et sans litige. J+2 : particuliers → e-mail (avec le lien) + SMS **sans lien** ; professionnels → demande d'autorisation de citer. J+9 : une seule relance si `avis_recu` n'est pas coché. J+14 : accord pour publier des photos (particuliers).\n\n**Tous** les clients reçoivent la même demande (règles Google) : aucun tri selon la satisfaction.",
+        "height": 220,
+        "width": 680
+      },
+      "id": "911f569b-545a-4086-8fc3-7d967d1eb090",
+      "name": "WF03d · Avis et accord de publication",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "fa01604c-cd40-3283-725e-b706c3199625",
+      "name": "Chaque jour à 10 h (lu-ve)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclencheur planifié « 0 10 * * 1-5 » (cron, fuseau Europe/Zurich défini dans les paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nreturn [{ json: { ouvrable: estOuvrable(maintenant()) } }];\n"
+      },
+      "id": "2622b7ed-1a4a-a2c4-a4f4-11637381a752",
+      "name": "Jour ouvrable ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Code JavaScript : jour ouvrable ?.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "de7b0535-2767-4bc0-9eca-5db15f858103",
+              "leftValue": "={{ $json.ouvrable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8f5f0293-ea16-2eb9-6140-b0112043f7ed",
+      "name": "Ouvrable ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Condition : $json.ouvrable. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_chantiers_termines }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "f66adeb6-e922-96bb-fc25-f7fbed5e08db",
+      "name": "Chantiers terminés",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Filtre « pipeline Chantiers, étape Terminé ou Avis demandé ».",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Alphabet GSM 03.38 : remplace ce qui ferait passer le SMS à 70 caractères.\nfunction versGsm(t) {\n  const r = { 'ê': 'e', 'ë': 'e', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u', 'ç': 'c', 'À': 'A', 'Â': 'A', 'È': 'E', 'Ê': 'E', 'Î': 'I',\n    'Ô': 'O', 'Û': 'U', 'œ': 'oe', 'Œ': 'OE', '«': '\"', '»': '\"', '’': \"'\", '‘': \"'\", '“': '\"', '”': '\"', '–': '-', '—': '-', '…': '...', ' ': ' ', ' ': ' ' };\n  return String(t).replace(/[^\\n -~£¥èéùìòÇØøÅåÆæßÉÄÖÑÜ§¿äöñüà¡]/g, (c) => (r[c] !== undefined ? r[c] : c.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')));\n}\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"avis-j2\": {\n  \"sujet\": \"Merci, et votre avis sur notre travail\",\n  \"corps\": \"{{salutation}},\\n\\nLe chantier{{#commune}} de {{commune}}{{/commune}} est terminé : merci pour votre confiance.\\n\\nQue vous soyez satisfait(e) ou que quelque chose aurait pu être mieux fait, votre avis public nous est utile et aide d'autres personnes à choisir. Cela prend une minute :\\n{{lien_avis_google}}\\n\\nSi vous le souhaitez, mentionnez le type de travaux et la commune. Et si un point n'est pas en ordre, dites-le-nous d'abord : nous revenons.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"avis-j9\": {\n  \"sujet\": \"Petit rappel, si vous avez une minute\",\n  \"corps\": \"{{salutation}},\\n\\nSi vous avez déjà laissé votre avis, merci beaucoup, et ignorez ce message.\\n\\nSinon, voici le lien, valable en tout temps : {{lien_avis_google}}\\n\\nNous ne vous relancerons plus à ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"reference-pro-j2\": {\n  \"sujet\": \"{{service_majuscule}}{{#commune}} à {{commune}}{{/commune}} : merci, et une question\",\n  \"corps\": \"{{salutation}},\\n\\nLes travaux{{#commune}} de {{commune}}{{/commune}} sont terminés : merci pour votre confiance et pour la bonne collaboration.\\n\\nPourrions-nous citer ce chantier parmi nos références (site internet et dossier de références) ? Nous vous soumettrons le texte avant toute publication. Si vous le préférez, un avis sur notre fiche Google nous aide aussi : {{lien_avis_google}}\\n\\nUne réponse à ce message suffit, dans un sens comme dans l'autre.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"accord-photos-j14\": {\n  \"sujet\": \"Pouvons-nous montrer votre chantier ?\",\n  \"corps\": \"{{salutation}},\\n\\nNous aimerions montrer quelques photos de votre chantier sur notre site, pour aider d'autres personnes à se faire une idée. Nous ne le ferons qu'avec votre accord. Choisissez ce qui vous convient :\\n\\n- Photos sans aucun nom : {{lien_photos_sans_nom}}\\n- Photos avec la commune seulement : {{lien_photos_commune}}\\n- Photos et quelques mots de votre part (nous vous les soumettons avant publication) : {{lien_temoignage}}\\n- Je préfère que vous ne publiiez rien : {{lien_refus}}\\n\\nAucune photo ne montre de visage ni d'objet personnel identifiable. Vous pouvez retirer votre accord à tout moment en répondant à ce message.\\n\\nMeilleures salutations,\\n\\n{{signature}}\"\n },\n \"sms-demande-avis\": {\n  \"sujet\": \"\",\n  \"corps\": \"Bonjour{{#civilite_nom}} {{civilite_nom}}{{/civilite_nom}}, merci d'avoir confié votre chantier à Andy Construct. Si vous avez une minute, votre avis sur Google aide d'autres personnes à choisir : cherchez \\\"Andy Construct\\\" sur Google Maps, rubrique Avis. Le lien direct est dans notre e-mail. {{prenom_associe}}\"\n }\n};\n\nconst t = maintenant(), sortie = [];\nfor (const a of ($input.first().json.data || [])) {\n  if (champ(a, 'reserves_levees') !== 'oui' || champ(a, 'litige') === 'oui' || champ(a, 'avis_recu') === 'oui') continue;\n  const reception = champ(a, 'date_reception_chantier'); if (!reception) continue;\n  const jours = Math.floor(t.startOf('day').diff(DateTime.fromISO(reception).startOf('day'), 'days').days);\n  const p = a.person_id || {}, email = p.email && p.email[0] && p.email[0].value, tel = p.phone && p.phone[0] && p.phone[0].value;\n  const pro = ['regie', 'architecte', 'commune', 'entreprise'].includes(champ(a, 'type_client'));\n  const associe = (a.user_id && a.user_id.name) || '', deEmail = (a.user_id && a.user_id.email) || $env.AC_EMAIL_EXPEDITEUR;\n  const vars = { salutation: 'Bonjour ' + (p.name || ''), service: serviceTexte(champ(a, 'service')), service_majuscule: majuscule(serviceTexte(champ(a, 'service'))), commune: champ(a, 'commune') || '', lien_avis_google: $env.AC_LIEN_AVIS_GOOGLE,\n    prenom_associe: associe.split(' ')[0], signature: signature(associe), url_desinscription: email ? lienStop(email) : '', civilite_nom: '',\n    lien_photos_sans_nom: lienAction({ a: 'photos-sans-nom', d: a.id }, 60), lien_photos_commune: lienAction({ a: 'photos-commune', d: a.id }, 60),\n    lien_temoignage: lienAction({ a: 'photos-temoignage', d: a.id }, 60), lien_refus: lienAction({ a: 'photos-refus', d: a.id }, 60) };\n  const mail = (id) => { const m = message(id, vars); return { de: deEmail, a: email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: deEmail }; };\n  const demande = champ(a, 'avis_demande_le'), relance = champ(a, 'avis_relance_le'), photos = champ(a, 'accord_photos_demande_le');\n  let o = null;\n  if (!demande && jours >= 2) o = { etape: 'J+2', courriel: email ? mail(pro ? 'reference-pro-j2' : 'avis-j2') : null,\n    sms: !pro && tel ? { a: tel, texte: versGsm(rendre(MODELES['sms-demande-avis'].corps, vars)) } : null, maj: champs({ avis_demande_le: t.toISODate() }) };\n  else if (demande && !relance && !pro && t.diff(DateTime.fromISO(demande), 'days').days >= 7) o = { etape: 'J+9', courriel: email ? mail('avis-j9') : null, maj: champs({ avis_relance_le: t.toISODate() }) };\n  else if (demande && !photos && !pro && jours >= 14) o = { etape: 'J+14', courriel: email ? mail('accord-photos-j14') : null, maj: champs({ accord_photos_demande_le: t.toISODate() }) };\n  if (o) sortie.push({ json: { deal_id: a.id, ...o } });\n}\nreturn sortie;\n"
+      },
+      "id": "94e449c7-e137-707d-e56c-c1275000d18a",
+      "name": "Messages dus",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Textes : demande-avis.md et sms-prospects.md. Lien d'avis Google : AC_LIEN_AVIS_GOOGLE.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "fee6b841-018d-d2d6-daa1-9deee136f20e",
+              "leftValue": "={{ !!($json.courriel && $json.courriel.a) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "174628c0-4d3a-43ab-d587-5367c916b9bc",
+      "name": "E-mail ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -200
+      ],
+      "notes": "Condition : !!($json.courriel && $json.courriel.a). Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "ee12ecd9-91a5-8e6b-be05-a854eacf70f9",
+      "name": "Envoyer l'e-mail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        -200
+      ],
+      "notes": "Signé par l'associé qui a dirigé le chantier.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "14234018-ef0c-4529-f306-2fe800d8d0a5",
+              "leftValue": "={{ !!($json.sms && $json.sms.a) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a225b69b-1dd0-5a9c-843b-9f7fedcc29f8",
+      "name": "SMS ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Particuliers, J+2 seulement, sans lien.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nconst t = maintenant();\nreturn $input.all().map((i) => ({ json: { ...i.json, maintenant: t.hour >= 8 && t.hour < 19 } }));\n"
+      },
+      "id": "7ade9563-9733-fa78-4c56-6464aaa808d6",
+      "name": "Plage horaire du SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "L'horloge passe à 10 h : toujours dans la plage autorisée ; contrôle de sécurité.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a8c1bd9c-90f3-edbe-f02e-bfcdb5a8a4e7",
+      "name": "Envoyer le SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "SMS sans lien : « cherchez Andy Construct sur Google Maps ». Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "e9ba7830-ff00-d86b-cf13-c1f19efde763",
+      "name": "Noter la date",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        200
+      ],
+      "notes": "avis_demande_le, avis_relance_le ou accord_photos_demande_le.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Chaque jour à 10 h (lu-ve)": {
+      "main": [
+        [
+          {
+            "node": "Jour ouvrable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jour ouvrable ?": {
+      "main": [
+        [
+          {
+            "node": "Ouvrable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ouvrable ?": {
+      "main": [
+        [
+          {
+            "node": "Chantiers terminés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chantiers terminés": {
+      "main": [
+        [
+          {
+            "node": "Messages dus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Messages dus": {
+      "main": [
+        [
+          {
+            "node": "E-mail ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Noter la date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer l'e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS ?": {
+      "main": [
+        [
+          {
+            "node": "Plage horaire du SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plage horaire du SMS": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (d) : demande d'avis à J+2, relance unique à J+9, accord de publication à J+14."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "horloge"
+    },
+    {
+      "name": "scenario-d"
+    },
+    {
+      "name": "avis"
+    }
+  ],
+  "versionId": "af9c0937-01fa-52ef-c42a-f8829c08d223",
+  "id": "fffcb2dbb941027c"
+}

@@ -1,0 +1,565 @@
+{
+  "name": "WF14 · Détection des réponses et des STOP",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF14 · Toute réponse arrête les relances\n\nLecture IMAP des boîtes des associés (une par nœud). Seuls l'expéditeur et la présence de « STOP » en début de message sont gardés ; le contenu n'est ni stocké ni journalisé (exécutions non conservées).\n\nPersonne connue : `a_repondu = oui` sur ses affaires ouvertes (arrêt de WF03c, WF04e) et attribut Brevo A_REPONDU (arrêt de WF07). « STOP » : opposition comme WF12.",
+        "height": 220,
+        "width": 640
+      },
+      "id": "e0d9bbe8-064c-0b7c-170c-7e16a030c8d8",
+      "name": "WF14 · Toute réponse arrête les relances",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "nothing",
+        "format": "simple",
+        "downloadAttachments": false,
+        "options": {
+          "customEmailConfig": "[\"UNSEEN\"]"
+        }
+      },
+      "id": "94b70573-05c2-2137-957a-55896022706d",
+      "name": "Boîte de l'associé bureau (IMAP)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Identifiants IMAP de la boîte de l'associé bureau (lecture seule, les messages restent non lus).",
+      "notesInFlow": false,
+      "credentials": {
+        "imap": {
+          "id": "REMPLACER-imap-bureau",
+          "name": "IMAP associé bureau"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "nothing",
+        "format": "simple",
+        "downloadAttachments": false,
+        "options": {
+          "customEmailConfig": "[\"UNSEEN\"]"
+        }
+      },
+      "id": "aec8c0af-65ac-8a69-6534-17f7028ab980",
+      "name": "Boîte de l'associé terrain (IMAP)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Identifiants IMAP de la boîte de l'associé terrain (lecture seule, les messages restent non lus).",
+      "notesInFlow": false,
+      "credentials": {
+        "imap": {
+          "id": "REMPLACER-imap-terrain",
+          "name": "IMAP associé terrain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// On ne garde que l'adresse de l'expéditeur et un indicateur STOP ; le corps est abandonné ici.\nreturn $input.all().map((i) => {\n  const de = String(i.json.from || '').match(/[^\\s<>\"]+@[^\\s<>\"]+/);\n  const debut = String(i.json.textPlain || i.json.text || '').trim().slice(0, 40);\n  return { json: { email: de ? de[0].toLowerCase() : '', stop: /^stop\\b/i.test(debut) || /^\\s*stop\\s*$/i.test(String(i.json.subject || '')) } };\n}).filter((i) => i.json.email && !/andyconstruct\\.ch$/.test(i.json.email));\n"
+      },
+      "id": "9675434e-cc27-e576-32c1-ff73c7c8ca53",
+      "name": "Expéditeur et STOP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "notes": "Minimisation : aucune autre donnée du message ne sort de ce nœud.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/persons/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "term",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "fields",
+              "value": "email"
+            },
+            {
+              "name": "exact_match",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3fdc60ef-d69a-bc9d-370f-6b2dec2ed7c6",
+      "name": "Pipedrive : chercher la personne",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        200
+      ],
+      "notes": "Par e-mail exact.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $('Expéditeur et STOP').item.json;\nconst items = ($input.item.json.data && $input.item.json.data.items) || [];\nreturn { json: { ...e, person_id: items.length ? items[0].item.id : null } };\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "4fd647d1-7c34-2886-f5a1-0fca05b9b11b",
+      "name": "Personne connue ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        200
+      ],
+      "notes": "Code JavaScript : personne connue ?.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a53635f5-c6b2-d440-3ace-b48bd3df8346",
+              "leftValue": "={{ !!$json.person_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e02974f0-aa0c-0532-3633-57f63a37ae47",
+      "name": "Connue ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ],
+      "notes": "Condition : !!$json.person_id. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $json.person_id + '/deals' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "open"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3c731ec0-6302-15d3-2351-e0d79f8a9977",
+      "name": "Affaires ouvertes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Appel GET 'https://api.pipedrive.com/v1/persons/' + $json.person_id + '/deals' (identifiants Pipedrive).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\nconst sortie = [];\nfor (const i of $input.all()) for (const a of (i.json.data || [])) sortie.push({ json: { deal_id: a.id, maj: champs({ a_repondu: 'oui' }) } });\nreturn sortie;\n"
+      },
+      "id": "14ccbf6c-18f6-08bf-8205-7f2b6452ad88",
+      "name": "Marquer « a répondu »",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "Code JavaScript : marquer « a répondu ».",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "eaf0aaa0-37ec-6fed-04a5-e1ba0f634677",
+      "name": "Mettre à jour l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "Arrête les relances d'offre et le recontact à 6 mois.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.brevo.com/v3/contacts/' + encodeURIComponent($('Personne connue ?').item.json.email) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ attributes: { A_REPONDU: true } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "971b62b1-036b-b820-0af1-09202c5661b9",
+      "name": "Brevo : marquer la réponse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        400
+      ],
+      "notes": "Attribut A_REPONDU : la séquence de conseils (WF07) s'arrête.",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-brevo",
+          "name": "Brevo (en-tête api-key)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "d595d63f-bbb2-9644-c290-41ff390e6ab8",
+              "leftValue": "={{ $('Personne connue ?').item.json.stop }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4b96f626-0e7f-1cdd-4e6f-9003d8d71114",
+      "name": "STOP ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        400
+      ],
+      "notes": "Condition : $('Personne connue ?').item.json.stop. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ email: $('Personne connue ?').item.json.email, emailBlacklisted: true, updateEnabled: true }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "88843e61-eda9-1eae-c3f7-dc5223abd044",
+      "name": "Brevo : bloquer l'adresse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        400
+      ],
+      "notes": "Même effet que le lien de désinscription.",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-brevo",
+          "name": "Brevo (en-tête api-key)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $('Personne connue ?').item.json.person_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ [JSON.parse($env.AC_PD_CHAMPS || '{}').opposition_marketing]: $now.toISODate() }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "0c70931f-c6ed-b2d6-e261-483435b455eb",
+      "name": "Pipedrive : noter l'opposition",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        400
+      ],
+      "notes": "opposition_marketing datée.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Boîte de l'associé bureau (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Expéditeur et STOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Boîte de l'associé terrain (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Expéditeur et STOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expéditeur et STOP": {
+      "main": [
+        [
+          {
+            "node": "Pipedrive : chercher la personne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipedrive : chercher la personne": {
+      "main": [
+        [
+          {
+            "node": "Personne connue ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personne connue ?": {
+      "main": [
+        [
+          {
+            "node": "Connue ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Connue ?": {
+      "main": [
+        [
+          {
+            "node": "Affaires ouvertes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Brevo : marquer la réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affaires ouvertes": {
+      "main": [
+        [
+          {
+            "node": "Marquer « a répondu »",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marquer « a répondu »": {
+      "main": [
+        [
+          {
+            "node": "Mettre à jour l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brevo : marquer la réponse": {
+      "main": [
+        [
+          {
+            "node": "STOP ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STOP ?": {
+      "main": [
+        [
+          {
+            "node": "Brevo : bloquer l'adresse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brevo : bloquer l'adresse": {
+      "main": [
+        [
+          {
+            "node": "Pipedrive : noter l'opposition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Toute réponse arrête les séquences ; « STOP » vaut opposition. Contenu des e-mails jamais conservé."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "conformite"
+    },
+    {
+      "name": "imap"
+    }
+  ],
+  "versionId": "39912e45-811e-eb53-bba8-f4252e888a0e",
+  "id": "75a897431822dbc3"
+}

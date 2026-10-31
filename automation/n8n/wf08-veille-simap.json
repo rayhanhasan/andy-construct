@@ -1,0 +1,371 @@
+{
+  "name": "WF08 · Veille simap hebdomadaire (g)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF08 · Veille des appels d'offres\n\nLundi 6 h 45 : publications simap.ch des 7 derniers jours, cantons romands, codes CPV et CFC 271/283/285 (et 277), mots-clés. Récapitulatif aux associés avec boutons « Étudier » (affaire dans le pipeline Marchés publics) et « Ignorer ».\n\nAPI publique de lecture (sans authentification) : vérifier les noms des paramètres sur simap.ch/api-doc avant activation. Usage interne de veille uniquement, une requête par semaine (conditions de simap). Abonnement e-mail natif de simap gardé en filet de sécurité.",
+        "height": 240,
+        "width": 680
+      },
+      "id": "9e1f0e41-7660-7460-cf25-44274dd5b0d1",
+      "name": "WF08 · Veille des appels d'offres",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "45 6 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "69c8516f-2777-222f-525c-ec71ced35150",
+      "name": "Lundi à 6 h 45",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclencheur planifié « 45 6 * * 1 » (cron, fuseau Europe/Zurich défini dans les paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nconst t = maintenant();\nreturn [{ json: { depuis: t.minus({ days: 7 }).toISODate(), jusque: t.toISODate() } }];\n"
+      },
+      "id": "60cd0100-bc8a-c842-d489-6a1a6480ac16",
+      "name": "Paramètres de recherche",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Fenêtre des 7 derniers jours.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.simap.ch/api/publications/v2/project/project-search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lang",
+              "value": "fr"
+            },
+            {
+              "name": "newestPublicationFrom",
+              "value": "={{ $json.depuis }}"
+            },
+            {
+              "name": "newestPublicationUntil",
+              "value": "={{ $json.jusque }}"
+            },
+            {
+              "name": "cantons",
+              "value": "GE,VD,NE,FR,VS,JU,BE"
+            },
+            {
+              "name": "cpvCodes",
+              "value": "45410000,45421146,45421141,45442100,45320000,45323000"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a659668f-e2eb-61d7-d313-d0a581fea277",
+      "name": "simap : rechercher les publications",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Paramètres à confirmer sur https://www.simap.ch/api-doc (lang=fr obligatoire). Le tri fin est refait dans le nœud suivant.",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\nconst r = $input.first().json || {};\nconst projets = r.projects || r.items || r.results || r.data || [];\nconst MOTS = /pl[aâ]trerie|gypserie|faux[- ]plafond|peinture int|acousti|cloison|CFC\\s*2(71|77|83|85)|BKP\\s*2(71|77|83|85)/i;\nconst ROMANDS = ['GE', 'VD', 'NE', 'FR', 'VS', 'JU', 'BE'];\nconst lignes = [];\nfor (const p of projets) {\n  const titre = String(p.title && (p.title.fr || p.title.de || p.title) || p.projectTitle || p.name || '');\n  const texte = JSON.stringify(p);\n  const canton = String(p.canton || (p.procOffice && p.procOffice.canton) || '');\n  if (!MOTS.test(texte) || (canton && !ROMANDS.includes(canton))) continue;\n  const delai = p.offerDeadline || p.deadline || (p.dates && p.dates.offerDeadline) || '';\n  const jours = delai ? Math.floor((Date.parse(delai) - Date.now()) / 86400000) : null;\n  if (jours !== null && jours < 10) continue;\n  const etoiles = (/CFC\\s*2(71|83|85)|BKP\\s*2(71|83|85)/i.test(texte) ? 1 : 0) + (['GE', 'VD'].includes(canton) ? 1 : 0) + (/acousti/i.test(texte) ? 1 : 0);\n  const id = p.id || p.projectId || p.projectNumber || '';\n  lignes.push({ etoiles, texte: '- ' + '★'.repeat(Math.max(1, etoiles)) + ' ' + titre + ' · ' + (p.procOfficeName || (p.procOffice && p.procOffice.name) || '') + ' · ' + canton\n    + ' · délai ' + (delai ? String(delai).slice(0, 10) : '?') + '\\n  simap : https://www.simap.ch/project-detail/' + id\n    + '\\n  Étudier : ' + lienAction({ a: 'simap-etudier', s: String(id), t: titre.slice(0, 120) }, 21) + '\\n  Ignorer : ' + lienAction({ a: 'simap-ignorer', s: String(id) }, 21) });\n}\nlignes.sort((a, b) => b.etoiles - a.etoiles);\nconst semaine = Math.ceil((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 1)) / 604800000);\nconst texte = (lignes.length ? lignes.map((l) => l.texte).join('\\n\\n') : \"Aucun avis correspondant cette semaine (l'abonnement e-mail de simap reste actif).\")\n  + (r.error ? '\\n\\nAttention : la recherche simap a échoué (' + String(r.error.message || r.error).slice(0, 120) + '). Vérifier les paramètres de l\\'API.' : '');\nreturn [{ json: { courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: $env.AC_EMAILS_ASSOCIES, repondre_a: $env.AC_EMAIL_EXPEDITEUR,\n  sujet: 'Veille marchés publics · semaine ' + semaine + ' : ' + lignes.length + ' avis à regarder', texte: texte + '\\n',\n  html: '<pre style=\"font:16px/1.5 Arial,sans-serif;white-space:pre-wrap\">' + texte.replace(/</g, '&lt;').replace(/(https?:\\/\\/\\S+)/g, '<a href=\"$1\">$1</a>') + '</pre>' } } }];\n"
+      },
+      "id": "2a2f5aed-23a4-3e6f-f788-aa13a9aa36f7",
+      "name": "Filtrer et noter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Correspondance CFC/CPV/mots-clés, cantons romands, délai de dépôt ≥ 10 jours, pertinence en étoiles.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "4c1616f8-9d03-868e-3ab6-384d6f149b6c",
+      "name": "Récapitulatif aux associés",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Décision à deux, 5 minutes le lundi.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "3f751fe2-1b75-5187-ec3e-a468bb76be4a",
+      "name": "Le 1er du mois à 6 h 30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Adjudications du mois précédent (veille concurrentielle et liste de prospection).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.simap.ch/api/publications/v2/project/project-search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lang",
+              "value": "fr"
+            },
+            {
+              "name": "pubTypes",
+              "value": "award"
+            },
+            {
+              "name": "newestPublicationFrom",
+              "value": "={{ $now.minus({ months: 1 }).toISODate() }}"
+            },
+            {
+              "name": "cantons",
+              "value": "GE,VD,NE,FR,VS,JU,BE"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "697a8991-5b0c-1fc0-23ac-688929a61480",
+      "name": "simap : adjudications du mois",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        400
+      ],
+      "notes": "Avis d'adjudication CFC 271/283/285 en Suisse romande (paramètres à confirmer).",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json || {};\nconst projets = (r.projects || r.items || r.results || r.data || []).filter((p) => /pl[aâ]trerie|gypserie|plafond|peinture|acousti|CFC\\s*2(71|83|85)/i.test(JSON.stringify(p)));\nconst texte = projets.map((p) => '- ' + String(p.title && (p.title.fr || p.title) || p.name || '') + ' · adjudicateur : ' + (p.procOfficeName || '') + ' · retenu : ' + (p.awardee || p.winner || '?')).join('\\n') || 'Aucune adjudication correspondante.';\nreturn [{ json: { courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: [$env.AC_EMAILS_ASSOCIES, $env.AC_AGENCE_EMAIL].filter(Boolean).join(','), repondre_a: $env.AC_EMAIL_EXPEDITEUR,\n  sujet: 'Adjudications du mois (CFC 271/283/285, Suisse romande)', texte: texte + '\\n', html: '<pre>' + texte.replace(/</g, '&lt;') + '</pre>' } } }];\n"
+      },
+      "id": "e1382462-e46a-57a1-f19f-dabe4903b986",
+      "name": "Lister les adjudications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ],
+      "notes": "Entreprises retenues, adjudicateurs, architectes cités.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "7f5f1eb3-be5a-b557-79fe-4fb4a6f30694",
+      "name": "Adjudications : e-mail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        400
+      ],
+      "notes": "Associés et agence (mise à jour de la liste B2B).",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Lundi à 6 h 45": {
+      "main": [
+        [
+          {
+            "node": "Paramètres de recherche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paramètres de recherche": {
+      "main": [
+        [
+          {
+            "node": "simap : rechercher les publications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "simap : rechercher les publications": {
+      "main": [
+        [
+          {
+            "node": "Filtrer et noter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrer et noter": {
+      "main": [
+        [
+          {
+            "node": "Récapitulatif aux associés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Le 1er du mois à 6 h 30": {
+      "main": [
+        [
+          {
+            "node": "simap : adjudications du mois",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "simap : adjudications du mois": {
+      "main": [
+        [
+          {
+            "node": "Lister les adjudications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lister les adjudications": {
+      "main": [
+        [
+          {
+            "node": "Adjudications : e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (g) : veille hebdomadaire simap.ch et adjudications mensuelles."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "marches-publics"
+    },
+    {
+      "name": "scenario-g"
+    }
+  ],
+  "versionId": "8b343ec3-847a-6aa8-fa75-52881c68df85",
+  "id": "2632ed89d79053e2"
+}

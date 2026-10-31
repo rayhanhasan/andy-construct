@@ -1,0 +1,767 @@
+{
+  "name": "WF03 · Horloge : rappel non fait et récapitulatif du soir (b)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF03 · Pas de rappel dans le délai\n\nToutes les 15 minutes en heures ouvrables : lit les affaires à l'étape « Nouvelle demande » (filtre Pipedrive) et compare `sla_echeance` à l'heure.\n\nNiveau 1 (échéance) : SMS à l'associé attribué. Niveau 2 (+1 h ouvrable pour A, +4 h pour B) : SMS et e-mail à l'autre associé. Niveau 3 (+1 jour ouvrable) : tâche « Rappeler » et ligne rouge du récapitulatif. Le niveau est gardé dans `relance_sla_niveau` (9 = traité). Fin de chaque passage : ping Healthchecks (supervision de l'horloge).",
+        "height": 240,
+        "width": 680
+      },
+      "id": "3fd2e026-d83a-dcfe-7118-6144cef523e0",
+      "name": "WF03 · Pas de rappel dans le délai",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 7-19 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "ace68d26-ccb3-fca2-79d3-8665bdf6ff75",
+      "name": "Toutes les 15 min (lu-ve, 7 h-19 h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Fuseau Europe/Zurich (paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\nreturn [{ json: { ouvrable: estOuvrable(maintenant()) } }];\n"
+      },
+      "id": "13a1619b-3bdf-a963-3636-69a9c5568aea",
+      "name": "Jour ouvrable ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Jours fériés genevois et fermetures (AC_JOURS_FERMES).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.AC_HEALTHCHECK_HORLOGE || 'https://hc-ping.com/REMPLACER' }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "9c260463-bff8-5cb1-369b-fe234dd44a55",
+      "name": "Ping Healthchecks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -200
+      ],
+      "notes": "Healthchecks.io alerte l'agence si l'horloge ne passe plus pendant 30 minutes.",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "876e434f-bf58-ed27-bf03-22ba92f8816f",
+              "leftValue": "={{ $json.ouvrable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "225ecb0d-2712-d2da-0024-abe49bbe754f",
+      "name": "Ouvrable ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Pas d'alerte un jour férié.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_nouvelles }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "b262e81f-06d7-29b2-a000-f9c7c48a7d00",
+      "name": "Demandes à rappeler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Filtre Pipedrive « étape Nouvelle demande, ouvertes » (AC_PD_IDS.filtre_nouvelles).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Alphabet GSM 03.38 : remplace ce qui ferait passer le SMS à 70 caractères.\nfunction versGsm(t) {\n  const r = { 'ê': 'e', 'ë': 'e', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u', 'ç': 'c', 'À': 'A', 'Â': 'A', 'È': 'E', 'Ê': 'E', 'Î': 'I',\n    'Ô': 'O', 'Û': 'U', 'œ': 'oe', 'Œ': 'OE', '«': '\"', '»': '\"', '’': \"'\", '‘': \"'\", '“': '\"', '”': '\"', '–': '-', '—': '-', '…': '...', ' ': ' ', ' ': ' ' };\n  return String(t).replace(/[^\\n -~£¥èéùìòÇØøÅåÆæßÉÄÖÑÜ§¿äöñüà¡]/g, (c) => (r[c] !== undefined ? r[c] : c.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')));\n}\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"sms-rappel-retard\": {\n  \"sujet\": \"\",\n  \"corps\": \"Rappel · {{nom_court}} ({{priorite}}, {{commune}}) attend votre appel depuis {{duree}}. Tél. {{telephone}} · {{lien_action}}\"\n },\n \"sms-escalade\": {\n  \"sujet\": \"\",\n  \"corps\": \"Andy · {{nom_court}} ({{priorite}}, {{commune}}) n'a pas encore été rappelé(e) (échéance {{echeance_hhmm}}, {{associe}}). Pouvez-vous appeler ? Tél. {{telephone}} · {{lien_action}}\"\n }\n};\n\nconst t = maintenant();\nconst affaires = $input.first().json.data || [];\n// Ajoute des heures ouvrables (7 h-18 h) à une date.\nfunction plusHeuresOuvrables(dt, h) {\n  let x = dt, reste = h * 60;\n  for (let i = 0; i < 400 && reste > 0; i++) {\n    if (!estOuvrable(x) || x.hour >= 18) { x = x.plus({ days: 1 }).set({ hour: 7, minute: 0 }); continue; }\n    if (x.hour < 7) x = x.set({ hour: 7, minute: 0 });\n    const fin = x.set({ hour: 18, minute: 0 }), dispo = fin.diff(x, 'minutes').minutes;\n    if (reste <= dispo) return x.plus({ minutes: reste });\n    reste -= dispo; x = fin;\n  }\n  return x;\n}\nconst sortie = [];\nfor (const a of affaires) {\n  const ech = champ(a, 'sla_echeance');\n  const niveau = Number(champ(a, 'relance_sla_niveau') || 0);\n  if (!ech || niveau >= 3) continue;\n  const T0 = DateTime.fromISO(ech).setZone('Europe/Zurich');\n  const prio = champ(a, 'priorite');\n  const T1 = plusHeuresOuvrables(T0, prio === 'A' ? 1 : 4), T2 = plusHeuresOuvrables(T0, 11);\n  const cible = t >= T2 ? 3 : t >= T1 ? 2 : t >= T0 ? 1 : 0;\n  if (cible <= niveau) continue;\n  const p = a.person_id || {};\n  const roleAttribue = a.user_id && String(a.user_id.id || a.user_id) === String(IDS.utilisateur_bureau) ? 'BUREAU' : 'TERRAIN';\n  const autre = roleAttribue === 'BUREAU' ? 'TERRAIN' : 'BUREAU';\n  const duree = t.diff(T0, ['hours', 'minutes']).toObject();\n  const vars = { nom_court: p.name || champ(a, 'ref_demande'), priorite: prio, commune: champ(a, 'commune') || '',\n    telephone: p.phone && p.phone[0] ? p.phone[0].value : 'pas de tél.', duree: Math.floor(duree.hours || 0) + ' h ' + String(Math.round(duree.minutes || 0)).padStart(2, '0'),\n    echeance_hhmm: T0.toFormat(\"H 'h' mm\"), associe: (a.user_id && a.user_id.name) || '', lien_action: lienAction({ a: 'menu', r: champ(a, 'ref_demande') }, 7) };\n  sortie.push({ json: {\n    deal_id: a.id, niveau: cible,\n    sms: { a: $env['AC_ASSOCIE_' + (cible === 1 ? roleAttribue : autre) + '_MOBILE'], texte: versGsm(rendre(MODELES[cible === 1 ? 'sms-rappel-retard' : 'sms-escalade'].corps, vars)) },\n    courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: $env['AC_ASSOCIE_' + autre + '_EMAIL'], repondre_a: $env.AC_EMAIL_EXPEDITEUR,\n      sujet: '[Retard ' + prio + '] ' + vars.nom_court + ' attend un rappel depuis ' + vars.duree,\n      texte: rendre(MODELES['sms-escalade'].corps, vars) + '\\n\\nOuvrir dans Pipedrive : ' + urlPipedrive(a.id) + '\\n',\n      html: '<p>' + rendre(MODELES['sms-escalade'].corps, vars) + '</p><p><a href=\"' + urlPipedrive(a.id) + '\">Ouvrir dans Pipedrive</a></p>' },\n    activite: { subject: 'Rappeler ' + vars.nom_court + ' (en retard)', type: 'call', due_date: t.toISODate(), deal_id: a.id },\n    maj: champs({ relance_sla_niveau: cible }),\n  }});\n}\nreturn sortie;\n"
+      },
+      "id": "5fe8857d-9319-a978-c8e6-ca2b395bcda9",
+      "name": "Délais dépassés",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Calcule pour chaque demande le niveau d'alerte dû (1, 2 ou 3) et prépare SMS, e-mail ou tâche.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "5d4f47fe-e3ce-212a-d330-4393fef76dfb",
+                    "leftValue": "={{ $json.niveau === 1 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1 · associé"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "690a7e61-3cb6-0690-e99a-32e7d8fd8c01",
+                    "leftValue": "={{ $json.niveau === 2 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "2 · escalade"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "id": "52f60d83-f0b3-700e-ce72-d7c5299f0587",
+                    "leftValue": "={{ $json.niveau === 3 }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "3 · tâche"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "e1c832e1-17cf-8964-c901-9a4ee6dceb48",
+      "name": "Selon le niveau",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Une seule action par demande et par niveau.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "95e251b6-b179-6687-e6f2-09fce904dadd",
+      "name": "SMS à l'associé attribué",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -200
+      ],
+      "notes": "Niveau 1 : « X attend votre appel depuis… ». Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.AC_SMS_URL || 'https://json.aspsms.com/SendSimpleTextSMS' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ UserName: $env.ASPSMS_USERKEY, Password: $env.ASPSMS_PASSWORD, Originator: $env.ASPSMS_ORIGINATOR || 'AndyConstr', Recipients: [$json.sms.a], MessageText: $json.sms.texte }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "69efac70-c7e6-bb97-1ef1-d1ea7d114cea",
+      "name": "SMS à l'autre associé",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        0
+      ],
+      "notes": "Niveau 2 : escalade. Pour Twilio : remplacer par le nœud Twilio (identifiants « Twilio »), même texte.",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "c347ff7e-6b2d-71ff-6e56-009596e82014",
+      "name": "E-mail à l'autre associé",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        0
+      ],
+      "notes": "Niveau 2 : même information par e-mail, avec le lien Pipedrive.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.activite }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "0bcd1f0c-d046-7da2-f970-9be18a6d09c1",
+      "name": "Tâche « Rappeler »",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        200
+      ],
+      "notes": "Niveau 3 : tâche du jour.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $('Délais dépassés').item.json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Délais dépassés').item.json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3d65a420-bde4-5f52-15cb-dcb0faace4f1",
+      "name": "Noter le niveau d'alerte",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        0
+      ],
+      "notes": "Évite de renvoyer la même alerte au passage suivant.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 17 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "cb8f26f9-baf5-7880-4755-b199be04b71d",
+      "name": "Chaque soir à 17 h 30 (lu-ve)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        600
+      ],
+      "notes": "Récapitulatif du jour (§5.8).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_nouvelles }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a4b9bc5c-26ac-e6a7-e37f-34818403202a",
+      "name": "Demandes ouvertes (soir)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        600
+      ],
+      "notes": "Même filtre que l'horloge.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\nconst t = maintenant();\nconst affaires = $input.first().json.data || [];\nconst jour = t.toISODate();\nconst lignes = (liste) => liste.map((a) => '- ' + (a.person_id && a.person_id.name || a.title) + ' · ' + (champ(a, 'commune') || '') + ' · ' + (champ(a, 'service') || '') + ' · ' + urlPipedrive(a.id)).join('\\n');\nconst duJour = affaires.filter((a) => String(a.add_time || '').startsWith(jour));\nconst c = duJour.filter((a) => champ(a, 'priorite') === 'C');\nconst hc = duJour.filter((a) => champ(a, 'priorite') === 'hors-cible');\nconst retard = affaires.filter((a) => champ(a, 'sla_echeance') && DateTime.fromISO(champ(a, 'sla_echeance')) < t);\nconst texte = ['Demandes C du jour (' + c.length + ') :', lignes(c) || '- aucune', '', 'Hors cible du jour (' + hc.length + ') :', lignes(hc) || '- aucune', '',\n  'En retard sur le délai de rappel (' + retard.length + ') :', lignes(retard) || '- aucune'].join('\\n');\nreturn [{ json: { a_signaler: c.length + hc.length + retard.length > 0, courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: $env.AC_EMAILS_ASSOCIES,\n  repondre_a: $env.AC_EMAIL_EXPEDITEUR, sujet: 'Andy Construct · récapitulatif du ' + t.toFormat('dd.MM.yyyy') + (retard.length ? ' · ' + retard.length + ' en retard' : ''),\n  texte, html: '<pre style=\"font:16px/1.5 Arial,sans-serif;white-space:pre-wrap\">' + texte.replace(/</g, '&lt;') + '</pre>' } } }];\n"
+      },
+      "id": "2236b0a2-f104-5003-3324-6ffaa3fcef5a",
+      "name": "Composer le récapitulatif",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        600
+      ],
+      "notes": "Demandes C et hors cible du jour, demandes en retard.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "dfdb1c02-b819-bb40-e6f1-e03abb41c6b4",
+              "leftValue": "={{ $json.a_signaler }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e24fa487-017a-22de-bdf5-81c9707dae72",
+      "name": "Quelque chose à signaler ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        600
+      ],
+      "notes": "Pas d'e-mail vide.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "6b9469b2-a034-a2c0-2310-6c53ee7bd0ec",
+      "name": "Envoyer le récapitulatif",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        600
+      ],
+      "notes": "Aux deux associés (AC_EMAILS_ASSOCIES).",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Toutes les 15 min (lu-ve, 7 h-19 h)": {
+      "main": [
+        [
+          {
+            "node": "Jour ouvrable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jour ouvrable ?": {
+      "main": [
+        [
+          {
+            "node": "Ouvrable ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ping Healthchecks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ouvrable ?": {
+      "main": [
+        [
+          {
+            "node": "Demandes à rappeler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demandes à rappeler": {
+      "main": [
+        [
+          {
+            "node": "Délais dépassés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Délais dépassés": {
+      "main": [
+        [
+          {
+            "node": "Selon le niveau",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Selon le niveau": {
+      "main": [
+        [
+          {
+            "node": "SMS à l'associé attribué",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SMS à l'autre associé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tâche « Rappeler »",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS à l'autre associé": {
+      "main": [
+        [
+          {
+            "node": "E-mail à l'autre associé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SMS à l'associé attribué": {
+      "main": [
+        [
+          {
+            "node": "Noter le niveau d'alerte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail à l'autre associé": {
+      "main": [
+        [
+          {
+            "node": "Noter le niveau d'alerte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tâche « Rappeler »": {
+      "main": [
+        [
+          {
+            "node": "Noter le niveau d'alerte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chaque soir à 17 h 30 (lu-ve)": {
+      "main": [
+        [
+          {
+            "node": "Demandes ouvertes (soir)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demandes ouvertes (soir)": {
+      "main": [
+        [
+          {
+            "node": "Composer le récapitulatif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Composer le récapitulatif": {
+      "main": [
+        [
+          {
+            "node": "Quelque chose à signaler ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quelque chose à signaler ?": {
+      "main": [
+        [
+          {
+            "node": "Envoyer le récapitulatif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (b) : alerte et escalade si une demande n'est pas rappelée dans le délai ; récapitulatif du soir."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "horloge"
+    },
+    {
+      "name": "scenario-b"
+    }
+  ],
+  "versionId": "1e154594-e82e-c5f7-c119-340b0955ac7b",
+  "id": "8ff972731f2f6d38"
+}

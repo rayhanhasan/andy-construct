@@ -1,0 +1,322 @@
+{
+  "name": "WF04p · Purge des données (nLPD, mensuel)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF04p · Durées de conservation\n\nLe 1er de chaque mois à 6 h : prospects non convertis sans activité depuis **24 mois** (stratégie §9.1). Par défaut, la liste est envoyée à l'agence pour validation. Avec `AC_PURGE_AUTO=true`, les personnes sont effacées de Pipedrive (les clients et toute personne liée à une affaire gagnée sont exclus). Brevo : effacer les contacts correspondants depuis l'interface (ou API).",
+        "height": 200,
+        "width": 640
+      },
+      "id": "833587ee-132a-7ec5-ef36-372aa5651b46",
+      "name": "WF04p · Durées de conservation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "c33a16f9-1a5d-d1fc-5439-79a4d9b32282",
+      "name": "Le 1er du mois à 6 h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclencheur planifié « 0 6 1 * * » (cron, fuseau Europe/Zurich défini dans les paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/persons",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "ba32ed94-b571-5196-dc4c-c674aa1b9195",
+      "name": "Personnes (Pipedrive)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Toutes les personnes (500 au plus par passage).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "const limite = Date.now() - 730 * 86400000;\nconst items = ($input.first().json.data || []).filter((p) => {\n  const derniere = Date.parse(String(p.last_activity_date || p.update_time || p.add_time).replace(' ', 'T') + 'Z');\n  return !p.won_deals_count && !p.open_deals_count && derniere < limite;\n});\nreturn [{ json: { ids: items.map((p) => p.id), liste: items.map((p) => '- ' + p.name + ' (id ' + p.id + ', dernière activité ' + String(p.last_activity_date || p.update_time).slice(0, 10) + ')').join('\\n'),\n  auto: String($env.AC_PURGE_AUTO) === 'true' } }];\n"
+      },
+      "id": "ad59c851-6a03-3833-1420-0ea0fc60c4a1",
+      "name": "Personnes à effacer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Exclut clients (affaire gagnée) et affaires ouvertes.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "dcc8c0b0-042a-370a-b829-f62d5744683d",
+              "leftValue": "={{ $json.auto && $json.ids.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "37e5213a-5667-c16a-6a87-92da12324bfa",
+      "name": "Purge automatique ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Faux : e-mail de validation à l'agence.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.ids.map((id) => ({ json: { id } }));\n"
+      },
+      "id": "3b36ff35-35d5-0af1-9089-f0ee32a74cfe",
+      "name": "Une personne par élément",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -200
+      ],
+      "notes": "Code JavaScript : une personne par élément.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "eb38b5e7-37ce-bf5a-c3da-771e8aed36fd",
+      "name": "Effacer la personne",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -200
+      ],
+      "notes": "Effacement définitif (notes et activités liées comprises).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst texte = (j.auto ? 'Personnes effacées' : 'Personnes à effacer (validation requise)') + ' : ' + j.ids.length + '\\n\\n' + (j.liste || 'aucune') + '\\n';\nreturn [{ json: { courriel: { de: $env.AC_EMAIL_EXPEDITEUR, a: $env.AC_AGENCE_EMAIL, repondre_a: $env.AC_EMAIL_EXPEDITEUR,\n  sujet: 'Andy Construct · purge mensuelle des données (' + j.ids.length + ')', texte, html: '<pre>' + texte.replace(/</g, '&lt;') + '</pre>' } } }];\n"
+      },
+      "id": "007d09f9-0203-8db4-8e21-28bb6f9c1a4f",
+      "name": "Préparer le compte rendu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        200
+      ],
+      "notes": "Trace de la purge pour le registre des traitements.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "93a708b0-9b47-9910-85c3-37d6920d29de",
+      "name": "E-mail à l'agence",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1200,
+        200
+      ],
+      "notes": "Compte rendu ou liste à valider.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Le 1er du mois à 6 h": {
+      "main": [
+        [
+          {
+            "node": "Personnes (Pipedrive)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personnes (Pipedrive)": {
+      "main": [
+        [
+          {
+            "node": "Personnes à effacer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personnes à effacer": {
+      "main": [
+        [
+          {
+            "node": "Purge automatique ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Préparer le compte rendu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Purge automatique ?": {
+      "main": [
+        [
+          {
+            "node": "Une personne par élément",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Une personne par élément": {
+      "main": [
+        [
+          {
+            "node": "Effacer la personne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer le compte rendu": {
+      "main": [
+        [
+          {
+            "node": "E-mail à l'agence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Durées de conservation nLPD : effacement des prospects inactifs depuis 24 mois."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "conformite"
+    }
+  ],
+  "versionId": "902a1475-1b23-9e74-c105-f3f05567bfc2",
+  "id": "ecae3cb7958f74a1"
+}

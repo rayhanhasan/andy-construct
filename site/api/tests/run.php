@@ -135,14 +135,14 @@ function configTest(string $stockage, array $surcharges = []): Config
         ],
         'n8n' => [
             'url_demande' => 'http://127.0.0.1:' . $GLOBALS['portN8n'] . '/ok',
-            'url_aimant' => 'http://127.0.0.1:' . $GLOBALS['portN8n'] . '/ok',
+            'url_guide' => 'http://127.0.0.1:' . $GLOBALS['portN8n'] . '/ok',
             'url_actions' => 'https://n8n.exemple.ch/webhook/ac-action',
             'url_desinscription' => 'https://n8n.exemple.ch/webhook/ac-stop',
             'delai' => 2,
             'simuler' => true,
         ],
-        'aimants' => [
-            'guide-bruit' => ['actif' => true, 'titre' => 'Réduire le bruit dans un appartement', 'url' => 'https://www.andyconstruct.ch/guides/bruit.pdf', 'format' => 'PDF, 8 pages', 'lecture' => '10 minutes', 'liste_brevo' => 3],
+        'guides' => [
+            'guide-reduire-le-bruit' => ['actif' => true, 'titre' => 'Réduire le bruit chez soi : ce qui marche vraiment', 'url' => 'https://www.andyconstruct.ch/assets/docs/guide-reduire-le-bruit.pdf', 'liste_brevo' => 3],
             'guide-inactif' => ['actif' => false, 'titre' => 'Inactif', 'url' => 'https://x.ch/a.pdf'],
         ],
         'realisations_par_service' => ['isolation-acoustique' => 'https://www.andyconstruct.ch/realisations/acoustique.html'],
@@ -233,7 +233,6 @@ function postDevis(array $surcharges = []): array
         'commune' => 'Vésenaz',
         'message' => "On entend tout le voisin du dessus.\nPlafond de la chambre, environ 14 m².",
         'connu_par' => 'recherche-google',
-        'accord' => 'oui',
         'site_web' => '',
         'page' => '/prestations.html',
         'page_entree' => '/isolation-acoustique.html',
@@ -282,13 +281,13 @@ foreach (['jean@', 'jean@bluewin', 'jean dupont@bluewin.ch', "jean@bluewin.ch\r\
 }
 
 groupe('Validation des formulaires');
-$v = new Validateur(['guide-bruit' => ['actif' => true]]);
+$v = new Validateur(['guide-reduire-le-bruit' => ['actif' => true]]);
 [$d, $e] = $v->valider(postDevis());
 egal([], $e, 'devis complet : aucune erreur');
 egal('+41791234567', $d['telephone']['e164'], 'téléphone normalisé');
 egal('isolation-acoustique', $d['service'], 'service principal');
 [$d, $e] = $v->valider(['formulaire' => 'devis']);
-egal(['nom', 'telephone', 'travaux', 'commune', 'accord'], array_keys($e), 'devis vide : nom, contact, travaux, commune, accord');
+egal(['nom', 'telephone', 'travaux', 'commune'], array_keys($e), 'devis vide : nom, contact, travaux, commune (aucune case de consentement)');
 egal(Validateur::MESSAGES['contact'], $e['telephone'], 'message « téléphone ou e-mail »');
 [$d, $e] = $v->valider(postDevis(['telephone' => '', 'email' => 'jean@']));
 egal(['email'], array_keys($e), 'e-mail invalide signalé');
@@ -307,16 +306,21 @@ egal("Ligne 1\nLigne 2", $d['message'], 'caractères de contrôle retirés du me
 egal([], $e, 'rappel : le téléphone suffit');
 [$d, $e] = $v->valider(['formulaire' => 'rappel', 'email' => 'a@b.ch']);
 egal(['telephone'], array_keys($e), 'rappel sans téléphone refusé');
-[$d, $e] = $v->valider(['formulaire' => 'aimant', 'prenom' => 'Bernard', 'email' => 'b@exemple.ch', 'aimant' => 'guide-bruit', 'accord' => 'oui']);
-egal([], $e, 'aimant par e-mail valable');
-[$d, $e] = $v->valider(['formulaire' => 'aimant', 'prenom' => 'Bernard', 'par_poste' => 'oui', 'aimant' => 'guide-bruit', 'accord' => 'oui']);
-egal(['adresse_postale', 'nom'], array_keys($e), 'aimant par la poste : adresse et nom requis');
-[$d, $e] = $v->valider(['formulaire' => 'aimant', 'prenom' => 'B', 'email' => 'b@exemple.ch', 'aimant' => 'guide-inconnu', 'accord' => 'oui']);
-egal(['aimant'], array_keys($e), 'aimant inconnu ou inactif refusé');
+$guidePoste = ['formulaire' => 'envoi_postal_guide', 'guide' => 'guide-reduire-le-bruit', 'nom' => 'Bernard Favre', 'adresse' => 'Chemin des Pommiers 12', 'npa' => '1222', 'localite' => 'Vésenaz'];
+[$d, $e] = $v->valider($guidePoste);
+egal([], $e, 'guide par la poste : nom, adresse, NPA, localité suffisent (e-mail facultatif)');
+egal("Chemin des Pommiers 12\n1222 Vésenaz", $d['adresse_postale'], 'adresse d\'envoi composée');
+egal(false, $d['conseils_email'], 'conseils par e-mail : non par défaut');
+[$d, $e] = $v->valider(['formulaire' => 'envoi_postal_guide', 'guide' => 'guide-reduire-le-bruit']);
+egal(['nom', 'adresse', 'npa', 'localite'], array_keys($e), 'guide par la poste vide : nom, adresse, NPA, localité');
+[$d, $e] = $v->valider(['guide' => 'guide-inconnu'] + $guidePoste);
+egal(['guide'], array_keys($e), 'guide inconnu ou inactif refusé');
+[$d, $e] = $v->valider(['formulaire' => 'aimant', 'aimant' => 'guide-reduire-le-bruit', 'par_poste' => 'oui', 'nom' => 'B. Favre', 'adresse_postale' => "Chemin des Pommiers 12\n1222 Vésenaz"]);
+ok($e === [] && $d['formulaire'] === 'envoi_postal_guide', 'ancien format (formulaire=aimant, adresse_postale sur 3 lignes) accepté');
 [$d, $e] = $v->valider(postDevis(['telephone' => '', 'preference_contact' => 'appel']));
 egal(Validateur::MESSAGES['telephone_requis'], $e['telephone'] ?? null, 'préférence « appel » sans numéro → numéro demandé');
-[$d, $e] = (new Validateur([], false))->valider(postDevis(['accord' => '']));
-egal([], $e, 'accord facultatif si accord_obligatoire = false');
+[$d, $e] = $v->valider(postDevis(['accord' => 'peu importe']));
+ok($e === [] && !array_key_exists('accord', $d), 'champ « accord » envoyé : ignoré (décision D2)');
 [$d, $e] = $v->valider(postDevis(['npa' => '12A7']));
 ok(isset($e['npa']), 'NPA mal formé refusé');
 [$d, $e] = $v->valider(postDevis(['rappel' => 'oui']));
@@ -516,7 +520,7 @@ groupe('Modèles de messages');
 egal('A B', Modeles::rendre('{{#x}}A{{/x}}{{^y}} B{{/y}}{{#z}} C{{/z}}', ['x' => true, 'y' => '', 'z' => 0]), 'sections conditionnelles');
 egal('[in]', Modeles::rendre('{{#a}}[{{#b}}in{{/b}}]{{/a}}', ['a' => 1, 'b' => 1]), 'sections imbriquées');
 egal('Bonjour Madame Françoise Dupont', Modeles::salutation('madame', 'Françoise Dupont', ''), 'salutation avec civilité');
-egal('Bonjour Bernard', Modeles::salutation('', '', 'Bernard'), 'salutation par le prénom (aimant)');
+egal('Bonjour Bernard', Modeles::salutation('', '', 'Bernard'), 'salutation par le prénom');
 egal('Bcc: x', Message::entete("\r\nBcc: x\r\n"), 'en-tête : retours à la ligne neutralisés');
 foreach (glob("$racine/modeles/*.txt") ?: [] as $m) {
     ok((bool) preg_match('/^Objet : .+\n\n/u', (string) file_get_contents($m)), 'modèle ' . basename($m) . ' : ligne « Objet : »');
@@ -586,7 +590,7 @@ $r = $tr->executer($serveurJson, [], postDevis(['form_t0' => 'v1.1800000000.aaaa
 ok($r->statut === 200 && array_key_exists('ref', $r->corps) && $r->corps['ref'] === null && count(mails($stock)) === 0, 'jeton falsifié → leurre, rien envoyé');
 
 $r = $tr->executer($serveurJson, [], ['formulaire' => 'devis', 'nom' => 'X', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)], [], $maintenantTr);
-ok($r->statut === 422 && ($r->corps['code'] ?? '') === 'validation' && isset($r->corps['erreurs']['telephone'], $r->corps['erreurs']['travaux'], $r->corps['erreurs']['accord']), 'champs manquants → 422 avec la liste des erreurs');
+ok($r->statut === 422 && ($r->corps['code'] ?? '') === 'validation' && isset($r->corps['erreurs']['telephone'], $r->corps['erreurs']['travaux'], $r->corps['erreurs']['commune']), 'champs manquants → 422 avec la liste des erreurs');
 
 $r = $tr->executer($serveurJson, [], postDevis(['form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)]), ['fichiers' => ['name' => ['piege.jpg'], 'tmp_name' => [$fx['php_jpg']], 'error' => [0], 'size' => [filesize($fx['php_jpg'])]]], $maintenantTr);
 ok($r->statut === 422 && isset($r->corps['erreurs']['fichiers']), 'fichier piégé → 422, erreur sur « fichiers »');
@@ -618,12 +622,21 @@ $r = $tr->executer(serveur(['REMOTE_ADDR' => '192.0.2.60']), [], ['formulaire' =
 ok($r->statut === 200 && str_contains((string) $r->corps['message'], 'nous vous rappelons'), 'demande de rappel acceptée', json_encode($r->corps, JSON_UNESCAPED_UNICODE));
 viderMails($stock);
 
-$r = $tr->executer(serveur(['REMOTE_ADDR' => '192.0.2.61']), [], ['formulaire' => 'aimant', 'prenom' => 'Bernard', 'email' => 'bernard@exemple.ch', 'profil' => 'regie', 'aimant' => 'guide-bruit', 'accord' => 'oui', 'newsletter' => 'oui', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 5)], [], $maintenantTr);
+$r = $tr->executer(serveur(['REMOTE_ADDR' => '192.0.2.61']), [], $guidePoste + ['email' => 'bernard@exemple.ch', 'civilite' => 'monsieur', 'profil' => 'proprietaire', 'conseils_email' => 'oui', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 5)], [], $maintenantTr);
 $eml = array_map('texteMail', mails($stock));
-$guide = (string) current(array_filter($eml, static fn ($m) => str_contains($m, 'bernard@exemple.ch') && str_contains($m, 'Voici votre guide')));
-ok($r->statut === 200 && $guide !== '', 'aimant : guide envoyé par e-mail', json_encode($r->corps, JSON_UNESCAPED_UNICODE) . ' / ' . count($eml) . ' e-mails');
-ok(str_contains($guide, 'https://www.andyconstruct.ch/guides/bruit.pdf') && str_contains($guide, 'https://n8n.exemple.ch/webhook/ac-stop?t=') && str_contains($guide, 'STOP'), 'aimant : lien du guide + désinscription');
-egal(2, count($eml), 'aimant profil régie : notification interne en plus');
+$guide = (string) current(array_filter($eml, static fn ($m) => str_contains($m, 'bernard@exemple.ch') && str_contains($m, 'nous vous envoyons le guide')));
+$interneGuide = (string) current(array_filter($eml, static fn ($m) => str_contains($m, 'associes@andyconstruct.ch')));
+ok($r->statut === 200 && str_contains((string) $r->corps['message'], 'part par la poste'), 'guide par la poste : réponse de succès', json_encode($r->corps, JSON_UNESCAPED_UNICODE));
+ok($guide !== '' && str_contains($guide, 'Chemin des Pommiers 12') && str_contains($guide, 'guide-reduire-le-bruit.pdf'), 'guide : accusé avec adresse d\'envoi et lien de lecture en ligne');
+ok(str_contains($guide, 'deux e-mails de conseils') && str_contains($guide, 'https://n8n.exemple.ch/webhook/ac-stop?t='), 'guide avec accord : séquence annoncée + désinscription');
+ok(str_contains($interneGuide, 'Guide imprim') && str_contains($interneGuide, 'Chemin des Pommiers 12'), 'guide : consigne d\'envoi postal aux associés');
+$wh = glob($stock . '/test-webhooks/*.json') ?: [];
+$chargeGuide = json_decode(explode("\n\n", (string) file_get_contents((string) end($wh)), 2)[1], true);
+ok(($chargeGuide['evenement'] ?? '') === 'guide.envoi_postal' && ($chargeGuide['guide']['conseils_email'] ?? null) === true, 'webhook : guide.envoi_postal, conseils_email = true');
+viderMails($stock);
+$r = $tr->executer(serveur(['REMOTE_ADDR' => '192.0.2.62']), [], $guidePoste + ['email' => 'claire@exemple.ch', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 5)], [], $maintenantTr);
+$guide = (string) current(array_filter(array_map('texteMail', mails($stock)), static fn ($m) => str_contains($m, 'claire@exemple.ch') && str_contains($m, 'nous vous envoyons le guide')));
+ok($guide !== '' && !str_contains($guide, 'conseils sur ce sujet') && !str_contains($guide, 'ac-stop'), 'guide sans accord : aucun conseil annoncé, aucune séquence');
 viderMails($stock);
 
 // ------------------------------------------------------ webhook réel (faux n8n)
@@ -673,7 +686,7 @@ $dossierMessages = dirname($racine, 2) . '/automation/messages';
 if (!is_dir($dossierMessages)) {
     echo "  (dossier automation/messages absent : test ignoré sur le serveur)\n";
 } else {
-    foreach (['accuse-devis' => 'accuse-reception-devis.md', 'accuse-rappel' => 'accuse-reception-rappel.md', 'accuse-aimant' => 'accuse-reception-aimant.md'] as $modele => $md) {
+    foreach (['accuse-devis' => 'accuse-reception-devis.md', 'accuse-rappel' => 'accuse-reception-rappel.md', 'accuse-guide' => 'accuse-reception-guide.md'] as $modele => $md) {
         $texteMd = (string) @file_get_contents("$dossierMessages/$md");
         $ok = preg_match('/```texte\n(.*?)```/s', $texteMd, $m) === 1;
         $php = str_replace("\r\n", "\n", (string) file_get_contents("$racine/modeles/$modele.txt"));

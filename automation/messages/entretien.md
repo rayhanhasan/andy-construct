@@ -44,7 +44,7 @@ Objet : Un an déjà : tout est en ordre ?
 
 Il y a un an, nous terminions {{pieces_ou_service}}{{#commune}} à {{commune}}{{/commune}}. Tout est-il toujours en ordre ? Si quelque chose vous pose question, répondez simplement à ce message : nous revenons voir.
 
-Et si une personne de votre entourage a un projet de placo, de peinture ou d'isolation, vous pouvez lui donner notre numéro, le 022 771 20 15. Nous vous en remercions d'avance.
+Et si une personne de votre entourage a un projet de placo, de peinture ou d'isolation, vous pouvez lui donner notre numéro, le +41 22 771 20 15. Nous vous en remercions d'avance.
 
 Meilleures salutations,
 

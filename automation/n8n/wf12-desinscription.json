@@ -1,0 +1,482 @@
+{
+  "name": "WF12 · Désinscription et opposition",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF12 · Désinscription\n\nLien de désinscription des e-mails non transactionnels (jeton signé, valable 400 jours). GET : page avec bouton « Confirmer » ; POST : blocage dans Brevo, opposition datée dans Pipedrive (`opposition_marketing`), arrêt des relances. Gratuit, sans compte, le jour même (LCD art. 3 al. 1 let. o). La réponse « STOP » par e-mail est traitée par WF14.",
+        "height": 200,
+        "width": 600
+      },
+      "id": "c5d43a87-c279-d08e-24bb-f3fc7ef7431b",
+      "name": "WF12 · Désinscription",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ac-stop",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5495b303-8ee3-d56a-1114-74bc5e6dd377",
+      "name": "Lien ouvert (GET /ac-stop)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Ne modifie rien : affiche la confirmation.",
+      "notesInFlow": false,
+      "webhookId": "f29b4c1c-dbf9-222c-2f55-29af0e02dbb2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\nfunction page(titre, corps) {\n  const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  return '<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">'\n    + '<meta name=\"robots\" content=\"noindex\"><title>' + e(titre) + ' · Andy Construct</title><style>'\n    + 'body{margin:0;font:18px/1.6 Arial,sans-serif;color:#1D1F22;background:#fff}main{max-width:36rem;margin:0 auto;padding:2rem 1rem}'\n    + 'h1{font-size:1.5rem;border-left:6px solid #E8000F;padding-left:.75rem}button{min-height:48px;margin:.4rem .4rem .4rem 0;padding:.7rem 1.2rem;'\n    + 'font:700 18px Arial,sans-serif;border:2px solid #1D1F22;border-radius:4px;background:#1D1F22;color:#fff;cursor:pointer}'\n    + 'button.secondaire{background:#fff;color:#1D1F22}a{color:#1D1F22}</style></head><body><main><h1>' + e(titre) + '</h1>'\n    + corps + '<p style=\"margin-top:2rem;font-size:15px;color:#44494F\">Andy Construct · +41 22 771 20 15</p></main></body></html>';\n}\nconst MODELES = {\n \"page-desinscription-confirmer\": {\n  \"sujet\": \"\",\n  \"corps\": \"Ne plus recevoir nos e-mails\\n\\nVous ne recevrez plus de conseils ni d'informations d'Andy Construct à l'adresse {{email_masque}}.\\n\\n[Confirmer]\\n\\nSi vous avez une demande ou un chantier en cours avec nous, nous pourrons encore vous écrire à ce sujet.\"\n },\n \"page-lien-invalide\": {\n  \"sujet\": \"\",\n  \"corps\": \"Ce lien n'est plus valable\\n\\nPour ne plus recevoir nos e-mails, répondez simplement « STOP » à l'un de nos messages, ou appelez-nous au +41 22 771 20 15. Nous nous en occupons le jour même.\"\n }\n};\n\nconst t = String(($input.first().json.query || {}).t || '');\nconst d = verifierJeton(t);\nif (!d || d.a !== 'stop' || !d.e) {\n  const [titre, ...reste] = MODELES['page-lien-invalide'].corps.split('\\n\\n');\n  return [{ json: { html: page(titre, '<p>' + reste.join('</p><p>') + '</p>') } }];\n}\nconst [u, dom] = d.e.split('@');\nconst masque = u.slice(0, 2) + '…@' + dom;\nconst texte = MODELES['page-desinscription-confirmer'].corps.replace('{{email_masque}}', masque);\nconst [titre, intro, , apres] = texte.split('\\n\\n');\nreturn [{ json: { html: page(titre, '<p>' + intro + '</p><form method=\"post\" action=\"\"><input type=\"hidden\" name=\"t\" value=\"' + t + '\"><button>Confirmer</button></form><p>' + apres + '</p>') } }];\n"
+      },
+      "id": "3ebc2d30-6e13-7a89-a803-b0579b34aad9",
+      "name": "Page de confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Adresse masquée à l'écran (ab…@domaine.ch).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              },
+              {
+                "name": "Content-Security-Policy",
+                "value": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+              }
+            ]
+          }
+        }
+      },
+      "id": "677d4a1a-ceda-0c7b-64a1-9a5675da1aa5",
+      "name": "Afficher la confirmation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Page sans script.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ac-stop",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "34f52ded-71a6-5eae-e139-e5f3d62db309",
+      "name": "Confirmation (POST /ac-stop)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "notes": "Clic sur « Confirmer ».",
+      "notesInFlow": false,
+      "webhookId": "13f1f90e-57ef-51c7-8421-180e19b810c6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\nconst d = verifierJeton(($input.first().json.body || {}).t);\nreturn [{ json: { valide: !!(d && d.a === 'stop' && d.e), email: d ? d.e : '' } }];\n"
+      },
+      "id": "79074efc-3cc0-1215-1d5a-e7c645b6206b",
+      "name": "Vérifier le jeton",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "notes": "Jeton signé AC_ACTION_SECRET (créé par le PHP ou par n8n).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "52bc3b0b-fec1-34df-a172-151b5d58dfa2",
+              "leftValue": "={{ $json.valide }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "18d39b40-a9ad-95c0-fdef-0d7d46e3035e",
+      "name": "Jeton valable ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ],
+      "notes": "Faux : page « lien plus valable ».",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "function page(titre, corps) {\n  const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  return '<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">'\n    + '<meta name=\"robots\" content=\"noindex\"><title>' + e(titre) + ' · Andy Construct</title><style>'\n    + 'body{margin:0;font:18px/1.6 Arial,sans-serif;color:#1D1F22;background:#fff}main{max-width:36rem;margin:0 auto;padding:2rem 1rem}'\n    + 'h1{font-size:1.5rem;border-left:6px solid #E8000F;padding-left:.75rem}button{min-height:48px;margin:.4rem .4rem .4rem 0;padding:.7rem 1.2rem;'\n    + 'font:700 18px Arial,sans-serif;border:2px solid #1D1F22;border-radius:4px;background:#1D1F22;color:#fff;cursor:pointer}'\n    + 'button.secondaire{background:#fff;color:#1D1F22}a{color:#1D1F22}</style></head><body><main><h1>' + e(titre) + '</h1>'\n    + corps + '<p style=\"margin-top:2rem;font-size:15px;color:#44494F\">Andy Construct · +41 22 771 20 15</p></main></body></html>';\n}\nconst MODELES = {\n \"page-desinscription-ok\": {\n  \"sujet\": \"\",\n  \"corps\": \"C'est fait\\n\\nVous ne recevrez plus nos e-mails. Si c'est une erreur, ou pour toute question, appelez-nous au +41 22 771 20 15.\"\n },\n \"page-lien-invalide\": {\n  \"sujet\": \"\",\n  \"corps\": \"Ce lien n'est plus valable\\n\\nPour ne plus recevoir nos e-mails, répondez simplement « STOP » à l'un de nos messages, ou appelez-nous au +41 22 771 20 15. Nous nous en occupons le jour même.\"\n }\n};\n\nconst ok = $input.first().json.valide;\nconst [titre, ...reste] = MODELES[ok ? 'page-desinscription-ok' : 'page-lien-invalide'].corps.split('\\n\\n');\nreturn [{ json: { ...$input.first().json, html: page(titre, '<p>' + reste.join('</p><p>') + '</p>') } }];\n"
+      },
+      "id": "0aa2411e-8056-2db8-c60a-0192f7b719df",
+      "name": "Pages de réponse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        600
+      ],
+      "notes": "Textes de desinscription.md.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              },
+              {
+                "name": "Content-Security-Policy",
+                "value": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+              }
+            ]
+          }
+        }
+      },
+      "id": "599389d0-e551-a0a2-cf18-81a7a3918b1c",
+      "name": "Afficher le résultat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        600
+      ],
+      "notes": "Réponse immédiate.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ email: $json.email, emailBlacklisted: true, updateEnabled: true }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "64019390-6c68-2596-7106-effc02a6dff1",
+      "name": "Brevo : bloquer l'adresse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        200
+      ],
+      "notes": "Crée ou met à jour le contact avec emailBlacklisted = true (aucun envoi marketing possible).",
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REMPLACER-brevo",
+          "name": "Brevo (en-tête api-key)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/persons/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "term",
+              "value": "={{ $('Vérifier le jeton').first().json.email }}"
+            },
+            {
+              "name": "fields",
+              "value": "email"
+            },
+            {
+              "name": "exact_match",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "4dd60e6c-54a5-c9a3-a16c-eeebab1e70c0",
+      "name": "Pipedrive : chercher la personne",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        200
+      ],
+      "notes": "Par e-mail exact.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\nconst items = ($input.first().json.data && $input.first().json.data.items) || [];\nreturn items.map((i) => ({ json: { person_id: i.item.id, maj: champs({ opposition_marketing: new Date().toISOString().slice(0, 10) }) } }));\n"
+      },
+      "id": "f4162bd9-9f10-46e4-b447-a5f6963aeda2",
+      "name": "Opposition à enregistrer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        200
+      ],
+      "notes": "Une mise à jour par personne trouvée.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $json.person_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "7bf4b7f3-86fc-bdf4-d840-bdcd32233a73",
+      "name": "Pipedrive : noter l'opposition",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        200
+      ],
+      "notes": "Champ opposition_marketing daté : WF04e, WF04i, WF07 n'enverront plus rien.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Lien ouvert (GET /ac-stop)": {
+      "main": [
+        [
+          {
+            "node": "Page de confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Page de confirmation": {
+      "main": [
+        [
+          {
+            "node": "Afficher la confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmation (POST /ac-stop)": {
+      "main": [
+        [
+          {
+            "node": "Vérifier le jeton",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier le jeton": {
+      "main": [
+        [
+          {
+            "node": "Jeton valable ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jeton valable ?": {
+      "main": [
+        [
+          {
+            "node": "Pages de réponse",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Brevo : bloquer l'adresse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pages de réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pages de réponse": {
+      "main": [
+        [
+          {
+            "node": "Afficher le résultat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brevo : bloquer l'adresse": {
+      "main": [
+        [
+          {
+            "node": "Pipedrive : chercher la personne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipedrive : chercher la personne": {
+      "main": [
+        [
+          {
+            "node": "Opposition à enregistrer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opposition à enregistrer": {
+      "main": [
+        [
+          {
+            "node": "Pipedrive : noter l'opposition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Opposition gratuite et facile : page de confirmation, Brevo bloqué, opposition datée dans le CRM."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "conformite"
+    }
+  ],
+  "versionId": "d273b3c1-089f-093d-981e-7c473894dd5c",
+  "id": "eafa418a7e013183"
+}

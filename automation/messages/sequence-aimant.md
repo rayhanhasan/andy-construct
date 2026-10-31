@@ -3,17 +3,19 @@
 | | |
 |---|---|
 | Canal | E-mail (Brevo, transactionnel), en semaine à 9 h 30 |
-| Déclencheur | Formulaire de guide avec e-mail (`formulaire=aimant`) ; WF07 |
-| E1 | Immédiat, envoyé par le PHP : `accuse-reception-aimant.md` (le guide) |
+| Condition | **Uniquement** si la personne a donné son e-mail **et** coché « Recevoir aussi deux conseils par e-mail » (`conseils_email=oui`, case non cochée par défaut ; décision D3). Les guides se téléchargent librement : aucune adresse n'est exigée pour les lire. |
+| Déclencheur | Formulaire « guide imprimé par la poste » (`formulaire=envoi_postal_guide`) ; WF07 |
+| E1 | Immédiat, envoyé par le PHP : `accuse-reception-guide.md` (annonce les deux conseils et porte la désinscription) |
 | E2 | J+3 : un conseil utile, un exemple réel |
-| E3 | J+8 : proposition de visite, sans pression |
+| E3 | J+8 : proposition de visite, sans pression ; dernier message |
 | Arrêt | Désinscription (lien ou STOP), réponse à un e-mail, ou demande de devis créée entre-temps |
-| Base légale | Information demandée, séquence annoncée sur le formulaire (« Vous recevrez le guide puis 2 e-mails de conseils ; désinscription en un clic »), désinscription dans chaque message |
+| Base légale | Accord explicite (case cochée) pour une information demandée ; désinscription dans chaque message (LCD art. 3 al. 1 let. o) |
 | Profils professionnels | En plus : tâche « Appel de courtoisie » à J+2 pour l'associé « bureau », après vérification de l'astérisque dans l'annuaire |
+| Guides concernés | `guide-reduire-le-bruit` et `checklist-chantier-site-occupe` (D7). Le guide « architectes » est prévu plus tard (stratégie §4, n° 4). |
 
 Variables : `salutation`, `commune_exemple`, `lien_fiche_projet`, `trimestre`, `signature`, `url_desinscription`.
 
-## Guide « Réduire le bruit dans un appartement » (propriétaires)
+## Guide « Réduire le bruit chez soi » (`guide-reduire-le-bruit`, propriétaires)
 
 <!-- modele: aimant-guide-bruit-e2 -->
 ```texte
@@ -43,7 +45,7 @@ Objet : Un avis sur votre situation ?
 
 Chaque logement est différent : le bon remède dépend du type de bruit (voix, pas, musique) et de la construction. C'est pour cela que nous passons toujours voir avant de proposer quoi que ce soit.
 
-Si vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite et détaillée. Il suffit de répondre à ce message ou d'appeler le 022 771 20 15.
+Si vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite et détaillée. Il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.
 
 C'est notre dernier message sur ce sujet.
 
@@ -55,7 +57,7 @@ Meilleures salutations,
 Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
-## Check-list « Travaux en immeuble habité » (régies)
+## Liste de contrôle « Travaux en immeuble habité » (`checklist-chantier-site-occupe`, régies)
 
 <!-- modele: aimant-checklist-regie-e2 -->
 ```texte
@@ -85,7 +87,7 @@ Objet : Vos fins de bail{{#trimestre}} de {{trimestre}}{{/trimestre}}
 
 Pour vos remises en état de fin de bail, nous pouvons chiffrer un forfait type (prix par pièce, plafonds et murs) : vos ordres partent alors plus vite, et vous savez à l'avance ce que coûtera un appartement.
 
-Si cela vous intéresse, répondez à ce message ou appelez le 022 771 20 15.
+Si cela vous intéresse, répondez à ce message ou appelez le +41 22 771 20 15.
 
 C'est notre dernier message sur ce sujet.
 
@@ -97,7 +99,7 @@ Meilleures salutations,
 Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
-## Guide « Acoustique en rénovation » (architectes)
+## Guide « Acoustique en rénovation » (architectes, guide futur)
 
 <!-- modele: aimant-guide-architectes-e2 -->
 ```texte

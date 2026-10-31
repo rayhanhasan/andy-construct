@@ -104,7 +104,7 @@ final class Modeles
         }
         $nom = match ($demande['formulaire']) {
             'rappel' => 'accuse-rappel',
-            'aimant' => 'accuse-aimant',
+            'envoi_postal_guide' => 'accuse-guide',
             default => 'accuse-devis',
         };
         $modele = $this->charger($nom);
@@ -152,7 +152,7 @@ final class Modeles
         if (mb_strlen($extrait) > 200) {
             $extrait = rtrim(mb_substr($extrait, 0, 197)) . '…';
         }
-        $aimant = (array) $this->config->get('aimants.' . $d['aimant'], []);
+        $guide = (array) $this->config->get('guides.' . $d['guide'], []);
         $realisations = (array) $this->config->get('realisations_par_service', []);
         $e = (array) $this->config->get('entreprise');
 
@@ -177,12 +177,10 @@ final class Modeles
             'horaires' => (string) ($e['horaires'] ?? ''),
             'url_confidentialite' => (string) $this->config->get('url_confidentialite'),
             'signature' => $this->signature($associe['nom']),
-            'aimant_titre' => (string) ($aimant['titre'] ?? ''),
-            'aimant_url' => (string) ($aimant['url'] ?? ''),
-            'aimant_format' => (string) ($aimant['format'] ?? ''),
-            'aimant_lecture' => (string) ($aimant['lecture'] ?? ''),
-            'par_poste' => $d['par_poste'],
-            'newsletter' => $d['newsletter'],
+            'guide_titre' => (string) ($guide['titre'] ?? ''),
+            'guide_url' => (string) ($guide['url'] ?? ''),
+            'adresse_envoi' => $d['adresse_postale'],
+            'conseils_email' => $d['conseils_email'] && $d['email'] !== '',
             'url_desinscription' => (string) ($demande['url_desinscription'] ?? ''),
         ];
     }
@@ -227,10 +225,10 @@ final class Modeles
         $lieu = trim(($d['npa'] !== '' && !str_contains($d['commune'], $d['npa']) ? $d['npa'] . ' ' : '') . $d['commune']);
         $loc = $demande['localite'];
 
-        if ($demande['formulaire'] === 'aimant') {
-            $titreAimant = (string) $this->config->get('aimants.' . $d['aimant'] . '.titre', $d['aimant']);
-            $sujet = $test . '[Aimant] ' . $titreAimant . ' · ' . Champs::libelle(Champs::PROFIL, $d['profil']) . ' · ' . $nomComplet;
-            $entete = 'Téléchargement d\'un guide' . ($d['par_poste'] ? ' · ENVOI POSTAL À FAIRE' : '');
+        if ($demande['formulaire'] === 'envoi_postal_guide') {
+            $titreGuide = (string) $this->config->get('guides.' . $d['guide'] . '.titre', $d['guide']);
+            $sujet = $test . '[Guide par la poste] ' . $titreGuide . ' · ' . $nomComplet . ' · ' . trim($d['npa'] . ' ' . $d['localite']);
+            $entete = 'Guide imprimé à envoyer par la poste';
         } else {
             $p = $s['priorite'];
             $etiquette = $p === 'hors-cible' ? 'Hors cible' : $p;
@@ -250,7 +248,7 @@ final class Modeles
             'Travaux' => implode(', ', array_map(static fn ($t) => Champs::TRAVAUX[$t], $d['travaux'])),
             'Surface' => $d['surface'] !== '' ? Champs::SURFACE[$d['surface']] : '',
             'Délai' => $d['delai'] !== '' ? Champs::DELAI[$d['delai']] : '',
-            'Lieu' => $lieu !== '' ? $lieu . ' (' . implode(', ', array_filter([
+            'Lieu' => $lieu !== '' && $demande['formulaire'] !== 'envoi_postal_guide' ? $lieu . ' (' . implode(', ', array_filter([
                 $loc['canton'] ? 'canton ' . $loc['canton'] : '',
                 'zone ' . $loc['zone'],
                 $loc['methode'] === 'commune-approchee' ? 'commune reconnue : ' . $loc['commune_reconnue'] . ', à vérifier' : '',
@@ -258,9 +256,9 @@ final class Modeles
             'Préférence' => trim(Champs::libelle(Champs::PREFERENCE_CONTACT, $d['preference_contact'], '') . ($d['creneau'] ? ', ' . Champs::CRENEAU[$d['creneau']] : ''), ', '),
             'Recommandé par' => $d['recommande_par'],
             'Connu par (déclaré)' => $d['connu_par'] !== '' ? Champs::CONNU_PAR[$d['connu_par']] : '',
-            'Guide' => $demande['formulaire'] === 'aimant' ? (string) $this->config->get('aimants.' . $d['aimant'] . '.titre', $d['aimant']) : '',
-            'Envoi postal' => $d['par_poste'] ? "oui, à l'adresse : " . str_replace("\n", ', ', $d['adresse_postale']) : '',
-            'Lettre trimestrielle' => $d['newsletter'] ? 'demandée (double confirmation à venir)' : '',
+            'Guide' => $demande['formulaire'] === 'envoi_postal_guide' ? (string) $this->config->get('guides.' . $d['guide'] . '.titre', $d['guide']) : '',
+            "Adresse d'envoi" => $demande['formulaire'] === 'envoi_postal_guide' ? str_replace("\n", ', ', $d['adresse_postale']) : '',
+            'Conseils par e-mail' => $d['conseils_email'] && $d['email'] !== '' ? 'oui, accord donné (2 e-mails, puis plus rien)' : '',
         ];
         $champs = array_filter($champs, static fn ($v) => $v !== '');
 

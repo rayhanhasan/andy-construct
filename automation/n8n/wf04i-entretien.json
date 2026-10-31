@@ -1,0 +1,282 @@
+{
+  "name": "WF04i · Entretien à 2 ans, un an déjà, régies (i)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF04i · Suivi après chantier\n\nChaque jour à 7 h 45. Peinture : réception + 23 mois. Autres services : + 12 mois. Régies : du 1er au 7 octobre, une fois par an.\n\n**Condition légale** : `info_exception_client` rempli (client informé de son droit d'opposition lors de la collecte, LCD art. 3 al. 1 let. o), pas d'opposition, un message marketing tous les 30 jours au plus. Une seule fois par chantier (`entretien_envoye_le`).",
+        "height": 220,
+        "width": 640
+      },
+      "id": "162bfa3b-6a0f-71d2-8029-8559d3f2a7ba",
+      "name": "WF04i · Suivi après chantier",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "45 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "7131d807-5e52-320a-a2bd-bb8d36efb49a",
+      "name": "Chaque jour à 7 h 45",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Déclencheur planifié « 45 7 * * * » (cron, fuseau Europe/Zurich défini dans les paramètres du workflow).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.pipedrive.com/v1/deals",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter_id",
+              "value": "={{ JSON.parse($env.AC_PD_IDS || \"{}\").filtre_chantiers_clos }}"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "1cf1bc7c-51f6-7b11-f12c-48c7402d134e",
+      "name": "Chantiers réceptionnés",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Filtre « pipeline Chantiers, gagnés, réception saisie ».",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const [charge, sig] = String(jeton || '').split('.');\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = b64(crypto.createHmac('sha256', secret).update(charge).digest());\n  if (attendue.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(attendue), Buffer.from(sig))) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"entretien-peinture-2-ans\": {\n  \"sujet\": \"Votre peinture, deux ans après\",\n  \"corps\": \"{{salutation}},\\n\\nIl y a bientôt deux ans, nous avons refait {{pieces_ou_service}}{{#commune}} à {{commune}}{{/commune}}. Si vous le souhaitez, nous passons voir l'état des surfaces et nous vous disons s'il y a des retouches à prévoir.\\n\\nC'est aussi l'occasion de faire le point sur d'autres pièces, si vous y pensiez.\\n\\nJe souhaite un passage : {{lien_passage}}\\n\\nSinon, il n'y a rien à faire : ce message ne sera pas répété.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"entretien-un-an\": {\n  \"sujet\": \"Un an déjà : tout est en ordre ?\",\n  \"corps\": \"{{salutation}},\\n\\nIl y a un an, nous terminions {{pieces_ou_service}}{{#commune}} à {{commune}}{{/commune}}. Tout est-il toujours en ordre ? Si quelque chose vous pose question, répondez simplement à ce message : nous revenons voir.\\n\\nEt si une personne de votre entourage a un projet de placo, de peinture ou d'isolation, vous pouvez lui donner notre numéro, le +41 22 771 20 15. Nous vous en remercions d'avance.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"regies-annuel\": {\n  \"sujet\": \"Vos rafraîchissements de {{annee_suivante}}\",\n  \"corps\": \"{{salutation}},\\n\\nVous préparez peut-être votre budget d'entretien pour {{annee_suivante}}. Nous pouvons chiffrer vos rafraîchissements types de fin de bail (prix par pièce) et vos cages d'escalier, pour que vos ordres partent plus vite le moment venu.\\n\\nSi cela vous est utile : {{lien_en_parler}}, ou une réponse à ce message.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n }\n};\n\nconst t = maintenant(), sortie = [], regiesVues = new Set();\nfor (const a of ($input.first().json.data || [])) {\n  const p = a.person_id || {}, email = p.email && p.email[0] && p.email[0].value;\n  if (!email || !champ(p, 'info_exception_client') || champ(p, 'opposition_marketing')) continue;\n  const dernier = champ(p, 'dernier_message_marketing');\n  if (dernier && t.diff(DateTime.fromISO(dernier), 'days').days < 30) continue;\n  const reception = champ(a, 'date_reception_chantier'); if (!reception) continue;\n  const mois = t.diff(DateTime.fromISO(reception), 'months').months;\n  const service = champ(a, 'service'), regie = champ(a, 'type_client') === 'regie';\n  const associe = (a.user_id && a.user_id.name) || '', deEmail = (a.user_id && a.user_id.email) || $env.AC_EMAIL_EXPEDITEUR;\n  const vars = { salutation: 'Bonjour ' + (p.name || ''), pieces_ou_service: champ(a, 'pieces_ou_service') || ('les travaux de ' + (service || 'votre chantier')),\n    commune: champ(a, 'commune') || '', signature: signature(associe), url_desinscription: lienStop(email), annee_suivante: t.year + 1,\n    lien_passage: lienAction({ a: 'entretien-passage', d: a.id }, 60), lien_en_parler: lienAction({ a: 'entretien-passage', d: a.id }, 60) };\n  let id = null, cle = null;\n  if (regie && t.month === 10 && t.day <= 7 && !regiesVues.has(p.value) && champ(p, 'regie_annuel_le') !== String(t.year)) { id = 'regies-annuel'; cle = 'regie_annuel_le'; regiesVues.add(p.value); }\n  else if (!champ(a, 'entretien_envoye_le') && service === 'peinture' && mois >= 23 && mois < 24) { id = 'entretien-peinture-2-ans'; cle = 'entretien_envoye_le'; }\n  else if (!champ(a, 'entretien_envoye_le') && service !== 'peinture' && mois >= 12 && mois < 13) { id = 'entretien-un-an'; cle = 'entretien_envoye_le'; }\n  if (!id) continue;\n  const m = message(id, vars);\n  sortie.push({ json: { deal_id: a.id, person_id: p.value, courriel: { de: deEmail, a: email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: deEmail },\n    maj: cle === 'regie_annuel_le' ? {} : champs({ entretien_envoye_le: t.toISODate() }),\n    maj_personne: champs({ dernier_message_marketing: t.toISODate(), ...(cle === 'regie_annuel_le' ? { regie_annuel_le: String(t.year) } : {}) }) } });\n}\nreturn sortie;\n"
+      },
+      "id": "3f635f9a-ac8c-86a4-9f06-92165305c55f",
+      "name": "Messages d'entretien dus",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Textes : entretien.md.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.courriel.de }}",
+        "toEmail": "={{ $json.courriel.a }}",
+        "subject": "={{ $json.courriel.sujet }}",
+        "emailFormat": "both",
+        "text": "={{ $json.courriel.texte }}",
+        "html": "={{ $json.courriel.html }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.courriel.repondre_a }}"
+        }
+      },
+      "id": "5aee0aef-4440-0f57-73de-f2735b709541",
+      "name": "Envoyer l'e-mail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Depuis la boîte de l'associé « terrain » ou de l'associé de l'affaire ; désinscription en pied.",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REMPLACER-smtp",
+          "name": "SMTP Andy Construct (domaine)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $('Messages d\\'entretien dus').item.json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Messages d\\'entretien dus').item.json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "77900353-d020-c1b4-ab62-e3afee8037c0",
+      "name": "Noter l'envoi (affaire)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "entretien_envoye_le.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $('Messages d\\'entretien dus').item.json.person_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Messages d\\'entretien dus').item.json.maj_personne }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "301ff388-7fd4-6e43-146a-4ab6c2747fca",
+      "name": "Noter l'envoi (personne)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "dernier_message_marketing (plafond de 30 jours).",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Chaque jour à 7 h 45": {
+      "main": [
+        [
+          {
+            "node": "Chantiers réceptionnés",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chantiers réceptionnés": {
+      "main": [
+        [
+          {
+            "node": "Messages d'entretien dus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Messages d'entretien dus": {
+      "main": [
+        [
+          {
+            "node": "Envoyer l'e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer l'e-mail": {
+      "main": [
+        [
+          {
+            "node": "Noter l'envoi (affaire)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Noter l'envoi (affaire)": {
+      "main": [
+        [
+          {
+            "node": "Noter l'envoi (personne)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Scénario (i) : entretien à 2 ans (peinture), un an déjà (autres), planification annuelle des régies."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "horloge"
+    },
+    {
+      "name": "scenario-i"
+    }
+  ],
+  "versionId": "8905f35f-1387-7766-aecd-67606246c14e",
+  "id": "46a0ad07d1f04d70"
+}

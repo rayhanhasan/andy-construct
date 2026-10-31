@@ -42,7 +42,7 @@ final class Webhook
 
     private function url(string $type): string
     {
-        return (string) $this->config->get($type === 'aimant' ? 'n8n.url_aimant' : 'n8n.url_demande', '');
+        return (string) $this->config->get($type === 'guide' ? 'n8n.url_guide' : 'n8n.url_demande', '');
     }
 
     /**

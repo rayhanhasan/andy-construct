@@ -74,7 +74,7 @@ R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" \
     -F formulaire=devis -F 'nom=Françoise Dupont' -F civilite=madame -F 'telephone=079 123 45 67' \
     -F email=francoise.dupont@exemple.ch -F 'travaux[]=isolation-acoustique' -F type_client=proprietaire \
     -F surface=15-50 -F delai=1-3-mois -F 'commune=1222 Vésenaz' -F 'message=On entend tout le voisin du dessus.' \
-    -F connu_par=recherche-google -F accord=oui -F site_web= -F "form_t0=$J" -F page=/contact.html \
+    -F connu_par=recherche-google -F site_web= -F "form_t0=$J" -F page=/contact.html \
     -F 'utm_source=google' -F 'utm_medium=cpc' -F 'utm_campaign=2026-11_acoustique' \
     -F "fichiers[]=@$TMP/photo.jpg;type=image/jpeg" -F "fichiers[]=@$TMP/plan.pdf;type=application/pdf" \
     "$BASE/api/demande.php")
@@ -93,7 +93,7 @@ verifier "$(sed -n '/^$/,$p' "$WH" | sed 1d | jq -r .source.categorie)" google-a
 # 2. Pot de miel
 M0=$(nb_mails)
 R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F nom=Robot \
-    -F telephone=0791234567 -F travaux=placo -F commune=Genève -F accord=oui -F site_web=http://spam.example \
+    -F telephone=0791234567 -F travaux=placo -F commune=Genève -F site_web=http://spam.example \
     -F "form_t0=$J" "$BASE/api/demande.php")
 verifier "$(tail -n1 <<<"$R")/$(sed '$d' <<<"$R" | jq -r '.ok,.ref' | tr '\n' ' ')" "200/true null " "pot de miel rempli → réponse leurre (200, ref null)"
 verifier "$(nb_mails)" "$M0" "pot de miel : aucun e-mail"
@@ -101,13 +101,13 @@ verifier "$(nb_mails)" "$M0" "pot de miel : aucun e-mail"
 # 3. Envoi trop rapide (jeton tout juste délivré)
 J2=$(jeton)
 R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F nom=Pressé \
-    -F telephone=0791234567 -F travaux=placo -F commune=Genève -F accord=oui -F "form_t0=$J2" "$BASE/api/demande.php")
+    -F telephone=0791234567 -F travaux=placo -F commune=Genève -F "form_t0=$J2" "$BASE/api/demande.php")
 verifier "$(tail -n1 <<<"$R")/$(sed '$d' <<<"$R" | jq -r .code)" "422/trop_rapide" "envoi en moins de 4 s → 422 trop_rapide"
 
 # 4. Fichiers piégés
 for piege in piege.jpg polyglotte.jpg; do
     R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F nom=Test \
-        -F telephone=0791234567 -F travaux=placo -F commune=Genève -F accord=oui -F "form_t0=$J" \
+        -F telephone=0791234567 -F travaux=placo -F commune=Genève -F "form_t0=$J" \
         -F "fichiers[]=@$TMP/$piege;type=image/jpeg" "$BASE/api/demande.php")
     verifier "$(tail -n1 <<<"$R")" 422 "fichier piégé « $piege » → 422"
     echo "      $(sed '$d' <<<"$R" | jq -r .erreurs.fichiers)"
@@ -117,12 +117,12 @@ verifier "$(ls "$TMP/stockage/fichiers/" | grep -cE '^[a-f0-9]{32}')" 2 "aucun f
 # 5. Champs manquants
 R=$(curl -s -w '\n%{http_code}' -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F "form_t0=$J" "$BASE/api/demande.php")
 verifier "$(tail -n1 <<<"$R")" 422 "champs manquants → 422"
-verifier "$(sed '$d' <<<"$R" | jq -r '.erreurs | keys | join(",")')" "accord,commune,nom,telephone,travaux" "erreurs : accord, commune, nom, téléphone, travaux"
+verifier "$(sed '$d' <<<"$R" | jq -r '.erreurs | keys | join(",")')" "commune,nom,telephone,travaux" "erreurs : commune, nom, téléphone, travaux (pas de case de consentement)"
 echo "      téléphone : $(sed '$d' <<<"$R" | jq -r .erreurs.telephone)"
 
 # 6. Téléphone et e-mail mal formés
 R=$(curl -s -H 'Accept: application/json' -H "$ORIGINE" -F formulaire=devis -F nom=Test -F 'telephone=022 77' \
-    -F 'email=jean@bluewin' -F travaux=placo -F commune=Genève -F accord=oui -F "form_t0=$J" "$BASE/api/demande.php")
+    -F 'email=jean@bluewin' -F travaux=placo -F commune=Genève -F "form_t0=$J" "$BASE/api/demande.php")
 verifier "$(jq -r '.erreurs | keys | join(",")' <<<"$R")" "email,telephone" "téléphone et e-mail mal formés signalés"
 
 # 7. Origine étrangère

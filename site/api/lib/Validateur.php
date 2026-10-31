@@ -19,25 +19,26 @@ final class Validateur
         'telephone' => 'Ce numéro semble incomplet. Indiquez-le par exemple ainsi : 079 123 45 67.',
         'telephone_requis' => 'Indiquez le numéro auquel nous pouvons vous rappeler.',
         'email' => 'Cette adresse e-mail semble incomplète. Vérifiez-la, par exemple : nom@exemple.ch.',
-        'travaux' => 'Choisissez le type de travaux (ou « Je ne sais pas encore »).',
+        'travaux' => 'Choisissez au moins un type de travaux, ou « Autre chose, ou je ne sais pas encore ».',
         'commune' => 'Indiquez la commune des travaux ou son NPA.',
         'npa' => 'Le NPA compte 4 chiffres, par exemple 1227.',
-        'accord' => 'Cochez cette case pour que nous puissions traiter votre demande.',
         'message' => "Votre message est trop long (3'000 caractères au maximum). Vous pouvez nous envoyer la suite par e-mail.",
         'texte_long' => 'Ce texte est trop long. Raccourcissez-le, s\'il vous plaît.',
-        'aimant' => "Ce guide n'est pas disponible pour le moment. Appelez-nous, nous vous l'envoyons volontiers.",
-        'email_aimant' => "Indiquez votre adresse e-mail, ou cochez « Je préfère le recevoir par la poste ».",
-        'adresse_postale' => "Indiquez l'adresse à laquelle envoyer le guide (rue, NPA et localité).",
+        'guide' => "Ce guide n'est pas disponible pour le moment. Appelez-nous, nous vous l'envoyons volontiers.",
+        'adresse' => "Indiquez l'adresse à laquelle envoyer le guide (rue et numéro).",
+        'npa_poste' => 'Indiquez le NPA, par exemple 1227.',
+        'localite' => 'Indiquez la localité, par exemple Carouge.',
         'nom_poste' => 'Indiquez votre nom pour l\'envoi par la poste.',
         'formulaire' => "Le formulaire envoyé n'est pas reconnu. Rechargez la page, s'il vous plaît.",
     ];
 
     /**
-     * @param array<string, mixed> $aimantsActifs slug => configuration
-     * @param bool $accordObligatoire case « accord » exigée (devis, aimant) ; peut passer à
-     *   false après avis du juriste (le devoir d'information suffit, nLPD art. 19).
+     * Aucune case de consentement n'est exigée (décision D2 : mention d'information
+     * sous le bouton, nLPD art. 19). Un champ « accord » envoyé est ignoré.
+     *
+     * @param array<string, mixed> $guidesActifs slug => configuration (guides envoyables par la poste)
      */
-    public function __construct(private array $aimantsActifs = [], private bool $accordObligatoire = true)
+    public function __construct(private array $guidesActifs = [])
     {
     }
 
@@ -53,6 +54,7 @@ final class Validateur
         $d = [];
 
         $formulaire = self::chaine($post, 'formulaire') ?: 'devis';
+        $formulaire = Champs::ALIAS_FORMULAIRES[$formulaire] ?? $formulaire;
         if (!in_array($formulaire, Champs::FORMULAIRES, true)) {
             return [['formulaire' => 'devis'], ['formulaire' => self::MESSAGES['formulaire']], ['formulaire_inconnu']];
         }
@@ -126,17 +128,25 @@ final class Validateur
         if (mb_strlen($d['recommande_par']) > 100) {
             $erreurs['recommande_par'] = self::MESSAGES['texte_long'];
         }
-        $d['accord'] = in_array(self::chaine($post, 'accord'), ['oui', 'on', '1'], true);
 
-        // Aimant
-        $d['aimant'] = self::chaine($post, 'aimant');
+        // Envoi postal d'un guide (décision D3) : le guide se télécharge librement ;
+        // ce formulaire ne sert qu'à recevoir la version imprimée.
+        $d['guide'] = self::chaine($post, 'guide') ?: self::chaine($post, 'aimant');
         $d['profil'] = self::liste($post, 'profil', array_keys(Champs::PROFIL), $avert);
-        $d['par_poste'] = in_array(self::chaine($post, 'par_poste'), ['oui', 'on', '1'], true);
-        $d['newsletter'] = in_array(self::chaine($post, 'newsletter'), ['oui', 'on', '1'], true);
-        $d['adresse_postale'] = self::texte(self::chaine($post, 'adresse_postale', 1000), true);
-        if (mb_strlen($d['adresse_postale']) > 300) {
-            $erreurs['adresse_postale'] = self::MESSAGES['texte_long'];
+        $d['adresse'] = self::texte(self::chaine($post, 'adresse', 1000), false);
+        $d['localite'] = self::texte(self::chaine($post, 'localite'), false);
+        $ancienneAdresse = self::texte(self::chaine($post, 'adresse_postale', 1000), true); // ancien champ sur 3 lignes
+        if ($d['adresse'] === '' && $ancienneAdresse !== '') {
+            $d['adresse'] = $ancienneAdresse;
         }
+        foreach (['adresse' => 300, 'localite' => 80] as $champ => $max) {
+            if (mb_strlen($d[$champ]) > $max) {
+                $erreurs[$champ] = self::MESSAGES['texte_long'];
+            }
+        }
+        $d['adresse_postale'] = trim($d['adresse'] . ($d['npa'] . $d['localite'] !== '' ? "\n" . trim($d['npa'] . ' ' . $d['localite']) : ''));
+        // Séquence de 2 conseils par e-mail : uniquement sur accord explicite (case non cochée par défaut).
+        $d['conseils_email'] = in_array(self::chaine($post, 'conseils_email'), ['oui', 'on', '1'], true);
 
         // Source (champs cachés)
         $d['canal'] = self::liste($post, 'canal', Champs::CANAL, $avert) ?: 'site';
@@ -172,34 +182,29 @@ final class Validateur
                 if ($d['preference_contact'] === 'appel' && !$aTelephone && !isset($erreurs['telephone'])) {
                     $erreurs['telephone'] = self::MESSAGES['telephone_requis'];
                 }
-                if (!$d['accord'] && $this->accordObligatoire) {
-                    $erreurs['accord'] = self::MESSAGES['accord'];
-                }
                 break;
             case 'rappel':
                 if (!$aTelephone && !isset($erreurs['telephone'])) {
                     $erreurs['telephone'] = self::MESSAGES['telephone_requis'];
                 }
                 break;
-            case 'aimant':
-                if ($d['prenom'] === '' && $d['nom'] === '') {
-                    $erreurs['prenom'] = self::MESSAGES['prenom'];
+            case 'envoi_postal_guide':
+                if ($d['nom'] === '') {
+                    $erreurs['nom'] ??= self::MESSAGES['nom_poste'];
                 }
-                if (!isset($this->aimantsActifs[$d['aimant']])) {
-                    $erreurs['aimant'] = self::MESSAGES['aimant'];
+                if ($d['adresse'] === '') {
+                    $erreurs['adresse'] ??= self::MESSAGES['adresse'];
                 }
-                if ($d['par_poste']) {
-                    if ($d['adresse_postale'] === '') {
-                        $erreurs['adresse_postale'] ??= self::MESSAGES['adresse_postale'];
-                    }
-                    if ($d['nom'] === '') {
-                        $erreurs['nom'] ??= self::MESSAGES['nom_poste'];
-                    }
-                } elseif (!$aEmail && !isset($erreurs['email'])) {
-                    $erreurs['email'] = self::MESSAGES['email_aimant'];
+                // NPA et localité : exigés, sauf si l'ancien champ unique « adresse_postale » les contient.
+                $adresseComplete = $ancienneAdresse !== '' && preg_match('/(?<!\d)[1-9]\d{3}(?!\d)/', $ancienneAdresse);
+                if ($d['npa'] === '' && !$adresseComplete && !isset($erreurs['npa'])) {
+                    $erreurs['npa'] = self::MESSAGES['npa_poste'];
                 }
-                if (!$d['accord'] && $this->accordObligatoire) {
-                    $erreurs['accord'] = self::MESSAGES['accord'];
+                if ($d['localite'] === '' && !$adresseComplete) {
+                    $erreurs['localite'] ??= self::MESSAGES['localite'];
+                }
+                if (!isset($this->guidesActifs[$d['guide']])) {
+                    $erreurs['guide'] = self::MESSAGES['guide'];
                 }
                 break;
         }

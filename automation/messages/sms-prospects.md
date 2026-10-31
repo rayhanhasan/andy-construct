@@ -16,7 +16,7 @@ Seulement si la personne n'a **pas** donné d'e-mail et que son numéro est un m
 
 <!-- modele: sms-accuse -->
 ```texte
-Andy Construct : votre demande (réf. {{ref}}) est bien arrivée. {{associe_court}} vous rappelle {{promesse}}, depuis le 022 771 20 15 ou le 078 631 14 34.
+Andy Construct : votre demande (réf. {{ref}}) est bien arrivée. {{associe_court}} vous rappelle {{promesse}}, depuis le +41 22 771 20 15 ou le +41 78 631 14 34.
 ```
 
 ## Après un appel sans réponse (WF02, bouton « Pas de réponse », 1er essai)
@@ -25,7 +25,7 @@ Si la personne n'a pas d'e-mail ; sinon l'e-mail de `rappel-sans-reponse.md`.
 
 <!-- modele: sms-essai-appel -->
 ```texte
-Andy Construct : {{associe_court}} a essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}). Vous pouvez nous rappeler au 022 771 20 15, du lundi au vendredi de 7 h à 18 h.
+Andy Construct : {{associe_court}} a essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}). Vous pouvez nous rappeler au +41 22 771 20 15, du lundi au vendredi de 7 h à 18 h.
 ```
 
 ## Demande d'avis, J+2 après la réception du chantier (WF03d)
@@ -41,5 +41,5 @@ Bonjour{{#civilite_nom}} {{civilite_nom}}{{/civilite_nom}}, merci d'avoir confi�
 
 <!-- modele: sms-veille-visite -->
 ```texte
-Andy Construct : nous passons demain {{jour}} à {{heure}} pour votre projet ({{service}}). Un imprévu ? Appelez le 022 771 20 15. {{prenom_associe}}
+Andy Construct : nous passons demain {{jour}} à {{heure}} pour votre projet ({{service}}). Un imprévu ? Appelez le +41 22 771 20 15. {{prenom_associe}}
 ```

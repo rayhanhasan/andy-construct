@@ -25,7 +25,7 @@ try {
     $resultat = new Resultat(500, 'json', [
         'ok' => false,
         'code' => 'technique',
-        'message' => "Un problème technique nous empêche d'enregistrer votre demande. Réessayez dans quelques minutes, ou appelez-nous au 022 771 20 15.",
+        'message' => "Un problème technique nous empêche d'enregistrer votre demande. Réessayez dans quelques minutes, ou appelez-nous au +41 22 771 20 15.",
         'ref' => null,
     ]);
     $traitement = null;

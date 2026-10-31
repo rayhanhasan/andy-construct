@@ -68,7 +68,7 @@ final class Traitement
 
     private function msg(string $code): string
     {
-        $tel = (string) $this->config->get('entreprise.tel_fixe', '022 771 20 15');
+        $tel = (string) $this->config->get('entreprise.tel_fixe', '+41 22 771 20 15');
         $email = (string) $this->config->get('entreprise.email', 'contact@andyconstruct.ch');
         $mo = (int) $this->config->get('fichiers.max_taille_mo', 8);
         $nb = (int) $this->config->get('fichiers.max_nombre', 3);
@@ -134,8 +134,7 @@ final class Traitement
         }
 
         $validateur = new Validateur(
-            array_filter((array) $this->config->get('aimants', []), static fn ($a) => is_array($a) && !empty($a['actif'])),
-            (bool) $this->config->get('accord_obligatoire', true)
+            array_filter((array) $this->config->get('guides', []), static fn ($g) => is_array($g) && !empty($g['actif']))
         );
         [$d, $erreurs, $avertissements] = $validateur->valider($post);
         $formulaire = $d['formulaire'];
@@ -171,7 +170,7 @@ final class Traitement
             $this->exigerTeleversementHttp,
             (string) $this->config->get('entreprise.email', 'contact@andyconstruct.ch')
         );
-        $aTeleverser = $formulaire === 'aimant' ? [] : Televersement::aplatir($files);
+        $aTeleverser = $formulaire === 'envoi_postal_guide' ? [] : Televersement::aplatir($files);
         $fichiers = [];
         if ($erreurs === []) {
             [$fichiers, $erreurFichier, $raisonFichier] = $televersement->traiter($aTeleverser);
@@ -258,7 +257,7 @@ final class Traitement
         $scoring = null;
         $echeance = null;
         $promesse = null;
-        if ($formulaire !== 'aimant') {
+        if ($formulaire !== 'envoi_postal_guide') {
             $scoring = $this->scoring->calculer([
                 'type_client' => $d['type_client'],
                 'service' => $d['service'],
@@ -283,7 +282,7 @@ final class Traitement
 
         $urlDesinscription = '';
         $baseStop = (string) $this->config->get('n8n.url_desinscription', '');
-        if ($formulaire === 'aimant' && $baseStop !== '' && $d['email'] !== '') {
+        if ($formulaire === 'envoi_postal_guide' && $d['conseils_email'] && $baseStop !== '' && $d['email'] !== '') {
             $urlDesinscription = $baseStop . (str_contains($baseStop, '?') ? '&' : '?') . 't='
                 . $this->jetons->creer(['a' => 'stop', 'e' => $d['email'], 'r' => $ref], 400 * 86400, $maintenant->getTimestamp());
         }
@@ -324,35 +323,27 @@ final class Traitement
         $formulaire = $demande['formulaire'];
         $bilan = ['interne' => false, 'interne_mis_de_cote' => false, 'accuse' => 'non', 'webhook' => 'non'];
 
-        // 1. E-mail interne : part toujours (sauf aimants sans action humaine, selon la configuration).
-        $politique = (string) $this->config->get('notifier_aimants', 'b2b_et_poste');
-        $notifier = $formulaire !== 'aimant'
-            || $politique === 'tous'
-            || ($politique === 'b2b_et_poste' && ($d['par_poste'] || in_array($d['profil'], Champs::TYPES_B2B, true)));
-        if ($notifier) {
-            $listeFichiers = [];
-            $total = array_sum(array_column($demande['fichiers'], 'taille'));
-            $joindre = $total <= (int) $this->config->get('fichiers.pj_max_total_mo', 20) * 1048576;
-            foreach ($demande['fichiers'] as $f) {
-                $listeFichiers[] = [
-                    'nom' => $f['nom'],
-                    'taille' => $f['taille'],
-                    'joint' => $joindre,
-                    'url' => $joindre ? '' : $this->liens->url($f['id'], (int) $this->config->get('fichiers.lien_validite_h_interne', 168)),
-                ];
-            }
-            $message = $this->modeles->interne($demande, $this->liensActions($demande), $listeFichiers);
-            if ($joindre) {
-                foreach ($demande['fichiers'] as $f) {
-                    $message->pieces[] = ['chemin' => $f['chemin'], 'nom' => $f['nom'], 'type' => $f['type']];
-                }
-            }
-            $r = $this->courriel->envoyer($message);
-            $bilan['interne'] = $r['ok'];
-            $bilan['interne_mis_de_cote'] = !$r['ok'];
-        } else {
-            $bilan['interne'] = true; // aucune notification requise
+        // 1. E-mail interne : part toujours (pour un guide, c'est la consigne d'envoi postal).
+        $listeFichiers = [];
+        $total = array_sum(array_column($demande['fichiers'], 'taille'));
+        $joindre = $total <= (int) $this->config->get('fichiers.pj_max_total_mo', 20) * 1048576;
+        foreach ($demande['fichiers'] as $f) {
+            $listeFichiers[] = [
+                'nom' => $f['nom'],
+                'taille' => $f['taille'],
+                'joint' => $joindre,
+                'url' => $joindre ? '' : $this->liens->url($f['id'], (int) $this->config->get('fichiers.lien_validite_h_interne', 168)),
+            ];
         }
+        $message = $this->modeles->interne($demande, $this->liensActions($demande), $listeFichiers);
+        if ($joindre) {
+            foreach ($demande['fichiers'] as $f) {
+                $message->pieces[] = ['chemin' => $f['chemin'], 'nom' => $f['nom'], 'type' => $f['type']];
+            }
+        }
+        $r = $this->courriel->envoyer($message);
+        $bilan['interne'] = $r['ok'];
+        $bilan['interne_mis_de_cote'] = !$r['ok'];
 
         // 2. Accusé de réception (seulement si une adresse e-mail est fournie).
         $confirmer = !$demande['saisie_interne'] || (($post['envoyer_confirmation'] ?? '') === 'oui');
@@ -366,7 +357,7 @@ final class Traitement
 
         // 3. Webhook n8n (ou file d'attente).
         $charge = $this->charge($demande, $bilan['accuse']);
-        $bilan['webhook'] = $this->webhook->transmettre($formulaire === 'aimant' ? 'aimant' : 'demande', $charge, $demande['ref']);
+        $bilan['webhook'] = $this->webhook->transmettre($formulaire === 'envoi_postal_guide' ? 'guide' : 'demande', $charge, $demande['ref']);
         return $bilan;
     }
 
@@ -374,7 +365,7 @@ final class Traitement
     private function liensActions(array $demande): array
     {
         $base = (string) $this->config->get('n8n.url_actions', '');
-        if ($base === '' || $demande['formulaire'] === 'aimant') {
+        if ($base === '' || $demande['formulaire'] === 'envoi_postal_guide') {
             return [];
         }
         $actions = [
@@ -405,9 +396,9 @@ final class Traitement
         $tel = $d['telephone'];
         $s = $demande['scoring'];
         $vars = $this->modeles->variables($demande);
-        $aimant = (array) $this->config->get('aimants.' . $d['aimant'], []);
+        $guide = (array) $this->config->get('guides.' . $d['guide'], []);
         return [
-            'evenement' => $demande['formulaire'] === 'aimant' ? 'aimant.demande' : 'demande.creee',
+            'evenement' => $demande['formulaire'] === 'envoi_postal_guide' ? 'guide.envoi_postal' : 'demande.creee',
             'version' => 1,
             'ref' => $demande['ref'],
             'recu_le' => $demande['recu_le']->format('c'),
@@ -427,6 +418,9 @@ final class Traitement
                 'preference_contact' => $d['preference_contact'],
                 'creneau' => $d['creneau'],
                 'adresse_postale' => $d['adresse_postale'],
+                'adresse' => $d['adresse'],
+                'npa' => $d['npa'],
+                'localite' => $d['localite'],
             ],
             'projet' => [
                 'travaux' => $d['travaux'],
@@ -444,15 +438,14 @@ final class Traitement
                 'recommande_par' => $d['recommande_par'],
                 'connu_par' => $d['connu_par'],
             ],
-            'aimant' => $demande['formulaire'] === 'aimant' ? [
-                'slug' => $d['aimant'],
-                'titre' => (string) ($aimant['titre'] ?? ''),
-                'url' => (string) ($aimant['url'] ?? ''),
-                'liste_brevo' => (int) ($aimant['liste_brevo'] ?? 0),
+            'guide' => $demande['formulaire'] === 'envoi_postal_guide' ? [
+                'slug' => $d['guide'],
+                'titre' => (string) ($guide['titre'] ?? ''),
+                'url' => (string) ($guide['url'] ?? ''),
+                'liste_brevo' => (int) ($guide['liste_brevo'] ?? 0),
                 'profil' => $d['profil'],
-                'par_poste' => $d['par_poste'],
-                'newsletter' => $d['newsletter'],
-                'e1_envoye_par_php' => $accuse === 'envoye',
+                'conseils_email' => $d['conseils_email'] && $d['email'] !== '',
+                'accuse_envoye_par_php' => $accuse === 'envoye',
             ] : null,
             'scoring' => $s === null ? null : [
                 'score' => $s['score'],
@@ -494,11 +487,9 @@ final class Traitement
     private function messageSucces(array $demande): string
     {
         $d = $demande['d'];
-        if ($demande['formulaire'] === 'aimant') {
-            if ($d['email'] !== '') {
-                return 'Merci, votre guide vient de vous être envoyé par e-mail.' . ($d['par_poste'] ? ' La version imprimée suivra par la poste.' : '');
-            }
-            return 'Merci, votre guide vous sera envoyé par la poste dans les prochains jours ouvrables.';
+        if ($demande['formulaire'] === 'envoi_postal_guide') {
+            return 'Merci. Le guide part par la poste dans les prochains jours.'
+                . ($d['email'] !== '' ? ' Une confirmation vient de vous être envoyée par e-mail.' : '');
         }
         $v = $this->modeles->variables($demande);
         if ($demande['formulaire'] === 'rappel') {
@@ -552,8 +543,8 @@ final class Traitement
         if ($referent !== '' && $hoteRef !== '' && ($hoteRef === $hoteSite || $hoteRef === ($server['HTTP_HOST'] ?? ''))) {
             $retour = $referent;
         }
-        $tel = (string) $this->config->get('entreprise.tel_fixe', '022 771 20 15');
-        $telE164 = '+41' . substr(preg_replace('/\D/', '', $tel) ?? '', 1);
+        $tel = (string) $this->config->get('entreprise.tel_fixe', '+41 22 771 20 15');
+        $telE164 = Telephone::normaliser($tel)['e164'] ?? '+41227712015';
         $liste = '';
         foreach ($erreurs as $texte) {
             $liste .= '<li>' . $h($texte) . '</li>';

@@ -1,0 +1,271 @@
+{
+  "name": "WF06 · Synchronisation du CRM (dates et statuts)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF06 · Le CRM est la seule source de vérité\n\nDéclencheur Pipedrive « affaire modifiée ». Quand une affaire change d'étape : « Offre envoyée » → `date_offre` (et relance à 0) ; « Terminé » (Chantiers) → `date_reception_chantier` ; affaire gagnée → tâche « Photos avant ». Idempotent : rien n'est réécrit si la valeur existe déjà (nos propres mises à jour redéclenchent ce workflow sans boucle).",
+        "height": 200,
+        "width": 640
+      },
+      "id": "ba813437-2d50-2001-e635-46a9aacdbb47",
+      "name": "WF06 · Le CRM est la seule source de vérité",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "action": "updated",
+        "object": "deal"
+      },
+      "id": "330b6b81-3ede-ac39-c03d-484b186dba54",
+      "name": "Affaire modifiée (Pipedrive)",
+      "type": "n8n-nodes-base.pipedriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Webhook Pipedrive « deal.updated » créé automatiquement à l'activation.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "webhookId": "5c5f6a99-829e-9c83-eb2d-54eab6d14957"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\nconst corps = $input.first().json;\nconst actuel = corps.current || (corps.data && corps.data.current) || {};\nconst avant = corps.previous || (corps.data && corps.data.previous) || {};\nconst aujourdHui = new Date().toISOString().slice(0, 10);\nconst maj = {};\nlet activite = null;\nif (actuel.stage_id !== avant.stage_id) {\n  if (String(actuel.stage_id) === String(IDS.etape_offre) && !champ(actuel, 'date_offre')) Object.assign(maj, champs({ date_offre: aujourdHui, relance_offre_etape: 0, a_repondu: 'non' }));\n  if (String(actuel.stage_id) === String(IDS.etape_chantier_termine) && !champ(actuel, 'date_reception_chantier')) Object.assign(maj, champs({ date_reception_chantier: aujourdHui }));\n}\nif (actuel.status === 'won' && avant.status !== 'won' && String(actuel.pipeline_id) === String(IDS.pipeline_demandes)) {\n  activite = { subject: 'Chantier signé : prendre les photos « avant » et confirmer le planning', type: 'task', due_date: aujourdHui, deal_id: actuel.id };\n}\nreturn [{ json: { deal_id: actuel.id, maj, a_ecrire: Object.keys(maj).length > 0, activite } }];\n"
+      },
+      "id": "82111e22-0c9a-fbe7-e5fe-f6fe09ee6adf",
+      "name": "Changement à reporter ?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Compare l'état actuel et précédent de l'affaire.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "79b77fbd-5a1d-c2c0-55b1-b939f7d4c784",
+              "leftValue": "={{ $json.a_ecrire }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ae0c1948-ca65-424a-2fa8-4bc71e84e09a",
+      "name": "Champs à écrire ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -200
+      ],
+      "notes": "Condition : $json.a_ecrire. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://api.pipedrive.com/v1/deals/' + $json.deal_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.maj }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "bce63e22-0f2f-5e08-094f-3dacc33165c2",
+      "name": "Mettre à jour l'affaire",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        -200
+      ],
+      "notes": "Dates qui pilotent WF03c et WF03d.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "466b9434-6010-dcc4-1ffa-84e8820e4bb9",
+              "leftValue": "={{ !!$json.activite }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "decfc7bd-63e8-70e9-629c-8934b2b90838",
+      "name": "Tâche à créer ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        200
+      ],
+      "notes": "Condition : !!$json.activite. Sortie du haut si vrai, du bas si faux.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/v1/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.activite }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "4bfd56ff-6127-bb43-8fb3-80057420154d",
+      "name": "Créer la tâche",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        200
+      ],
+      "notes": "Tâche « photos avant ».",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Affaire modifiée (Pipedrive)": {
+      "main": [
+        [
+          {
+            "node": "Changement à reporter ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Changement à reporter ?": {
+      "main": [
+        [
+          {
+            "node": "Champs à écrire ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tâche à créer ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Champs à écrire ?": {
+      "main": [
+        [
+          {
+            "node": "Mettre à jour l'affaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tâche à créer ?": {
+      "main": [
+        [
+          {
+            "node": "Créer la tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Remplit les dates du CRM à chaque changement d'étape (date d'offre, réception de chantier)."
+  },
+  "tags": [
+    {
+      "name": "andy-construct"
+    },
+    {
+      "name": "crm"
+    }
+  ],
+  "versionId": "0179ccfe-3fad-44e2-d185-082394130a3c",
+  "id": "1580a883437f8f0b"
+}

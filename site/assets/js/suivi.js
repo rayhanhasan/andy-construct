@@ -1,4 +1,4 @@
-/* Suivi sans cookie (Umami), DNT/GPC respectés. Contrat : docs/v2/contrat-interface.md §9 */
+/* Suivi sans cookie (Umami), DNT/GPC respectés. Contrat : docs/v2/contrat-interface.md §12 */
 (function(w,d){'use strict';
 var n=navigator,L=location,K='ac_src',src=null,
 dnt=n.doNotTrack=='1'||w.doNotTrack=='1'||!!n.globalPrivacyControl,

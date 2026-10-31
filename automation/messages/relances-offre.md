@@ -10,7 +10,7 @@
 | J+35 | Message interne à l'associé : « Clore cette offre ? » (boutons) |
 | J+45 | Clôture automatique « sans réponse », **sans** message au client |
 
-Variables : `salutation`, `service`, `commune`, `date_offre` (« 12 novembre »), `num_offre`, `lien_parler`, `lien_reporte`, `lien_autre` (liens en un clic signés, valables 60 jours), `signature`.
+Variables : `salutation`, `service` (« vos travaux de peinture », « votre isolation acoustique »), `service_majuscule`, `commune`, `date_offre` (« 12 novembre »), `num_offre`, `lien_parler`, `lien_reporte`, `lien_autre` (liens en un clic signés, valables 60 jours), `signature`.
 
 ## J+3 · « Bien reçue ? »
 
@@ -52,7 +52,7 @@ Meilleures salutations,
 
 <!-- modele: relance-offre-j21 -->
 ```texte
-Objet : Votre projet de {{service}} : où en êtes-vous ?
+Objet : {{service_majuscule}} : où en êtes-vous ?
 
 {{salutation}},
 
@@ -60,7 +60,7 @@ Où en est votre réflexion ? Un simple clic nous aide à nous organiser, sans a
 
 - Je souhaite en parler : {{lien_parler}}
 - Le projet est reporté, vous pouvez me recontacter plus tard : {{lien_reporte}}
-- J'ai choisi une autre solution : {{lien_autre}}
+- J'ai fait un autre choix : {{lien_autre}}
 
 Vous pouvez aussi répondre à ce message. Sans nouvelle de votre part, nous ne vous relancerons plus au sujet de cette offre.
 
@@ -75,17 +75,17 @@ Chaque lien ouvre d'abord une page avec un bouton de confirmation (un logiciel d
 
 <!-- modele: page-offre-parler -->
 ```texte
-Merci. {{associe}} vous appelle dans les prochains jours ouvrables. Vous pouvez aussi nous joindre au 022 771 20 15.
+Merci. {{associe}} vous appelle dans les prochains jours ouvrables. Vous pouvez aussi nous joindre au +41 22 771 20 15.
 ```
 
 <!-- modele: page-offre-reporte -->
 ```texte
-C'est noté. Nous vous recontacterons une seule fois, dans six mois environ. Si votre projet avance plus tôt, appelez-nous au 022 771 20 15.
+C'est noté. Nous vous recontacterons une seule fois, dans six mois environ. Si votre projet avance plus tôt, appelez-nous au +41 22 771 20 15.
 ```
 
 <!-- modele: page-offre-autre -->
 ```texte
-Merci de nous avoir répondu, cela nous aide beaucoup. Nous ne vous relancerons pas. Si un autre projet se présente, nous restons à votre disposition au 022 771 20 15.
+Merci de nous avoir répondu, cela nous aide beaucoup. Nous ne vous relancerons pas. Si un autre projet se présente, nous restons à votre disposition au +41 22 771 20 15.
 ```
 
 ## J+35 · message interne « Clore cette offre ? »
