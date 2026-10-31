@@ -4,6 +4,8 @@ Livrable de la phase 1 « Logos & preuve sociale » (voir `programme-v2.md`, §4
 Fichiers : `site/assets/img/references/` (logos + `logos.json`).
 État au 31 octobre 2026. Ce document est une **analyse documentaire, pas un avis d'avocat**. En cas de doute sur un cas précis, faites-le valider par un juriste avant la mise en production.
 
+> **Mise à jour v3 (31 octobre 2026)** : à la demande du client, toutes les références sont désormais affichées avec leur **logo officiel en couleur**, collectivités et OMC comprises (fichiers dans `references/couleur/`). Les collectivités et l'OMC passent de `protege` à `a_autoriser` : leur logo apparaît dans la version de validation seulement, et en production uniquement après une autorisation écrite. Voir le **§9**, qui l'emporte sur les §1, §4.1, §4.2, §5 et §6 en cas de contradiction.
+
 ## 1. En bref
 
 | | Nombre | Rendu sur le site |
@@ -250,3 +252,111 @@ Règles pour les témoignages (programme §4, nLPD) :
 - Covance devenue Labcorp : avis de changement de nom de Labcorp (https://labcorp.com/content/dam/labcorp/files/certfications/Name%20change%20documentation.pdf)
 - De Grisogono : Bloomberg, 31 mai 2022 ; Arabian Business, 2022
 - Everness : everness.ch (« Best Western pendant 25 ans, quitté en 2020 »)
+
+## 9. v3 : logos couleur officiels
+
+État au 31 octobre 2026. Fichiers : `site/assets/img/references/couleur/<id>.svg|png`, déclarés dans `logos.json` (champs `fichier_couleur`, `couleur_dominante`, `source_couleur_url`). Les versions graphite et blanches de la v2 restent en place (`fichier`, `fichier_blanc`), notamment pour le pied de page sombre.
+
+### 9.1 Décision du client et effet sur les statuts
+
+- **Décision (31.10.2026)** : toutes les références s'affichent avec leur **vrai logo officiel, en couleur, bien visible**, y compris les collectivités. Plus de nom en texte à la place d'un logo quand un logo officiel existe.
+- **Ville de Genève, Collonge-Bellerive, Plan-les-Ouates, Salle de l'Alhambra et OMC** passent de `protege` à **`a_autoriser`**. Leur `remarque` dans `logos.json` est désormais : « Logo officiel d'une collectivité publique (armoiries) / emblème d'organisation internationale : affichage en version de validation seulement ; publication en production uniquement avec l'autorisation écrite de l'institution (LPAP / Convention de Paris art. 6ter). »
+- Le raisonnement juridique du §4 reste entièrement valable : **sans autorisation écrite, aucun de ces logos n'est publié**. La seule différence avec la v2 : le fichier est préparé, et la demande porte désormais sur le **logo** (armoiries ou emblème compris), plus seulement sur le nom.
+- Rendu par le générateur : en **preview**, logo couleur pour `a_autoriser` et `autorise` ; en **production**, logo seulement si `statut == "autorise"`. Les fichiers des logos non autorisés (dossier `couleur/` compris) ne doivent pas être copiés dans le paquet de production.
+- **Domaine des Perrières** reste `introuvable` (nom en texte) : aucun logo public. En ligne, « Domaine des Perrières » n'apparaît que comme nom d'une résidence dans une annonce immobilière à Coppet. lesperrieres.ch appartient à la Cave & Domaine Les Perrières de Satigny, sans lien.
+- **De Grisogono** : le fichier couleur est prêt, mais la recommandation du §4.4 ne change pas (titulaire actuel de la marque ≠ client). Au client de trancher.
+
+| Statut (v3) | Nombre | Références |
+|---|---|---|
+| `a_autoriser` | **17** | toutes, sauf Domaine des Perrières |
+| `protege` | **0** | — |
+| `introuvable` | **1** | Domaine des Perrières |
+| `autorise` | **0** | à basculer au fil des réponses |
+
+### 9.2 Fichiers, sources et réglages
+
+Toutes les sources ont été relevées le 31 octobre 2026 sur le site officiel, dans l'en-tête ou la médiathèque. Wikimedia Commons ou Wikipédia n'ont servi que lorsque le site officiel ne donnait pas mieux.
+
+| # | Référence | Fichier (`couleur/`) | Source | Couleur dominante | Échelle | Statut |
+|---|---|---|---|---|---|---|
+| 1 | Ville de Genève | `ville-de-geneve.svg` (32 Ko) | geneve.ch, SVG de l'en-tête (`themes/custom/vdg_theme/logo.svg`) | `#CC3333` (+ jaune `#FFCD00`, noir) | 1,40 | `a_autoriser` (ex-`protege`) |
+| 2 | Piaget | `piaget.svg` (1 Ko) | piaget.com, sprite SVG de l'en-tête (symbole `#logo`), en noir comme sur fond clair | `#000000` | 0,95 | `a_autoriser` |
+| 3 | Conservatoire de musique de Genève | `conservatoire-musique-geneve.svg` (7 Ko) | cmg.ch, SVG intégré (version couleur) | `#4C81C3` (+ noir) | 0,90 | `a_autoriser` |
+| 4 | UBS | `ubs.svg` (5 Ko) | ubs.com, SVG de l'en-tête. Couleurs du thème clair du site : rouge `#DA0000` (UBS), noir `#1C1C1C` (clés) | `#DA0000` | 0,90 | `a_autoriser` |
+| 5 | HEAD – Genève | `head-geneve.png` (8 Ko) | head.hesge.ch, PNG de l'en-tête (248 × 122 px, seule version publiée) | `#410099` | 0,95 | `a_autoriser` |
+| 6 | Collonge-Bellerive | `collonge-bellerive.png` (18 Ko) | collonge-bellerive.ch, PNG couleur (770 × 120 px, seule version publiée) | `#E20913` (+ jaune, vert, gris) | 0,70 | `a_autoriser` (ex-`protege`) |
+| 7 | J. Safra Sarasin | `j-safra-sarasin.png` (15 Ko) | Wikipédia en anglais (fichier « fair use », 432 × 231 px). jsafrasarasin.com a refusé nos connexions | `#011851` | 1,30 | `a_autoriser` |
+| 8 | Salle de l'Alhambra | `alhambra.png` (23 Ko) | alhambra-geneve.ch, logotype « Alhambra » de l'en-tête (PNG 1112 × 185 px, noir) | `#0F0A07` | 0,70 | `a_autoriser` (ex-`protege`) |
+| 9 | Labcorp (ex-Covance) | `labcorp.svg` (3 Ko) | Wikimedia Commons, identique au logo de labcorp.com (mêmes couleurs, vérifié) | `#4CD5F7` (+ bleus, noir) | 0,75 | `a_autoriser` |
+| 10 | Plan-les-Ouates | `plan-les-ouates.svg` (4 Ko) | plan-les-ouates.ch, SVG de l'en-tête | `#FCC522` (+ bleu, rouge, noir) | 1,15 | `a_autoriser` (ex-`protege`) |
+| 11 | Energestion | `energestion.png` (22 Ko) | energestion.ch, médiathèque : `Logo-Energestion-menu-1.png`, version couleur pour fond clair (500 × 200 px) | `#9ACC73` (+ gris) | 1,15 | `a_autoriser` |
+| 12 | OMC | `omc.png` (15 Ko) | wto.org, logo français de l'en-tête (GIF 518 × 154 px, seule version publiée sur le site) | `#E2001D` (+ bleu, vert, jaune, noir) | 1,05 | `a_autoriser` (ex-`protege`) |
+| 13 | de Grisogono | `de-grisogono.png` (10 Ko) | degrisogono.com, PNG 1280 × 504 px | `#B77B1B` (+ noir) | 1,30 | `a_autoriser` (texte seul recommandé, §4.4) |
+| 14 | Harmonie Nautique de Genève | `harmonie-nautique.png` (9 Ko) | harmonie-nautique.ch, JPEG 1200 × 1697 px sur fond blanc | `#00FFFF` (+ noir) | 1,00 | `a_autoriser` |
+| 15 | Everness Hotel & Resort | `everness.svg` (5 Ko) | everness.ch, SVG (version noire pour fond clair) | `#000000` | 0,55 | `a_autoriser` |
+| 16 | Dipan | `dipan.png` (25 Ko) | dipan.ch, `logo-default-slim.png`, version pour fond clair (313 × 150 px) | `#0094D1` (+ vert, noir) | 1,35 | `a_autoriser` |
+| 17 | Domaine des Perrières | — | aucun logo public | — | 1,00 | `introuvable` |
+| 18 | Celgene | `celgene.svg` (5 Ko) | Wikimedia Commons, logo d'époque (marque absorbée par BMS en 2019) | `#26326F` | 1,35 | `a_autoriser` |
+
+**Traitement**
+- **SVG** (9 logos) :
+  - même nettoyage en liste blanche qu'au §5 : aucun `<script>`, gestionnaire `on*`, lien externe, `<style>`, `<image>`, `<foreignObject>` ou métadonnée ;
+  - **couleurs d'origine conservées** : les classes CSS (Plan-les-Ouates) et les variables CSS (UBS) sont converties en attributs `fill` ;
+  - le masque sans effet de la Ville de Genève est supprimé, et les tracés de même couleur sont regroupés ;
+  - `viewBox` recadré au plus près du dessin ;
+  - nombres arrondis, avec un contrôle automatique : écart de rendu inférieur à 0,1 % par rapport à la pleine précision.
+- **PNG** (8 logos) :
+  - détourage par l'alpha d'origine, ou par « couleur vers alpha » pour les sources sur fond blanc (GIF de l'OMC, JPEG de l'Harmonie Nautique), ce qui garde des bords nets sans liseré blanc ;
+  - recadrage serré, **240 px de haut**, fond transparent, 8 à 25 Ko (tous sous 30 Ko).
+  - Six sources font moins de 240 px de haut et ont été agrandies : HEAD 122 px, Collonge-Bellerive 120 px, Energestion 134 px, Dipan 148 px, J. Safra Sarasin 149 px, OMC 154 px. Elles restent nettes jusqu'à environ 60 px affichés sur écran haute densité. Il faudra **demander le fichier vectoriel avec l'autorisation**.
+- **`couleur_dominante`** : la teinte de marque la plus étendue, si elle couvre au moins 15 % de l'encre. Sinon, l'encre principale (noir, marine…).
+- **`echelle`** : même méthode qu'au §5 (égalisation partielle, exposant 0,35). La densité d'encre est pondérée par la clarté de la couleur, car un jaune pèse moins qu'un noir.
+  - Bornes 0,55 à 1,40. La largeur affichée ne dépasse jamais 4,6 fois la hauteur de base (la `max-width` du CSS), d'où 0,70 pour Collonge-Bellerive et l'Alhambra.
+  - Ajustements à l'œil : Ville de Genève ×1,1 (plafonnée à 1,40 : texte très espacé et points jaunes clairs) et Plan-les-Ouates ×1,1.
+- **Contrôle visuel** : planche-contact à 48 et 96 px de haut sur fond blanc, et bandeau simulé sur blanc et sur brume. Tous les logos sont nets, aux couleurs fidèles, sans déformation ni liseré.
+  - Limites propres aux logos eux-mêmes : la mention « VILLE DE GENÈVE », très espacée, n'est lisible qu'à partir d'environ 60 px de haut. Le sous-titre d'Energestion, le « Water Technology » de Dipan et le « Commune de » de Collonge-Bellerive deviennent illisibles en petit.
+
+**Règles d'usage (remplacent « Monochrome uniquement » du §6)**
+- Logos **en couleur** sur fond clair. Pas de recoloration, pas de déformation, pas d'effet au survol.
+- Sur le pied de page sombre : version blanche existante, ou logo couleur sur pastille blanche.
+- Toujours **sans lien**, sous un titre factuel (« Ils nous ont confié des travaux »), jamais « partenaires ».
+- Les fichiers bruts téléchargés (un dossier par logo) sont conservés hors du dépôt. Chaque SVG a été inspecté avant traitement.
+
+### 9.3 Démarche d'autorisation : collectivités et OMC
+
+Pour ces cinq institutions, la loi réserve l'usage du signe à l'institution elle-même (LPAP art. 8 al. 1 pour les armoiries, art. 10 pour les autres signes publics ; Convention de Paris art. 6ter et LPNE art. 3 pour l'OMC). Seule une **autorisation écrite et expresse** (LPAP art. 8 al. 5) permet la publication.
+
+| Institution | Signe | À qui écrire | Remarques |
+|---|---|---|---|
+| **Ville de Genève** | logo avec armoiries (demi-aigle et clé) | **Service des relations extérieures et de la communication**, Unité information et communication, rue du Tir 3, 1204 Genève, +41 22 418 59 43 (formulaire « Contact » de geneve.ch) | La Ville réserve son logo aux projets qu'elle subventionne ou soutient (page « Mise à disposition du logo »). L'accord pour un fournisseur n'est pas acquis : prévoir un refus. |
+| **Salle de l'Alhambra** | logotype « Alhambra » (sans armoiries) | Alhambra, rue de la Rôtisserie 10, 1204 Genève, coordination@alhambra-geneve.ch, **copie** au Service des relations extérieures et de la communication de la Ville | Salle municipale (Département de la culture et de la transition numérique) : la Ville doit être d'accord. |
+| **Commune de Collonge-Bellerive** | logo avec écusson communal | **Mairie**, à l'attention du secrétariat général, chemin du Château-de-Bellerive 1, 1245 Collonge-Bellerive, 022 722 11 50, info@collonge-bellerive.ch | L'autorisation relève de l'exécutif communal (Conseil administratif) : demander une réponse signée par lui ou par son délégataire. |
+| **Commune de Plan-les-Ouates** | logo avec écusson communal | **Mairie**, secrétariat général (service Communication et médias), route des Chevaliers-de-Malte 3, case postale 17, 1228 Plan-les-Ouates, +41 22 884 64 00, mairie@plan-les-ouates.ch | Idem : réponse du Conseil administratif ou de son délégataire. |
+| **OMC** | emblème et nom « Organisation mondiale du commerce » | **enquiries@wto.org**, en demandant la transmission à la **Division des affaires juridiques** | Selon wto.org (« Droit d'auteur et autorisations »), le logo, nom et acronyme compris, ne peut être utilisé par des tiers que « dans des circonstances exceptionnelles », avec autorisation écrite préalable, en général pour des événements ou publications communs. **Refus probable.** La LPNE protégeant aussi le nom et le sigle, demander dans le même courrier l'accord pour le nom en texte. |
+
+**Étapes**
+1. Envoyer la lettre type du §7.1, en remplaçant le premier point par la variante ci-dessous. Elle est signée par un associé et accompagnée de :
+   - une capture du bandeau en version de validation, logo à la taille réelle ;
+   - la liste des pages concernées ;
+   - l'année et la nature du chantier.
+2. Demander explicitement :
+   - l'autorisation écrite d'utiliser le logo (armoiries ou emblème compris) sur andyconstruct.ch, et son périmètre (pages, durée, révocation) ;
+   - le fichier officiel et la charte graphique ;
+   - le nom et la fonction du signataire compétent.
+3. À la réception :
+   - archiver l'e-mail ou la lettre (date, signataire, périmètre) ;
+   - passer `statut` à `autorise` dans `logos.json` et ajouter `accord_date` et `accord_contact` ;
+   - remplacer le fichier par le fichier officiel reçu s'il est meilleur.
+4. Sans réponse après 30 jours, relancer une fois. En cas de refus ou de silence, laisser `a_autoriser` : le logo n'est pas publié en production. Pour l'OMC, retirer aussi le nom en cas de refus.
+
+**Variante de la lettre type (collectivités et OMC, logo demandé)** : remplacer le premier point de la liste par :
+> - votre **logo officiel**, en couleur, sans aucune modification, figurerait dans un bandeau intitulé « Ils nous ont confié des travaux » sur notre site andyconstruct.ch (accueil, page Réalisations, pied de page). Comme il comporte vos [armoiries / votre emblème], dont l'usage vous est réservé par la loi (LPAP art. 8 / Convention de Paris art. 6ter), nous ne le publierons qu'avec votre **autorisation écrite** ;
+
+et garder les trois choix (logo et nom ; nom seulement ; ni l'un ni l'autre).
+
+### 9.4 Sources (v3)
+
+- Ville de Genève, logo : https://www.geneve.ch/themes/custom/vdg_theme/logo.svg ; conditions : https://www.geneve.ch/autorites-administration/administration-municipale/mise-disposition-logo ; contact communication : https://www.geneve.ch/propos/credits
+- Plan-les-Ouates : https://www.plan-les-ouates.ch/sites/all/themes/pmbcom/dist/images/logo.svg ; Collonge-Bellerive : https://www.collonge-bellerive.ch/ (`dist/collonge-bellerive/2023/images/logo-color…png`) ; Alhambra : https://www.alhambra-geneve.ch/wp-content/themes/sc/img/Alhambra.png
+- OMC, logo : https://www.wto.org/images/wtomenus/logo_fr.gif ; conditions d'usage : https://www.wto.org/french/info_f/copyrights_permissions_f.htm
+- Entreprises et institutions : piaget.com (`pia/dist/assets/icons.svg`), ubs.com (`ubs-logo-type-logo-and-name…svg`), cmg.ch, head.hesge.ch, energestion.ch (`wp-content/uploads/2023/08/Logo-Energestion-menu-1.png`), dipan.ch (`img/logo-default-slim.png`), harmonie-nautique.ch, everness.ch, degrisogono.com ; Wikimedia Commons (Labcorp, Celgene) ; Wikipédia en anglais (J. Safra Sarasin). URL exactes : champ `source_couleur_url` de `logos.json`.
