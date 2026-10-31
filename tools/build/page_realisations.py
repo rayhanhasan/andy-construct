@@ -1,125 +1,120 @@
 # -*- coding: utf-8 -*-
-"""Réalisations : galerie statique générée depuis manifest.json (aucun fetch JS)."""
-from common import *
-from content import REF_GROUPS, REF_NOTE
+"""Réalisations (architecture §4.3 et §8, copy deck §G) : projets filtrables, visionneuse, avant / après."""
+import ctx
+from ctx import e, T, V, definitif, marque, PROD
+from common import page, page_head, ld_page, TEL, TEL_URI, devis_btn, svc_nom, SERVICES
+import composants as c
+import portfolio as pf
 
-TITLE = 'Réalisations et références | Andy Construct'
-DESC = "Travaux de placo, d'isolation et de peinture pour la Ville de Genève, des salles communales, le Conservatoire, la HEAD, des entreprises et des particuliers."
-
-ORDER = ['placo', 'isolation-acoustique', 'cloisons', 'peinture', 'chantier']  # filtres vides (peinture) non affichés
-
-SVG_PREV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
-SVG_NEXT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
-SVG_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+FILTRES = [('tous', 'Tous')] + [(s, None) for s in SERVICES]
 
 
-def gallery():
-    counts = {c: sum(1 for m in MANIFEST if groupe(m) == c) for c in ORDER}
-    filters = ['<li><button type="button" data-filter="toutes" data-label="Toutes" aria-pressed="true">Toutes<span>(%d)</span></button></li>' % len(MANIFEST)]
-    for c in ORDER:
-        if counts[c]:
-            filters.append('<li><button type="button" data-filter="%s" data-label="%s" aria-pressed="false">%s<span>(%d)</span></button></li>'
-                           % (c, CAT[c], CAT[c], counts[c]))
-    items = []
-    for m in MANIFEST:
-        b = m['base']
-        items.append('''
-          <li data-cat="%(cat)s">
-            <button type="button" class="gallery__btn" aria-haspopup="dialog" aria-label="Agrandir la photo : %(t)s"
-              data-webp="%(b)s-1600.webp" data-jpg="%(b)s-800.jpg" data-w="%(w)d" data-h="%(h)d" data-title="%(t)s" data-label="%(lab)s">
-              <span class="media">%(pic)s</span>
-              <span class="caption"><b>%(t)s</b><span>%(lab)s</span></span>
-            </button>
-          </li>''' % dict(cat=groupe(m), t=e(titre(m)), b=b, w=m['largeur_1600'], h=m['hauteur_1600'],
-                          lab=CAT[groupe(m)], pic=pic(m['id'], '(min-width: 1180px) 280px, (min-width: 760px) 33vw, 50vw')))
-    return '\n          '.join(filters), ''.join(items)
+def visionneuse():
+    return '''  <dialog class="lightbox" id="visionneuse" aria-labelledby="lb-titre">
+    <div class="lightbox__bar"><p class="lightbox__count" aria-live="polite"></p><button type="button" class="btn btn--light" data-lb="close">Fermer</button></div>
+    <div class="lightbox__stage"><img src="data:," alt="" width="1600" height="1200"></div>
+    <div class="lightbox__foot">
+      <button type="button" class="btn btn--light" data-lb="prev"><span aria-hidden="true">←</span> Précédente</button>
+      <p class="lightbox__caption" id="lb-titre"></p>
+      <button type="button" class="btn btn--light" data-lb="next">Suivante <span aria-hidden="true">→</span></button>
+    </div>
+  </dialog>
+'''
 
 
 def build():
-    h = head(TITLE, DESC, 'realisations.html', ld=[page_ld('realisations.html', TITLE, 'Réalisations')])
-    filters, items = gallery()
+    p = dict(fichier='realisations.html', title='Réalisations : placo, peinture, isolation | Andy Construct',
+             desc='Chantiers de placo, de peinture et d\'isolation photographiés par notre équipe : halls, salles, logements, bureaux. Avant / après et références.')
+    projets = [x for x in pf.PROJETS if pf.proj_ok(x)]
+    paires = pf.PAIRES
 
-    groups = ''
-    for g, names in REF_GROUPS:
-        lis = ''.join('<li>%s%s</li>' % (e(n), ('<small>%s</small>' % e(REF_NOTE[n])) if REF_NOTE.get(n) else '') for n in names)
-        groups += '\n          <div><h3>%s</h3><ul>%s</ul></div>' % (g, lis)
+    # Compteurs des filtres (projets + paires avant / après) ; un filtre sans projet est masqué
+    def compte(s):
+        if s == 'tous':
+            return len(projets) + len(paires)
+        return sum(1 for x in projets if s in pf.proj_tags(x)) + sum(1 for x in paires if s in pf.paire_services(x[0]))
+    boutons = ''
+    for s, lab in FILTRES:
+        n = compte(s)
+        if not n:
+            continue
+        nom = lab or svc_nom(s)
+        boutons += ('<button type="button" data-filtre="%s" aria-pressed="%s" data-suivi="galerie_filtre" data-suivi-filtre="%s">%s <span>(%d)</span></button>'
+                    % (s, 'true' if s == 'tous' else 'false', s, nom, n))
 
-    body = '''
-  <main id="contenu">
-%(ph)s
-    <section class="section" id="galerie" aria-labelledby="galerie-titre">
+    sizes = '(min-width: 1100px) 360px, (min-width: 700px) 45vw, 100vw'
+    cartes = ''.join(pf.carte_projet(x, sizes) for x in projets)
+    aa = ''.join(pf.avant_apres(x[0]) for x in paires)
+
+    # Données structurées : galerie (légendes exactes, sans lieu non confirmé)
+    medias = []
+    for x in projets:
+        for ph in pf.proj_photos(x):
+            big = c.pic_data(ph)[0]
+            medias.append({'@type': 'ImageObject', 'contentUrl': PROD + big, 'caption': ctx.fr(pf.legende(ph)), 'creator': {'@id': PROD + '#entreprise'}})
+    ld = ld_page('realisations.html', p['title'], 'Réalisations', typ='CollectionPage')
+    ld['@graph'].append({'@type': 'ImageGallery', '@id': PROD + 'realisations.html#galerie', 'name': 'Réalisations d\'Andy Construct',
+                         'isPartOf': {'@id': PROD + 'realisations.html#page'}, 'associatedMedia': medias})
+    p['ld'] = [ld]
+
+    mention = T('C25', 'Toutes les photos sont nos propres réalisations.', '')
+    corps = page_head('Réalisations', 'Nos réalisations',
+                      'Des chantiers photographiés par notre équipe, pendant et après les travaux. Choisissez un type de travaux.',
+                      extra=('<p class="page-head__note">%s</p>' % mention) if mention else '')
+    corps += '''    <section class="section section--top" aria-labelledby="projets-titre">
       <div class="container">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="eyebrow">Galerie</p>
-            <h2 id="galerie-titre">Nos chantiers en photos</h2>
-          </div>
-          <p class="lead">Choisissez un type de travaux, puis cliquez sur une photo pour l'agrandir.</p>
-        </div>
-        <!-- PROVISOIRE : fiches « Projets choisis » (commune, année, client, besoin, solution) à créer avec les informations du client.
-             Galerie générée en HTML statique depuis assets/img/portfolio/manifest.json ; catégories déduites des images, à valider. -->
-        <span id="avant-apres"></span><!-- PROVISOIRE : photos avant / après à fournir par le client (ancre conservée pour la redirection 301) -->
-        <ul class="filters" aria-label="Filtrer les photos par type de travaux">
-          %(filters)s
-        </ul>
-        <p class="gallery-status" role="status">%(n)d photos affichées</p>
-        <ul class="gallery" data-gallery>%(items)s
-        </ul>
+        <h2 id="projets-titre" class="visually-hidden">Projets</h2>
+        <div class="filters js-only" role="group" aria-label="Filtrer les projets par type de travaux">%(boutons)s</div>
+        <p class="filters-status js-only" aria-live="polite" data-compteur>%(n)d projets affichés</p>
+        <div class="projets" data-galerie-zone data-suivi-zone="fiche_projet">%(cartes)s</div>
       </div>
     </section>
 
-    <dialog class="lightbox" id="visionneuse" aria-label="Visionneuse de photos">
-      <div class="lightbox__bar">
-        <p class="lightbox__count" aria-live="polite"></p>
-        <button type="button" class="btn btn--light" data-lb="close">Fermer %(close)s</button>
-      </div>
-      <div class="lightbox__stage">
-        <picture><source type="image/webp"><img alt="" width="1600" height="1200"></picture>
-      </div>
-      <div class="lightbox__foot">
-        <button type="button" class="btn btn--light" data-lb="prev">%(prev)s<span class="lightbox__nav-label">Précédente</span></button>
-        <p class="lightbox__caption"><b></b><span></span></p>
-        <button type="button" class="btn btn--light" data-lb="next"><span class="lightbox__nav-label">Suivante</span>%(next)s</button>
-      </div>
-    </dialog>
-
-    <section class="section section--mist" id="references" aria-labelledby="references-titre">
+    <section class="section section--mist" id="avant-apres" aria-labelledby="aa-titre">
       <div class="container">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="eyebrow">18 références</p>
-            <h2 id="references-titre">Ils nous ont fait confiance</h2>
-          </div>
-          <p class="lead">Collectivités, institutions culturelles, entreprises et hôtels : des maîtres d'ouvrage publics et privés qui nous ont confié leurs travaux.</p>
+        <div class="section-head">
+          <h2 id="aa-titre">Avant, après</h2>
+          <p class="lead">Les mêmes lieux, avant et après nos travaux.</p>
         </div>
-        <!-- PROVISOIRE : à valider avec le client (date de chaque référence, accord pour les logos de marques privées) -->
-        <div class="refs-groups">%(groups)s
-        </div>
+        <div class="aa-liste">%(aa)s</div>
+      </div>
+    </section>
+''' % dict(boutons=boutons, n=compte('tous'), cartes=cartes, aa=aa)
+    corps += c.temoignages()
+
+    if not ctx.prod():
+        # Photos hors offre : visibles en validation seulement, pour que le client tranche (architecture §8.4)
+        items = ''
+        for pid in pf.RETIREES:
+            it = c.MANIFEST[pid]
+            items += ('<figure class="hors-offre__item">%s<figcaption><span class="badge badge--grey">Hors offre</span> %s</figcaption></figure>'
+                      % (c.pic(pid, '(min-width: 1100px) 270px, (min-width: 700px) 30vw, 50vw', it['titre']), e(it['titre'])))
+        corps += '''    <section class="section hors-offre" aria-labelledby="hors-offre-titre">
+      <div class="container">
+        <h2 id="hors-offre-titre">Photos retirées de la version publiée</h2>
+        <p class="lead">Version de validation seulement : ces %d photos montrent des ouvrages hors des quatre métiers (plafonds tendus, métalliques, lumineux, cloisons vitrées). Elles n'apparaissent pas sur le site publié, sauf décision contraire de votre part.</p>
+        <div class="hors-offre__grille">%s</div>
+      </div>
+    </section>
+''' % (len(pf.RETIREES), items)
+
+    corps += '''    <section class="section section--tight" aria-label="Références">
+      <div class="container refs-fin">
+        %s
+        <a class="link-arrow" href="professionnels.html#references">Voir les 18 références, par secteur</a>
       </div>
     </section>
 
-    <section class="section" id="professionnels" aria-labelledby="pros-titre">
-      <div class="container split pros">
+    <section class="section section--mist" aria-labelledby="projet-titre">
+      <div class="container split">
         <div>
-          <p class="eyebrow">Professionnels</p>
-          <h2 id="pros-titre">Pour les architectes, régies et collectivités</h2>
-          <p class="lead">Nous établissons nos offres sur la base de vos plans et descriptifs, dans toute la Suisse romande, et nous nous coordonnons avec les autres corps de métier du chantier.</p>
-          <p><a class="link-arrow" href="contact.html#devis">Transmettre un dossier</a></p>
+          <h2 id="projet-titre">Un projet semblable aux nôtres ?</h2>
+          <p class="lead">Montrez-nous votre local ou vos plans : nous venons voir et vous remettons une offre écrite.</p>
+          <div class="cta-actions">%s<a class="btn btn--ghost" href="%s" data-suivi-numero="fixe" data-suivi-emplacement="fiche_projet">Appeler le %s</a></div>
         </div>
-        <!-- PROVISOIRE : à valider avec le client (codes CFC selon les prestations réelles, dossier de références PDF à produire) -->
-        <dl class="pros__list">
-          <div><dt>Ouvrages traités</dt><dd>Salles communales et polyvalentes, lieux culturels, bureaux et sièges d'entreprises, laboratoires, commerces et restaurants, logements.</dd></div>
-          <div><dt>Codes CFC</dt><dd>271 Plâtrerie · 285 Traitement des surfaces intérieures (peinture)</dd></div>
-          <div><dt>Dossier de références</dt><dd>Dossier PDF disponible sur demande, par e-mail à <a href="mailto:%(mail)s">%(mail)s</a>.</dd></div>
-          <div><dt>Contact direct</dt><dd><a href="%(tel_uri)s">%(tel)s</a> · <a href="%(mob_uri)s">%(mob)s</a></dd></div>
-        </dl>
+        <div class="rappel-seul" data-suivi-zone="bloc_demande">%s</div>
       </div>
     </section>
-%(cta)s  </main>
-''' % dict(ph=page_head('Réalisations', 'Réalisations et références',
-                        "%d photos prises sur nos chantiers, placo, isolation et finitions, de la pose de l'ossature à la dernière couche, et les 18 maîtres d'ouvrage qui nous ont fait confiance." % len(MANIFEST)),
-           filters=filters, n=len(MANIFEST), items=items, close=SVG_CLOSE, prev=SVG_PREV, next=SVG_NEXT,
-           groups=groups, mail=MAIL, tel=TEL, tel_uri=TEL_URI, mob=MOB, mob_uri=MOB_URI,
-           cta=cta_band('Votre projet', "Montrez-nous votre local ou vos plans : nous vous conseillons la solution adaptée et vous remettons une offre détaillée."))
-
-    write('realisations.html', h + header('realisations.html') + body + footer(joined=True))
+''' % (c.refs_ligne(), devis_btn(p, 'realisations_fin'), TEL_URI, TEL, c.module_rappel('realisations-rappel', seul=True, niveau='h3'))
+    corps += visionneuse()
+    page(p, corps)

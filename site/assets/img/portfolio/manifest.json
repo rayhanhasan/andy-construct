@@ -15,7 +15,9 @@
     "qualite": 5,
     "role": "hero",
     "largeur_2400": 2400,
-    "hauteur_2400": 1800
+    "hauteur_2400": 1800,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-ilots-lumineux-02",
@@ -31,7 +33,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 5,
-    "role": "hero_alt"
+    "role": "hero_alt",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-lumineux-circulaire-01",
@@ -47,7 +51,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 5,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "paroi-lumineuse-imprimee-01",
@@ -63,7 +69,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 5,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-ilot-eclairage-indirect-01",
@@ -79,7 +87,9 @@
     "largeur_800": 800,
     "hauteur_800": 624,
     "qualite": 5,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 312
   },
   {
     "id": "faux-plafond-placo-gorge-lumineuse-01",
@@ -95,7 +105,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": "hero_alt"
+    "role": "hero_alt",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-couronnes-lumineuses-01",
@@ -111,7 +123,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "panneaux-acoustiques-muraux-01",
@@ -127,7 +141,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "faux-plafond-placo-gorge-lumineuse-02",
@@ -143,7 +159,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "chantier-ossature-puits-de-lumiere-01",
@@ -159,7 +177,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": "featured"
+    "role": "featured",
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-puits-de-lumiere-01",
@@ -175,7 +195,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-ilots-lumineux-03",
@@ -191,7 +213,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-couronnes-lumineuses-02",
@@ -207,7 +231,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-poutres-apparentes-01",
@@ -223,7 +249,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "cadre-acoustique-salle-de-reunion-01",
@@ -239,7 +267,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "cadre-acoustique-imprime-01",
@@ -255,7 +285,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-dalles-couloir-01",
@@ -271,7 +303,9 @@
     "largeur_800": 600,
     "hauteur_800": 800,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 533
   },
   {
     "id": "plafond-placo-ilot-ovale-01",
@@ -287,7 +321,18 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300,
+    "recadre": {
+      "base": "assets/img/portfolio/plafond-placo-ilot-ovale-01-recadre",
+      "largeur_1200": 1200,
+      "hauteur_1200": 800,
+      "largeur_800": 800,
+      "hauteur_800": 533,
+      "largeur_400": 400,
+      "hauteur_400": 267
+    }
   },
   {
     "id": "plafond-lames-metalliques-01",
@@ -303,7 +348,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "chantier-ossature-puits-de-lumiere-02",
@@ -319,7 +366,9 @@
     "largeur_800": 600,
     "hauteur_800": 800,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 533
   },
   {
     "id": "chantier-pose-plafond-lumineux-01",
@@ -335,7 +384,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "chantier-salle-de-spectacle-01",
@@ -351,7 +402,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 4,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-tendu-mat-01",
@@ -367,7 +420,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "habillage-placo-niches-arrondies-01",
@@ -383,7 +438,9 @@
     "largeur_800": 600,
     "hauteur_800": 800,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 533
   },
   {
     "id": "plafond-lames-metalliques-02",
@@ -399,7 +456,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "plafond-bacs-metalliques-cuisine-01",
@@ -415,7 +474,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "cloisons-modulaires-vitrees-01",
@@ -431,7 +492,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "cloisons-modulaires-vitrees-02",
@@ -447,7 +510,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "chantier-suspentes-ossature-01",
@@ -463,7 +528,9 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   },
   {
     "id": "chantier-salle-de-spectacle-02",
@@ -479,6 +546,8 @@
     "largeur_800": 800,
     "hauteur_800": 600,
     "qualite": 3,
-    "role": null
+    "role": null,
+    "largeur_400": 400,
+    "hauteur_400": 300
   }
 ]

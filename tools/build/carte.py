@@ -6,7 +6,6 @@ Projection équirectangulaire locale (cos 46,7°), simplification Douglas-Peucke
 (les frontières communes restent identiques), marqueurs = « A » du logo vectorisé depuis le favicon.
 """
 import json, math, os
-from PIL import Image
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(os.path.dirname(os.path.dirname(ICI)), 'site')
@@ -86,8 +85,18 @@ def charger(eps=0.7, marge=12):
     return obj
 
 
+def a_logo():
+    """Chemin du « A » mis en cache dans data/andy-a.json (sinon recalculé, Pillow requis)."""
+    cache = os.path.join(ICI, 'data', 'andy-a.json')
+    if os.path.exists(cache):
+        a = json.load(open(cache, encoding='utf-8'))
+        return a['d'], a['w'], a['h']
+    return vectoriser_a()
+
+
 def vectoriser_a(png=os.path.join(SITE, 'assets/img/brand/favicon-192.png'), seuil=128, eps=1.1):
     """Contour du « A » (pixels opaques) en chemin SVG, normalisé dans sa boîte englobante."""
+    from PIL import Image
     im = Image.open(png).convert('RGBA')
     w, h = im.size
     alpha = im.getchannel('A').load()
@@ -144,7 +153,7 @@ CANTONS_LBL = [('GENÈVE', 5.93, 46.262), ('VAUD', 6.33, 46.63), ('NEUCHÂTEL', 
 
 def carte_svg():
     obj = charger()
-    a_d, a_w, a_h = vectoriser_a()
+    a_d, a_w, a_h = a_logo()
     autres = ''.join('<path d="%s"/>' % d for cid, d in obj['cantons'].items() if cid not in ROMANDS)
     romands = ''.join('<path d="%s"/>' % obj['cantons'][cid] for cid in ROMANDS)
     districts = ''.join('<path d="%s"/>' % d for d in obj['districts'].values())
@@ -166,7 +175,7 @@ def carte_svg():
         etiquettes += '<text class="c-ville" x="%.1f" y="%.1f"%s>%s</text>' % (tx, y - 8, '' if cote > 0 else ' text-anchor="end"', nom)
     c, u, x, y, lw = marque(SIEGE[1], SIEGE[2], 44)
     points += c.replace('r="3.2"', 'r="4.5"'); pins += u
-    siege = '<text class="c-siege" x="%.1f" y="%.1f">Siège — Carouge</text>' % (x + lw * .7 + 8, y - 14)
+    siege = '<text class="c-siege" x="%.1f" y="%.1f">Siège : Carouge</text>' % (x + lw * .7 + 8, y - 14)
     cantons = ''.join('<text class="c-canton" x="%.1f" y="%.1f">%s</text>' % (proj(lon, lat) + (n,)) for n, lon, lat in CANTONS_LBL)
 
     return '''<svg class="carte__svg" viewBox="0 0 %(W)d %(H)d" role="img" aria-labelledby="carte-titre carte-desc">
@@ -184,7 +193,7 @@ def carte_svg():
             <g class="c-lbl" aria-hidden="true">%(etiquettes)s%(siege)s</g>
             <g class="c-cartouche" aria-hidden="true">
               <rect x="14" y="14" width="228" height="118"/>
-              <image href="assets/img/brand/logo-andy-construct.png" x="30" y="28" width="150" height="54"/>
+              <image href="assets/img/brand/logo-andy-construct-352.png" x="30" y="28" width="150" height="54"/>
               <text class="c-cart-t" x="30" y="104">Zone d'intervention</text>
               <text class="c-cart-s" x="30" y="122">toute la Suisse romande</text>
             </g>

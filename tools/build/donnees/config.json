@@ -1,0 +1,5 @@
+{
+  "umami_src": "",
+  "umami_id": "",
+  "_aide": "umami_src : URL du script Umami (ex. https://stats.andyconstruct.ch/script.js) ; umami_id : identifiant du site. Vides : aucun script de mesure n'est chargé."
+}

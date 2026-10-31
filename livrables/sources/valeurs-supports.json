@@ -1,0 +1,27 @@
+{
+  "_description": "Valeurs à fournir par le client pour les supports PDF (copy-deck.md §Q). Laisser null tant que la valeur n'est pas connue : la version production masque alors la ligne (texte de repli), la version preview affiche un emplacement entre crochets. Une valeur saisie ici n'est publiée en production que si le code Cxx correspondant est confirmé dans tools/build/donnees/confirmations.json.",
+  "effectif": null,
+  "interlocuteurs": [
+    {"nom": null, "role": null, "email": null, "mobile": null}
+  ],
+  "references": {
+    "ville-de-geneve": {"annee": null, "travaux": null},
+    "plan-les-ouates": {"annee": null, "travaux": null},
+    "collonge-bellerive": {"annee": null, "travaux": null},
+    "omc": {"annee": null, "travaux": null},
+    "conservatoire-musique-geneve": {"annee": null, "travaux": null},
+    "head-geneve": {"annee": null, "travaux": null},
+    "alhambra": {"annee": null, "travaux": null},
+    "harmonie-nautique": {"annee": null, "travaux": null},
+    "piaget": {"annee": null, "travaux": null},
+    "ubs": {"annee": null, "travaux": null},
+    "j-safra-sarasin": {"annee": null, "travaux": null},
+    "de-grisogono": {"annee": null, "travaux": null},
+    "celgene": {"annee": null, "travaux": null},
+    "labcorp": {"annee": null, "travaux": null},
+    "dipan": {"annee": null, "travaux": null},
+    "energestion": {"annee": null, "travaux": null},
+    "everness": {"annee": null, "travaux": null},
+    "domaine-des-perrieres": {"annee": null, "travaux": null}
+  }
+}

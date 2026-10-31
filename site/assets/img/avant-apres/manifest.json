@@ -1,0 +1,156 @@
+[
+  {
+    "id": "aa1",
+    "slug": "caisson-verriere",
+    "avant": {
+      "base": "assets/img/avant-apres/aa1-caisson-verriere-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa1-caisson-verriere-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 533
+    }
+  },
+  {
+    "id": "aa2",
+    "slug": "gaine-ventilation-couloir",
+    "avant": {
+      "base": "assets/img/avant-apres/aa2-gaine-ventilation-couloir-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa2-gaine-ventilation-couloir-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 533
+    }
+  },
+  {
+    "id": "aa3",
+    "slug": "combles-fenetre-de-toit",
+    "avant": {
+      "base": "assets/img/avant-apres/aa3-combles-fenetre-de-toit-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa3-combles-fenetre-de-toit-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 533
+    }
+  },
+  {
+    "id": "aa4",
+    "slug": "caisson-ventilation",
+    "avant": {
+      "base": "assets/img/avant-apres/aa4-caisson-ventilation-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa4-caisson-ventilation-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 533
+    }
+  },
+  {
+    "id": "aa5",
+    "slug": "couloir-puits-de-lumiere",
+    "avant": {
+      "base": "assets/img/avant-apres/aa5-couloir-puits-de-lumiere-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa5-couloir-puits-de-lumiere-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    }
+  },
+  {
+    "id": "aa6",
+    "slug": "sejour-faux-plafond",
+    "avant": {
+      "base": "assets/img/avant-apres/aa6-sejour-faux-plafond-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa6-sejour-faux-plafond-apres",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    }
+  },
+  {
+    "id": "aa7",
+    "slug": "paroi-cintree",
+    "avant": {
+      "base": "assets/img/avant-apres/aa7-paroi-cintree-avant",
+      "largeurs": [
+        400,
+        800
+      ],
+      "largeur": 800,
+      "hauteur": 600
+    },
+    "apres": {
+      "base": "assets/img/avant-apres/aa7-paroi-cintree-apres",
+      "largeurs": [
+        400,
+        650
+      ],
+      "largeur": 650,
+      "hauteur": 971
+    }
+  }
+]
