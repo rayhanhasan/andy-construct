@@ -128,7 +128,8 @@ def refs_grille():
                 continue
             nom = NOMS_GRILLE.get(rid)
             if logo_affiche(rid):
-                items += ref_item(rid).replace('</li>', '<span class="ref__legende">%s</span></li>' % insec(e(nom or LOGOS[rid]['nom_affiche'])))
+                # le nom est écrit sous le logo : l'image devient décorative (pas de nom lu deux fois)
+                items += re.sub(r'alt="[^"]*"', 'alt=""', ref_item(rid)).replace('</li>', '<span class="ref__legende">%s</span></li>' % insec(e(nom or LOGOS[rid]['nom_affiche'])))
             else:
                 items += ref_item(rid, nom=nom)
         cols += '<div class="refs-grid__col"><h3>%s</h3><ul class="refs refs--grid">%s</ul></div>' % (titre, items)
@@ -439,11 +440,11 @@ def bloc_demande(p, service=None, h2='Demander un devis', intro=None, refs=True,
           <div class="demande__form">
         %s
           </div>
-          <aside class="demande__aside" aria-label="Autres moyens de nous joindre">
+          <div class="demande__aside">
         %s
         %s
         %s
-          </aside>
+          </div>
         </div>
       </div>
     </section>

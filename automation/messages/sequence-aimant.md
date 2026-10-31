@@ -10,7 +10,7 @@
 | E3 | J+8 : proposition de visite, sans pression ; dernier message |
 | Arrêt | Désinscription (lien ou STOP), réponse à un e-mail, ou demande de devis créée entre-temps |
 | Base légale | Accord explicite (case cochée) pour une information demandée ; désinscription dans chaque message (LCD art. 3 al. 1 let. o) |
-| Profils professionnels | En plus : tâche « Appel de courtoisie » à J+2 pour l'associé « bureau », après vérification de l'astérisque dans l'annuaire |
+| Profils professionnels | Aucun appel (décision du chef de projet) : seule la tâche « envoyer le guide imprimé » est créée. Un appel exigerait une case explicite, non cochée par défaut, « Je souhaite être rappelé(e) », absente du formulaire |
 | Guides concernés | `guide-reduire-le-bruit` et `checklist-chantier-site-occupe` (D7). Le guide « architectes » est prévu plus tard (stratégie §4, n° 4). |
 
 Variables : `salutation`, `commune_exemple`, `lien_fiche_projet`, `trimestre`, `signature`, `url_desinscription`.
@@ -143,4 +143,4 @@ Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinsc
 - E2 régie : le modèle d'avis aux locataires doit exister avant d'être proposé `[À CONFIRMER C20]`.
 - E3 régie : forfait type et prix par pièce `[À CONFIRMER C17]` ; ne pas activer la série « régie » sans confirmation.
 - Guide « architectes » : lots CFC cités `[À CONFIRMER C14]` (repli : « 271 Plâtrerie »).
-- L'appel de courtoisie aux profils professionnels (ligne « Profils professionnels » ci-dessus) n'est annoncé ni sur le formulaire ni dans l'accusé (« Votre adresse postale sert uniquement à cet envoi », « Pas de publicité ») : à désactiver, ou à annoncer avant toute mise en service d'un formulaire « par la poste » qui propose des profils professionnels.
+- L'appel de courtoisie aux profils professionnels est **supprimé** de WF07 (il n'était annoncé ni sur le formulaire ni dans l'accusé). Avant E2 et E3, WF07 relit l'état Brevo **et** l'opposition dans Pipedrive ; si l'un des deux ne peut pas être lu, rien n'est envoyé.

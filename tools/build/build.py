@@ -147,7 +147,7 @@ def copier_site(out, mode):
                 continue
             if r in ('api/config.php', 'assets/css/styles.css', 'assets/js/main.js', 'assets/js/suivi.js') or f == '.DS_Store':
                 continue
-            if rel == os.path.join('assets', 'img', 'references') and f in exclus_logos:
+            if rel == os.path.join('assets', 'img', 'references') and (f in exclus_logos or (mode == 'production' and f == 'logos.json')):
                 continue
             if rel == os.path.join('assets', 'img', 'portfolio') and any(f.startswith(pid + '-') for pid in exclus_photos):
                 continue

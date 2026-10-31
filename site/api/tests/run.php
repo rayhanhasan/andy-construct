@@ -738,6 +738,13 @@ $r = $tr->executer(['REQUEST_METHOD' => 'POST', 'REMOTE_ADDR' => '198.51.100.41'
 ok($r->forme === 'html' && !str_contains($r->html, 'javascript:') && str_contains($r->html, '/contact.html#formulaire'), 'page d\'erreur : référent « javascript: » ignoré (lien de retour par défaut)');
 viderMails($stock);
 
+groupe('Configuration par défaut (relecture juridique : CO art. 954a, C03)');
+$exemple = require $racine . '/config.example.php';
+egal('Andy Construct, Chanton & Cie', $exemple['entreprise']['nom'] ?? null, 'config.example.php : raison de commerce complète');
+egal('', $exemple['entreprise']['horaires'] ?? null, 'config.example.php : horaires vides tant que C03 n\'est pas confirmé');
+egal(['Andy Construct, Chanton & Cie', ''], [Config::defauts()['entreprise']['nom'], Config::defauts()['entreprise']['horaires']], 'valeurs par défaut de Config identiques');
+ok(str_contains($accuse, 'Andy Construct, Chanton & Cie') && str_contains($accuse, 'Le +41 22 771 20 15 (r') && !str_contains($accuse, ', (r'), 'accusé : raison de commerce en signature, horaires absents sans virgule orpheline');
+
 // ------------------------------------------------------ webhook réel (faux n8n)
 groupe('Webhook vers un faux n8n (HTTP réel, file d\'attente)');
 $journalN8n = $stock . '/faux-n8n.log';

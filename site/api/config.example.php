@@ -89,15 +89,18 @@ return [
         'terrain' => ['nom' => '', 'email' => '', 'mobile' => ''],
     ],
 
-    // Coordonnées reprises dans les e-mails. Horaires À CONFIRMER par le client.
+    // Coordonnées reprises dans les e-mails. « nom » : raison de commerce complète, en
+    // signature des accusés (CO art. 954a). « horaires » : vide = non affichés (les modèles
+    // n'écrivent alors aucune virgule) ; à renseigner quand C03 est confirmé, par exemple
+    // 'du lundi au vendredi, de 7 h à 18 h'.
     'entreprise' => [
-        'nom' => 'Andy Construct',
+        'nom' => 'Andy Construct, Chanton & Cie',
         'adresse' => 'Route des Acacias 48, 1227 Carouge',
         'tel_fixe' => '+41 22 771 20 15',
         'tel_mobile' => '+41 78 631 14 34',
         'site' => 'www.andyconstruct.ch',
         'email' => 'contact@andyconstruct.ch',
-        'horaires' => 'du lundi au vendredi, de 7 h à 18 h',
+        'horaires' => '',
     ],
     // Numéros depuis lesquels les associés rappellent (dit au prospect pour qu'il décroche).
     'numeros_appel_sortant' => 'le +41 22 771 20 15 ou le +41 78 631 14 34',

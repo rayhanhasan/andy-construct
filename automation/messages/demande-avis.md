@@ -7,7 +7,7 @@
 | Règles Google | **Tous** les clients reçoivent la même demande ; aucune sélection selon la satisfaction présumée, aucune contrepartie, aucun avis rédigé par l'entreprise. Un litige (`litige = oui`) **décale** la demande, il ne la supprime pas. |
 | Plafond | Une demande et une seule relance (J+9). |
 | Pied | Messages de service liés au contrat ; la phrase d'opposition y figure quand même par prudence (y compris pour les professionnels et dans le SMS). |
-| Opposition | Un « STOP » doit arrêter **toute** la série (J+9, J+14) : WF03d ne lit aujourd'hui ni `opposition_marketing` ni `ne_pas_relancer` ni `a_repondu` (à corriger avant activation). |
+| Opposition | Un « STOP » arrête **toute** la série (J+9, J+14, SMS) : avant chaque envoi, WF03d relit la personne dans Pipedrive (`opposition_marketing`, rempli par WF14 ou WF12) et l'affaire (`ne_pas_relancer`) ; lecture impossible = aucun envoi. `a_repondu` n'est pas utilisé ici : il peut dater de la phase d'offre. |
 | À valider | Le décalage pour `litige = oui` et l'attente de `reserves_levees = oui` ne doivent pas devenir un tri des clients mécontents (règles Google : pas de sollicitation sélective) : fixer un délai maximal après lequel la demande part quand même, ou ne pas la faire du tout pour personne dans ce cas. Supports de publication des photos (site, fiche Google, LinkedIn, dossier de références) : la liste du J+14 doit correspondre à l'usage réel. |
 
 Variables : `salutation`, `service`, `commune`, `lien_avis_google` (lien direct vers le formulaire d'avis de la fiche), `prenom_associe`, `signature`, `lien_photos_sans_nom`, `lien_photos_commune`, `lien_temoignage`, `lien_refus`, `url_desinscription`.

@@ -370,6 +370,101 @@ echo json_encode(['corps' => $corps, 'ts' => (string) $ts, 'sig' => Webhook::sig
         erreur('wf03', f'e-mail d\'escalade non échappé : {r if not html else html[:300]}')
 
 
+def evaluer(expression, json_courant, noeuds=None, env=None):
+    """Évalue une expression n8n « ={{ … }} » (IF) avec un $json et des $('nœud') simulés."""
+    corps = re.match(r'^=\{\{(.*)\}\}$', expression, re.S).group(1)
+    code = ("const $ = (n) => { const v = (spec.noeuds || {})[n]; return { first: () => ({ json: v }), item: { json: v } }; };\n"
+            "const $json = spec.json, $env = spec.env || {};\nreturn (" + corps + ");")
+    with tempfile.TemporaryDirectory() as d:
+        s = Path(d) / 'spec.json'
+        s.write_text(json.dumps({'json': json_courant, 'noeuds': noeuds or {}, 'env': env or {}}), encoding='utf-8')
+        h = Path(d) / 'e.js'
+        h.write_text("const spec = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8'));\n"
+                     "console.log(JSON.stringify((function () {\n" + code + "\n})()));\n", encoding='utf-8')
+        r = subprocess.run(['node', str(h), str(s)], capture_output=True, text=True)
+        try:
+            return json.loads(r.stdout.strip().splitlines()[-1])
+        except Exception:
+            return {'exception': r.stderr[-300:]}
+
+
+def predecesseurs(wf, nom):
+    return {src for src, c in wf['connections'].items() for sortie in c.get('main', []) for x in (sortie or []) if x['node'] == nom}
+
+
+def verifier_relecture_juridique():
+    """Points bloquants de docs/v2/qa/relecture-juridique-copy.md (opposition, appel, nombre d'e-mails)."""
+    lire = lambda f: json.loads((ICI / f).read_text(encoding='utf-8'))
+    # WF07 : aucun appel commercial automatique.
+    wf07 = lire('wf07-guide-par-la-poste.json')
+    texte07 = json.dumps(wf07, ensure_ascii=False)
+    if 'courtoisie' not in json.dumps([n for n in wf07['nodes'] if n['type'] != 'n8n-nodes-base.stickyNote'], ensure_ascii=False) \
+            and "type: 'call'" not in texte07 and "'Profil professionnel ?'" not in texte07:
+        ok("relecture : WF07 ne crée aucun appel (seule la tâche « envoyer le guide imprimé »)")
+    else:
+        erreur('wf07', "un appel commercial automatique subsiste")
+    # WF07 : opposition relue dans Pipedrive (et Brevo) après chaque attente.
+    for etape in ('E2', 'E3'):
+        pd = f'Pipedrive : opposition ? ({etape})'
+        if predecesseurs(wf07, f'Envoyer {etape} ?') != {pd} or predecesseurs(wf07, pd) != {f'Brevo : toujours inscrit ? ({etape})'}:
+            erreur('wf07', f'{etape} : la lecture de l\'opposition dans Pipedrive ne précède pas l\'envoi')
+            continue
+        if not shutil.which('node'):
+            continue
+        expr = next(n for n in wf07['nodes'] if n['name'] == f'Envoyer {etape} ?')['parameters']['conditions']['conditions'][0]['leftValue']
+        env = {'AC_PD_CHAMPS': json.dumps({'opposition_marketing': 'k_opp'})}
+        brevo = {f'Brevo : toujours inscrit ? ({etape})': {'emailBlacklisted': False, 'attributes': {}}}
+        cas = [
+            (evaluer(expr, {'data': {'id': 5}}, brevo, env), True, 'aucune opposition'),
+            (evaluer(expr, {'data': {'id': 5, 'k_opp': '2026-11-03'}}, brevo, env), False, 'opposition dans Pipedrive'),
+            (evaluer(expr, {'data': {'id': 5}}, {f'Brevo : toujours inscrit ? ({etape})': {'emailBlacklisted': True}}, env), False, 'désinscrit dans Brevo'),
+            (evaluer(expr, {'data': {'id': 5}}, {f'Brevo : toujours inscrit ? ({etape})': {'error': 'timeout'}}, env), False, 'Brevo illisible'),
+            (evaluer(expr, {}, brevo, env), False, 'personne illisible'),
+        ]
+        if all(r == attendu for r, attendu, _ in cas):
+            ok(f'relecture : WF07 {etape} n\'est envoyé que sans opposition (Pipedrive, Brevo) ; lecture impossible = pas d\'envoi')
+        else:
+            erreur('wf07', f'{etape} : ' + ', '.join(f'{d} → {r}' for r, a, d in cas if r != a))
+    # WF03d : opposition relue avant J+2, J+9, J+14 et le SMS.
+    wf03d = lire('wf03d-demande-avis.json')
+    if set(x['node'] for x in wf03d['connections']['Messages dus']['main'][0]) == {'Personne : opposition ?'} \
+            and all(predecesseurs(wf03d, n) == {'Sans opposition'} for n in ('E-mail ?', 'SMS ?', 'Noter la date')):
+        ok('relecture : WF03d relit la personne dans Pipedrive avant tout envoi (aucun chemin ne contourne « Sans opposition »)')
+    else:
+        erreur('wf03d', 'un envoi peut contourner la vérification de l\'opposition')
+    if shutil.which('node') and any(n['name'] == 'Sans opposition' for n in wf03d['nodes']):
+        env = {'AC_PD_CHAMPS': json.dumps({'opposition_marketing': 'k_opp'})}
+        du = [{'deal_id': 1, 'person_id': 5, 'etape': 'J+9'}, {'deal_id': 2, 'person_id': 6, 'etape': 'J+9'}, {'deal_id': 3, 'person_id': 7, 'etape': 'J+14'}]
+        r = executer(noeud('wf03d-demande-avis.json', 'Sans opposition'), env=env, noeuds={'Messages dus': du},
+                     entrees=[{'data': {'id': 5, 'k_opp': '2026-11-03'}}, {'data': {'id': 6, 'k_opp': None}}, {'data': None}])
+        gardes = [i['json']['deal_id'] for i in (r.get('resultat') or [])]
+        if gardes == [2]:
+            ok('relecture : WF03d, « STOP » enregistré → relance J+9 annulée ; personne illisible → rien n\'est envoyé')
+        else:
+            erreur('wf03d', f'filtre d\'opposition inattendu : {r}')
+    # WF03c : sans téléphone, deux e-mails au plus (J+3 et J+10).
+    wf03c = lire('wf03c-relances-offre.json')
+    if "Noter l'étape de relance" not in [x['node'] for x in (wf03c['connections']["Type d'action"]['main'] + [[]] * 5)[4]]:
+        erreur('wf03c', "la sortie « autre » (aucun message) ne note pas l'étape : J+35 et J+45 n'arriveraient jamais")
+    if shutil.which('node'):
+        env = {'AC_ACTION_SECRET': 'secret-actions-verif-0123456789abcdef01234567', 'AC_N8N_URL': 'https://n8n.exemple.ch',
+               'AC_PD_CHAMPS': json.dumps({'date_offre': 'k_do', 'relance_offre_etape': 'k_et', 'priorite': 'k_prio', 'type_client': 'k_tc'}),
+               'AC_PD_IDS': json.dumps({'pipeline_ao': 99}), 'AC_EMAIL_EXPEDITEUR': 'site@andyconstruct.ch'}
+        il_y_a = lambda j: (__import__('datetime').date.today() - __import__('datetime').timedelta(days=j)).isoformat()
+        def affaire(i, etape, jours, tel):
+            return {'id': i, 'pipeline_id': 1, 'k_do': il_y_a(jours), 'k_et': etape, 'k_prio': 'B', 'k_tc': 'proprietaire', 'title': 'Offre',
+                    'person_id': {'name': 'Jean Martin', 'email': [{'value': 'jean@exemple.ch'}], 'phone': [{'value': '+41791112233'}] if tel else []}}
+        r = executer(noeud('wf03c-relances-offre.json', 'Relance due'), env=env, luxon=True,
+                     entrees=[{'data': [affaire(1, 1, 11, False), affaire(2, 2, 22, False), affaire(3, 2, 22, True), affaire(4, 1, 11, True)]}])
+        if r.get('ignore'):
+            return
+        types = {i['json']['deal_id']: i['json']['type'] for i in (r.get('resultat') or [])}
+        if types == {1: 'email', 2: 'aucune', 3: 'email', 4: 'tache'}:
+            ok('relecture : WF03c sans téléphone → e-mails J+3 et J+10 seulement (J+21 : étape notée, aucun message) ; avec téléphone → appel J+10, e-mail J+21')
+        else:
+            erreur('wf03c', f'relances inattendues : {types or r}')
+
+
 def main():
     fichiers = sorted(ICI.glob('wf*.json'))
     if not fichiers:
@@ -380,6 +475,7 @@ def main():
         verifier_fichier(f, chemins, js)
     verifier_js(js)
     verifier_interop()
+    verifier_relecture_juridique()
     for m in reussites:
         print('  ✔ ' + m)
     for m in avertissements:

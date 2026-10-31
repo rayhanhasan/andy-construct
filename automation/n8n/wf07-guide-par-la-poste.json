@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## WF07 · Guide imprimé et séquence de conseils\n\nDécision D3 : les guides se téléchargent librement. Ce workflow traite le petit formulaire « recevoir le guide imprimé ».\n\n1. Tâche CRM « Envoyer le guide imprimé » (adresse en note) pour l'associé bureau. Variante : API Pingen (courrier automatique).\n2. L'accusé de réception (si e-mail) est envoyé par le PHP, même si n8n est en panne.\n3. **Séquence E2 (J+3) et E3 (J+8) seulement si e-mail ET case « conseils par e-mail » cochée** (opt-in explicite). Avant chaque envoi : désinscription, réponse ou demande de devis arrêtent la séquence.",
+        "content": "## WF07 · Guide imprimé et séquence de conseils\n\nDécision D3 : les guides se téléchargent librement. Ce workflow traite le petit formulaire « recevoir le guide imprimé ».\n\n1. Tâche CRM « Envoyer le guide imprimé » (adresse en note) pour l'associé bureau. Variante : API Pingen (courrier automatique).\n2. L'accusé de réception (si e-mail) est envoyé par le PHP, même si n8n est en panne.\n3. **Séquence E2 (J+3) et E3 (J+8) seulement si e-mail ET case « conseils par e-mail » cochée** (opt-in explicite). Avant chaque envoi : désinscription (Brevo **et** opposition dans Pipedrive), réponse ou demande de devis arrêtent la séquence ; si l'un des deux états ne peut pas être lu, rien n'est envoyé.\n4. **Aucun appel commercial** (décision du chef de projet) : seule la tâche « envoyer le guide imprimé » est créée. Un appel ne serait possible qu'avec une case explicite, non cochée par défaut, « Je souhaite être rappelé(e) », absente du formulaire et du contrat d'interface.",
         "height": 260,
         "width": 680
       },
@@ -127,7 +127,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const parties = String(jeton || '').split('.');\n  if (parties.length !== 2) return null; // exactement « charge.signature » : rien d'autre n'est accepté\n  const [charge, sig] = parties;\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = Buffer.from(b64(crypto.createHmac('sha256', secret).update(charge).digest()));\n  const recue = Buffer.from(sig);\n  if (attendue.length !== recue.length || !crypto.timingSafeEqual(attendue, recue)) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct, Chanton & Cie · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"aimant-guide-bruit-e2\": {\n  \"sujet\": \"Bruit : absorber ou isoler, ce qui change tout\",\n  \"corps\": \"{{salutation}},\\n\\nLa moitié des déceptions vient d'une confusion : un panneau absorbant réduit l'écho dans la pièce, il n'arrête pas le bruit du voisin. Pour cela, il faut isoler, c'est-à-dire désolidariser une paroi ou un plafond.\\n\\n{{#lien_fiche_projet}}Voici comment nous avons traité un cas réel{{#commune_exemple}} à {{commune_exemple}}{{/commune_exemple}} : {{lien_fiche_projet}}\\n\\n{{/lien_fiche_projet}}Une question sur votre situation ? Répondez simplement à ce message.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-guide-bruit-e3\": {\n  \"sujet\": \"Un avis sur votre situation ?\",\n  \"corps\": \"{{salutation}},\\n\\nChaque logement est différent : le bon remède dépend du type de bruit (voix, pas, musique) et de la construction. C'est pour cela que nous préférons voir les lieux avant de faire une offre.\\n\\nSi vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite. Il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.\\n\\nC'est notre dernier message sur ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-checklist-regie-e2\": {\n  \"sujet\": \"Immeuble habité : ce qui évite les plaintes des locataires\",\n  \"corps\": \"{{salutation}},\\n\\nDans un immeuble habité, ce sont rarement les travaux qui posent problème, mais l'information : un avis affiché trop tard, un interlocuteur introuvable, de la poussière dans la cage d'escalier.\\n\\n{{#lien_fiche_projet}}Voici un chantier réalisé en logement occupé, avec son organisation : {{lien_fiche_projet}}\\n\\n{{/lien_fiche_projet}}Si un modèle d'avis aux locataires vous est utile, répondez à ce message : nous vous l'envoyons.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-checklist-regie-e3\": {\n  \"sujet\": \"Vos fins de bail{{#trimestre}} de {{trimestre}}{{/trimestre}}\",\n  \"corps\": \"{{salutation}},\\n\\nPour vos remises en état de fin de bail, nous pouvons chiffrer un forfait type (prix par pièce, plafonds et murs) : vos ordres partent alors plus vite, et vous savez à l'avance ce que coûtera un appartement.\\n\\nSi cela vous intéresse, répondez à ce message ou appelez le +41 22 771 20 15.\\n\\nC'est notre dernier message sur ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n }\n};\n\nconst d = $input.first().json.demande;\nconst g = d.guide || {};\nconst c = d.contact;\nconst prochain = (jours) => { let x = maintenant().plus({ days: jours }).set({ hour: 9, minute: 30, second: 0 }); while (!estOuvrable(x)) x = x.plus({ days: 1 }); return x.toISO(); };\nconst serie = g.slug === 'checklist-chantier-site-occupe' ? 'aimant-checklist-regie' : 'aimant-guide-bruit';\nconst vars = { salutation: c.salutation, signature: signature($env.AC_ASSOCIE_BUREAU_NOM || ''), url_desinscription: c.email ? lienStop(c.email) : '',\n  lien_fiche_projet: $env['AC_FICHE_' + (serie === 'aimant-guide-bruit' ? 'BRUIT' : 'REGIE')] || '', commune_exemple: $env.AC_FICHE_BRUIT_COMMUNE || '', trimestre: '' };\nconst courrier = (id) => { const m = message(id, vars); return { de: $env.AC_EMAIL_EXPEDITEUR, a: c.email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: $env.AC_ASSOCIE_BUREAU_EMAIL || $env.AC_EMAIL_EXPEDITEUR }; };\nreturn [{ json: {\n  d, conseils: !!(g.conseils_email && c.email), pro: ['regie', 'architecte', 'commune', 'entreprise'].includes(g.profil),\n  personne: { name: [c.prenom, c.nom].filter(Boolean).join(' '), email: c.email ? [{ value: c.email, primary: true }] : [], ...champs({ etiquette_personne: 'guide' }) },\n  tache_poste: { subject: 'Envoyer le guide imprimé : ' + g.titre, type: 'task', due_date: maintenant().toISODate(), user_id: IDS.utilisateur_bureau,\n    note: [(c.civilite === 'madame' ? 'Madame ' : c.civilite === 'monsieur' ? 'Monsieur ' : '') + c.nom].concat(String(c.adresse_postale || '').split('\\n'), ['Réf. ' + d.ref])\n      .map((l) => String(l).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('<br>') },\n  tache_courtoisie: { subject: 'Appel de courtoisie (guide ' + g.slug + ') : vérifier l\\'astérisque dans l\\'annuaire avant d\\'appeler', type: 'call',\n    due_date: DateTime.fromISO(prochain(2)).toISODate(), user_id: IDS.utilisateur_bureau },\n  brevo_contact: { email: c.email, updateEnabled: true, listIds: g.liste_brevo ? [g.liste_brevo] : [], attributes: { PRENOM: c.prenom || '', NOM: c.nom || '', GUIDE: g.slug, PROFIL: g.profil || '' } },\n  e2_le: prochain(3), e3_le: prochain(8), e2: courrier(serie + '-e2'), e3: courrier(serie + '-e3'),\n}}];\n"
+        "jsCode": "// Jetons signés partagés avec site/api (lib/Jeton.php) : base64url(JSON).base64url(HMAC-SHA256).\n// Prérequis : NODE_FUNCTION_ALLOW_BUILTIN=crypto dans l'environnement de n8n.\nconst crypto = require('crypto');\nconst b64 = (buf) => Buffer.from(buf).toString('base64').replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\nfunction creerJeton(donnees, validiteS) {\n  const secret = $env.AC_ACTION_SECRET;\n  if (!secret || secret.length < 32) throw new Error('AC_ACTION_SECRET absent ou trop court');\n  const d = { ...donnees, x: Math.floor(Date.now() / 1000) + validiteS, n: crypto.randomBytes(4).toString('hex') };\n  const charge = b64(JSON.stringify(d));\n  return charge + '.' + b64(crypto.createHmac('sha256', secret).update(charge).digest());\n}\nfunction verifierJeton(jeton) {\n  const secret = $env.AC_ACTION_SECRET || '';\n  const parties = String(jeton || '').split('.');\n  if (parties.length !== 2) return null; // exactement « charge.signature » : rien d'autre n'est accepté\n  const [charge, sig] = parties;\n  if (!charge || !sig || secret.length < 32) return null;\n  const attendue = Buffer.from(b64(crypto.createHmac('sha256', secret).update(charge).digest()));\n  const recue = Buffer.from(sig);\n  if (attendue.length !== recue.length || !crypto.timingSafeEqual(attendue, recue)) return null;\n  let d;\n  try { d = JSON.parse(Buffer.from(charge.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; }\n  if (!d || !d.x || d.x < Date.now() / 1000) return null;\n  return d;\n}\nconst lienAction = (donnees, jours) => ($env.AC_N8N_URL || '') + '/webhook/ac-action?t=' + creerJeton(donnees, jours * 86400);\nconst lienStop = (email) => ($env.AC_N8N_URL || '') + '/webhook/ac-stop?t=' + creerJeton({ a: 'stop', e: email }, 400 * 86400);\n\n// Jours ouvrables (lu-ve) hors jours fériés genevois et fermetures (AC_JOURS_FERMES = \"2027-07-19,2027-07-20\").\nfunction paques(a) {\n  const b = Math.floor(a / 100), c = a % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),\n    g = Math.floor((b - f + 1) / 3), h = (19 * (a % 19) + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,\n    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor(((a % 19) + 11 * h + 22 * l) / 451);\n  return DateTime.fromObject({ year: a, month: Math.floor((h + l - 7 * m + 114) / 31), day: ((h + l - 7 * m + 114) % 31) + 1 }, { zone: 'Europe/Zurich' });\n}\nfunction feries(a) {\n  const p = paques(a), j = (n) => p.plus({ days: n }).toISODate();\n  const jeune = DateTime.fromObject({ year: a, month: 9, day: 1 }, { zone: 'Europe/Zurich' });\n  const premierDimanche = jeune.plus({ days: (7 - jeune.weekday) % 7 });\n  return [a + '-01-01', j(-2), j(1), j(39), j(50), a + '-08-01', premierDimanche.plus({ days: 4 }).toISODate(), a + '-12-25', a + '-12-31']\n    .concat(String($env.AC_JOURS_FERMES || '').split(',').map((s) => s.trim()).filter(Boolean));\n}\nconst estOuvrable = (dt) => dt.weekday <= 5 && !feries(dt.year).includes(dt.toISODate());\nconst maintenant = () => DateTime.now().setZone('Europe/Zurich');\n\n// Correspondance des champs personnalisés Pipedrive (clés de 40 caractères) et des identifiants,\n// lus dans l'environnement : AC_PD_CHAMPS et AC_PD_IDS (voir automation/n8n/parametres.env.example).\nconst C = JSON.parse($env.AC_PD_CHAMPS || '{}');\nconst IDS = JSON.parse($env.AC_PD_IDS || '{}');\nconst champ = (objet, nom) => (C[nom] && objet ? objet[C[nom]] : undefined);\nfunction champs(valeurs) { const o = {}; for (const [k, v] of Object.entries(valeurs)) if (C[k] && v !== undefined) o[C[k]] = v; return o; }\n// Service en toutes lettres, avec son article : « vos travaux de peinture ».\nconst SERVICES = { placo: 'vos travaux de placo', peinture: 'vos travaux de peinture', 'isolation-acoustique': 'votre isolation acoustique',\n  'cloisons-isothermes': 'vos cloisons isolantes', plusieurs: 'vos travaux', 'ne-sait-pas': 'vos travaux' };\nconst serviceTexte = (slug) => SERVICES[slug] || 'vos travaux';\nconst majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);\nconst urlPipedrive = (id) => 'https://' + ($env.AC_PD_DOMAINE || 'app') + '.pipedrive.com/deal/' + id;\n\n// Même syntaxe que site/api/lib/Modeles.php : {{x}}, {{#x}}…{{/x}}, {{^x}}…{{/x}}.\nfunction rendre(g, v) {\n  const re = /\\{\\{([#^])([a-z0-9_]+)\\}\\}((?:(?!\\{\\{[#^]\\2\\}\\})[\\s\\S])*?)\\{\\{\\/\\2\\}\\}/;\n  for (let i = 0; i < 20 && re.test(g); i++) {\n    g = g.replace(new RegExp(re.source, 'g'), (m, t, k, c) => ((t === '#') === !!v[k] ? c : ''));\n  }\n  return g.replace(/\\{\\{([a-z0-9_]+)\\}\\}/g, (m, k) => (v[k] === undefined || v[k] === null ? '' : String(v[k])));\n}\nfunction message(id, v) {\n  const m = MODELES[id];\n  return { sujet: rendre(m.sujet, v), texte: rendre(m.corps, v).trim() + '\\n' };\n}\n// Version HTML sobre (paragraphes, liens complets), sans image ni pixel de suivi.\nfunction versHtml(t) {\n  const e = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const lien = (s) => e(s).replace(/https?:\\/\\/[^\\s<]+/g, (u) => '<a href=\"' + u + '\" style=\"color:#1D1F22\">' + u + '</a>');\n  return '<div style=\"max-width:600px;font-family:Arial,sans-serif;font-size:17px;line-height:1.55;color:#1D1F22\">'\n    + t.trim().split(/\\n{2,}/).map((b) => b.startsWith('--\\n')\n      ? '<hr style=\"border:0;border-top:1px solid #D9DBDE\"><p style=\"font-size:14px;color:#44494F\">' + b.slice(3).split('\\n').map(lien).join('<br>') + '</p>'\n      : '<p>' + b.split('\\n').map(lien).join('<br>') + '</p>').join('') + '</div>';\n}\nfunction signature(associe) {\n  return [associe, 'Andy Construct, Chanton & Cie · Route des Acacias 48, 1227 Carouge', '+41 22 771 20 15 · www.andyconstruct.ch'].filter(Boolean).join('\\n');\n}\nconst MODELES = {\n \"aimant-guide-bruit-e2\": {\n  \"sujet\": \"Bruit : absorber ou isoler, ce qui change tout\",\n  \"corps\": \"{{salutation}},\\n\\nLa moitié des déceptions vient d'une confusion : un panneau absorbant réduit l'écho dans la pièce, il n'arrête pas le bruit du voisin. Pour cela, il faut isoler, c'est-à-dire désolidariser une paroi ou un plafond.\\n\\n{{#lien_fiche_projet}}Voici comment nous avons traité un cas réel{{#commune_exemple}} à {{commune_exemple}}{{/commune_exemple}} : {{lien_fiche_projet}}\\n\\n{{/lien_fiche_projet}}Une question sur votre situation ? Répondez simplement à ce message.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-guide-bruit-e3\": {\n  \"sujet\": \"Un avis sur votre situation ?\",\n  \"corps\": \"{{salutation}},\\n\\nChaque logement est différent : le bon remède dépend du type de bruit (voix, pas, musique) et de la construction. C'est pour cela que nous préférons voir les lieux avant de faire une offre.\\n\\nSi vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite. Il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.\\n\\nC'est notre dernier message sur ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-checklist-regie-e2\": {\n  \"sujet\": \"Immeuble habité : ce qui évite les plaintes des locataires\",\n  \"corps\": \"{{salutation}},\\n\\nDans un immeuble habité, ce sont rarement les travaux qui posent problème, mais l'information : un avis affiché trop tard, un interlocuteur introuvable, de la poussière dans la cage d'escalier.\\n\\n{{#lien_fiche_projet}}Voici un chantier réalisé en logement occupé, avec son organisation : {{lien_fiche_projet}}\\n\\n{{/lien_fiche_projet}}Si un modèle d'avis aux locataires vous est utile, répondez à ce message : nous vous l'envoyons.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n },\n \"aimant-checklist-regie-e3\": {\n  \"sujet\": \"Vos fins de bail{{#trimestre}} de {{trimestre}}{{/trimestre}}\",\n  \"corps\": \"{{salutation}},\\n\\nPour vos remises en état de fin de bail, nous pouvons chiffrer un forfait type (prix par pièce, plafonds et murs) : vos ordres partent alors plus vite, et vous savez à l'avance ce que coûtera un appartement.\\n\\nSi cela vous intéresse, répondez à ce message ou appelez le +41 22 771 20 15.\\n\\nC'est notre dernier message sur ce sujet.\\n\\nMeilleures salutations,\\n\\n{{signature}}\\n\\n--\\nVous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.\"\n }\n};\n\nconst d = $input.first().json.demande;\nconst g = d.guide || {};\nconst c = d.contact;\nconst prochain = (jours) => { let x = maintenant().plus({ days: jours }).set({ hour: 9, minute: 30, second: 0 }); while (!estOuvrable(x)) x = x.plus({ days: 1 }); return x.toISO(); };\nconst serie = g.slug === 'checklist-chantier-site-occupe' ? 'aimant-checklist-regie' : 'aimant-guide-bruit';\nconst vars = { salutation: c.salutation, signature: signature($env.AC_ASSOCIE_BUREAU_NOM || ''), url_desinscription: c.email ? lienStop(c.email) : '',\n  lien_fiche_projet: $env['AC_FICHE_' + (serie === 'aimant-guide-bruit' ? 'BRUIT' : 'REGIE')] || '', commune_exemple: $env.AC_FICHE_BRUIT_COMMUNE || '', trimestre: '' };\nconst courrier = (id) => { const m = message(id, vars); return { de: $env.AC_EMAIL_EXPEDITEUR, a: c.email, sujet: m.sujet, texte: m.texte, html: versHtml(m.texte), repondre_a: $env.AC_ASSOCIE_BUREAU_EMAIL || $env.AC_EMAIL_EXPEDITEUR }; };\nreturn [{ json: {\n  d, conseils: !!(g.conseils_email && c.email), // aucun appel commercial : le formulaire n'en propose pas (décision du chef de projet)\n  personne: { name: [c.prenom, c.nom].filter(Boolean).join(' '), email: c.email ? [{ value: c.email, primary: true }] : [], ...champs({ etiquette_personne: 'guide' }) },\n  tache_poste: { subject: 'Envoyer le guide imprimé : ' + g.titre, type: 'task', due_date: maintenant().toISODate(), user_id: IDS.utilisateur_bureau,\n    note: [(c.civilite === 'madame' ? 'Madame ' : c.civilite === 'monsieur' ? 'Monsieur ' : '') + c.nom].concat(String(c.adresse_postale || '').split('\\n'), ['Réf. ' + d.ref])\n      .map((l) => String(l).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('<br>') },\n  brevo_contact: { email: c.email, updateEnabled: true, listIds: g.liste_brevo ? [g.liste_brevo] : [], attributes: { PRENOM: c.prenom || '', NOM: c.nom || '', GUIDE: g.slug, PROFIL: g.profil || '' } },\n  e2_le: prochain(3), e3_le: prochain(8), e2: courrier(serie + '-e2'), e3: courrier(serie + '-e3'),\n}}];\n"
       },
       "id": "2109bb80-ff0d-5e50-12f2-f783fb02ae0d",
       "name": "Préparer",
@@ -193,74 +193,6 @@
         0
       ],
       "notes": "Tâche pour un humain (ou Pingen) : l'adresse est dans la note.",
-      "notesInFlow": false,
-      "credentials": {
-        "pipedriveApi": {
-          "id": "REMPLACER-pipedrive",
-          "name": "Pipedrive Andy Construct"
-        }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 2000
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "bfd81d26-f9f4-b388-19b4-5f80efabcd33",
-              "leftValue": "={{ $('Préparer').first().json.pro }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "8cf514b8-ba73-768e-6e62-630349f4315a",
-      "name": "Profil professionnel ?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1680,
-        -200
-      ],
-      "notes": "Régie, architecte, commune, entreprise : appel de courtoisie à J+2.",
-      "notesInFlow": false
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.pipedrive.com/v1/activities",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "pipedriveApi",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $('Préparer').first().json.tache_courtoisie }}",
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "5c6a546e-17c1-7fbd-f64f-3efbdb5b372c",
-      "name": "Tâche : appel de courtoisie",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1920,
-        -200
-      ],
-      "notes": "Information demandée ; astérisque vérifié avant l'appel.",
       "notesInFlow": false,
       "credentials": {
         "pipedriveApi": {
@@ -395,7 +327,7 @@
           "conditions": [
             {
               "id": "d9b465a7-a8a8-9139-e2d9-2081ced167c3",
-              "leftValue": "={{ $json.emailBlacklisted !== true && !($json.attributes && ($json.attributes.A_REPONDU || $json.attributes.DEMANDE)) }}",
+              "leftValue": "={{ (() => { const b = $('Brevo : toujours inscrit ? (E2)').first().json || {}; const cle = JSON.parse($env.AC_PD_CHAMPS || '{}').opposition_marketing; return !!cle && !!($json.data && $json.data.id) && !$json.data[cle] && b.emailBlacklisted === false && !(b.attributes && (b.attributes.A_REPONDU || b.attributes.DEMANDE)); })() }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -413,10 +345,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2640,
+        2880,
         200
       ],
-      "notes": "Arrêt si désinscription, réponse (WF14) ou demande de devis (attributs Brevo A_REPONDU / DEMANDE).",
+      "notes": "Envoi seulement si : contact Brevo lu et non désinscrit, pas de réponse ni de demande, et aucune opposition dans Pipedrive.",
       "notesInFlow": false
     },
     {
@@ -437,7 +369,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2880,
+        3120,
         200
       ],
       "notes": "E2 : un conseil, un exemple réel.",
@@ -462,7 +394,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        3120,
+        3360,
         200
       ],
       "notes": "Deuxième pause.",
@@ -484,7 +416,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3360,
+        3600,
         200
       ],
       "notes": "Même contrôle avant E3.",
@@ -509,7 +441,7 @@
           "conditions": [
             {
               "id": "0ec0055b-cadd-d56a-5ea1-bc5436728732",
-              "leftValue": "={{ $json.emailBlacklisted !== true && !($json.attributes && ($json.attributes.A_REPONDU || $json.attributes.DEMANDE)) }}",
+              "leftValue": "={{ (() => { const b = $('Brevo : toujours inscrit ? (E3)').first().json || {}; const cle = JSON.parse($env.AC_PD_CHAMPS || '{}').opposition_marketing; return !!cle && !!($json.data && $json.data.id) && !$json.data[cle] && b.emailBlacklisted === false && !(b.attributes && (b.attributes.A_REPONDU || b.attributes.DEMANDE)); })() }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -527,10 +459,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        3600,
+        4080,
         200
       ],
-      "notes": "Même règle d'arrêt.",
+      "notes": "Envoi seulement si : contact Brevo lu et non désinscrit, pas de réponse ni de demande, et aucune opposition dans Pipedrive.",
       "notesInFlow": false
     },
     {
@@ -551,7 +483,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3840,
+        4320,
         200
       ],
       "notes": "E3 : proposition de visite ; dernier message.",
@@ -560,6 +492,66 @@
         "httpHeaderAuth": {
           "id": "REMPLACER-brevo",
           "name": "Brevo (en-tête api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $('Créer la personne (CRM)').first().json.data.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "22d43eda-dc29-49ae-873c-b4a0ddb47122",
+      "name": "Pipedrive : opposition ? (E2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        200
+      ],
+      "notes": "Relit la personne dans Pipedrive après l'attente : opposition_marketing (STOP, désinscription, téléphone). Erreur = rien n'est envoyé.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.pipedrive.com/v1/persons/' + $('Créer la personne (CRM)').first().json.data.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "pipedriveApi",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "55a58659-75a6-40dc-a096-4992178f1fc8",
+      "name": "Pipedrive : opposition ? (E3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        200
+      ],
+      "notes": "Relit la personne dans Pipedrive après l'attente : opposition_marketing (STOP, désinscription, téléphone). Erreur = rien n'est envoyé.",
+      "notesInFlow": false,
+      "credentials": {
+        "pipedriveApi": {
+          "id": "REMPLACER-pipedrive",
+          "name": "Pipedrive Andy Construct"
         }
       },
       "retryOnFail": true,
@@ -645,23 +637,7 @@
       "main": [
         [
           {
-            "node": "Profil professionnel ?",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Conseils par e-mail acceptés ?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Profil professionnel ?": {
-      "main": [
-        [
-          {
-            "node": "Tâche : appel de courtoisie",
             "type": "main",
             "index": 0
           }
@@ -705,7 +681,7 @@
       "main": [
         [
           {
-            "node": "Envoyer E2 ?",
+            "node": "Pipedrive : opposition ? (E2)",
             "type": "main",
             "index": 0
           }
@@ -749,7 +725,7 @@
       "main": [
         [
           {
-            "node": "Envoyer E3 ?",
+            "node": "Pipedrive : opposition ? (E3)",
             "type": "main",
             "index": 0
           }
@@ -761,6 +737,28 @@
         [
           {
             "node": "Brevo : envoyer E3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipedrive : opposition ? (E2)": {
+      "main": [
+        [
+          {
+            "node": "Envoyer E2 ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipedrive : opposition ? (E3)": {
+      "main": [
+        [
+          {
+            "node": "Envoyer E3 ?",
             "type": "main",
             "index": 0
           }

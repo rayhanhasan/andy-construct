@@ -47,7 +47,8 @@ def business():
                          {'@type': 'ContactPoint', 'telephone': MOB, 'contactType': 'sales', 'areaServed': 'CH', 'availableLanguage': ['fr']}],
         'areaServed': [{'@type': 'AdministrativeArea', 'name': z} for z in zones],
         'knowsAbout': ['Placo', 'Plâtrerie', 'Cloisons en plaques de plâtre', 'Doublages', 'Faux-plafonds', 'Peinture intérieure',
-                       'Isolation acoustique', 'Isolation phonique', 'Correction acoustique', 'Cloisons isolantes', 'Cloisons isothermes'],
+                       'Isolation acoustique', 'Isolation phonique'] + (['Correction acoustique'] if definitif('C18') else [])
+                      + (['Cloisons isolantes'] if definitif('C16') else []) + ['Cloisons isothermes'],
         'hasOfferCatalog': {'@type': 'OfferCatalog', 'name': 'Prestations', 'itemListElement': [
             {'@type': 'Offer', 'itemOffered': {'@type': 'Service', 'name': svc_nom(s, html=False), 'url': PROD + svc_url(s)}} for s in SERVICES]},
         'sameAs': [LOCALCH, LINKEDIN] + ([GGE] if definitif('C11') else []),

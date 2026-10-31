@@ -107,13 +107,13 @@ final class Config
                 'terrain' => ['nom' => '', 'email' => '', 'mobile' => ''],
             ],
             'entreprise' => [
-                'nom' => 'Andy Construct',
+                'nom' => 'Andy Construct, Chanton & Cie',
                 'adresse' => 'Route des Acacias 48, 1227 Carouge',
                 'tel_fixe' => '+41 22 771 20 15',
                 'tel_mobile' => '+41 78 631 14 34',
                 'site' => 'www.andyconstruct.ch',
                 'email' => 'contact@andyconstruct.ch',
-                'horaires' => 'du lundi au vendredi, de 7 h à 18 h',
+                'horaires' => '', // C03 non confirmé : non affichés
             ],
             'numeros_appel_sortant' => 'le +41 22 771 20 15 ou le +41 78 631 14 34',
             'url_confidentialite' => 'https://www.andyconstruct.ch/confidentialite.html',

@@ -229,9 +229,9 @@ Configuration : `mode_test => false` mais `destinataires_internes` = boîte de t
 | 12 | Robot (pot de miel) | Réponse « ok », rien reçu |
 | 13 | Clic « Pas de réponse » 3 fois | E-mail ou SMS au 1er essai, clôture courtoise au 3e |
 | 14 | Prévisualisation d'un lien par Outlook | Aucune action (seul le bouton agit) |
-| 15 | Offre envoyée (étape) puis J+3, J+10, J+21 simulés | E-mail J+3, tâche d'appel J+10, e-mail J+21 avec 3 liens |
+| 15 | Offre envoyée (étape) puis J+3, J+10, J+21 simulés | Avec téléphone : e-mail J+3, tâche d'appel J+10, e-mail J+21 avec 3 liens. Sans téléphone : e-mails J+3 et J+10, rien au J+21 (deux e-mails au plus) |
 | 16 | Réponse à un e-mail de relance | `a_repondu` = oui, plus aucune relance |
-| 17 | Chantier terminé + réserves levées | Avis J+2 (e-mail + SMS sans lien), relance J+9 unique |
+| 17 | Chantier terminé + réserves levées | Avis J+2 (e-mail + SMS sans lien), relance J+9 unique ; après un « STOP » (WF14) ou une désinscription (WF12), plus rien |
 | 18 | Passage à l'heure d'été (dernier dimanche de mars) | Échéances et horloges correctes |
 | 19 | Jour férié genevois (Jeûne genevois) | Pas de relance, échéance reportée |
 | 20 | Lien de désinscription | Page de confirmation, Brevo bloqué, opposition datée dans Pipedrive |

@@ -338,8 +338,8 @@ PAGES_ECRITES = []
 
 
 def page(p, corps):
-    """Assemble et écrit une page. p : dict(fichier, title, desc, …) ; corps : contenu de <main>."""
-    ctx.UTILISES.clear()
+    """Assemble et écrit une page. p : dict(fichier, title, desc, …) ; corps : contenu de <main>.
+    Les codes Cxx rencontrés depuis la page précédente (corps compris) alimentent la légende du mode verification."""
     hd = header(p)
     ft = footer(p)
     doc = (head(p) + '<body>\n  <a class="skip-link" href="#contenu">Aller au contenu</a>\n' + bandeau() + hd
@@ -351,6 +351,7 @@ def page(p, corps):
     with open(os.path.join(ctx.OUT, p['fichier']), 'w', encoding='utf-8') as f:
         f.write(doc)
     PAGES_ECRITES.append((p['fichier'], p.get('index', True)))
+    ctx.UTILISES.clear()
     print('  %-26s %6d octets' % (p['fichier'], len(doc.encode('utf-8'))))
 
 

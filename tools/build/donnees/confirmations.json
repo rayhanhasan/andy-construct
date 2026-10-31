@@ -181,6 +181,6 @@
   },
   "V02": {
     "confirme": false,
-    "note": "À VÉRIFIER : politique de confidentialité, texte à relire par le juriste (et à compléter par l'agent automatisation)."
+    "note": "Politique de confidentialité relue par le juriste (automatisation.md §9). Restent à fournir : fournisseur de messagerie, durée de conservation Umami (24 mois proposé)."
   }
 }

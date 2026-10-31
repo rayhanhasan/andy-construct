@@ -284,7 +284,8 @@ def isolantes():
              prix_q('Combien coûte une cloison isolante ?', 'Le prix dépend de la surface, de l\'épaisseur d\'isolant, des portes et de la finition.')],
         h2_demande='Demander un devis pour ' + sing,
         ld_desc='Cloisons et doublages isolants (isothermes) entre pièces chauffées et caves, garages ou combles, en plaques de plâtre, à Genève et en Suisse romande.',
-        service_type='Cloisons isolantes et isolation intérieure', alternate='Cloisons isothermes',
+        service_type=V('C16', 'Cloisons isolantes et isolation intérieure', 'Cloisons isothermes et isolation intérieure'),
+        alternate=V('C16', 'Cloisons isothermes', 'Cloisons isolantes'),
     )
 
 
