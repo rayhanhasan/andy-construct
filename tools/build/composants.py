@@ -13,7 +13,7 @@ from icons import ICONS, INFO
 # fichier, ou logo non autorisé dans ce mode → nom en « wordmark » typographique homogène (Archivo élargie).
 LOGOS_DIR = os.path.join(ctx.SITE, 'assets/img/references')
 LOGOS = {l['id']: l for l in json.load(open(os.path.join(LOGOS_DIR, 'logos.json'), encoding='utf-8'))}
-TEXTE_SEUL = {'de-grisogono'}   # logos-references.md §4.4 : nom en texte seulement (titulaire de la marque ≠ client)
+TEXTE_SEUL = set()   # v3 : décision du client, de vrais logos partout (de Grisogono compris, statut a_autoriser)
 
 
 def _chemin_logo(nom):

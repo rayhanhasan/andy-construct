@@ -1,5 +1,6 @@
-/* Andy Construct v2 : scripts du site (sans dépendance). Source : tools/build/static/main.js.
-   Contrat des formulaires : docs/v2/contrat-interface.md. Mesure : window.acSuivi (assets/js/suivi.js). */
+/* Andy Construct v3 : scripts du site (sans dépendance). Source : tools/build/static/main.js.
+   Contrat des formulaires : docs/v2/contrat-interface.md. Mesure : window.acSuivi (assets/js/suivi.js).
+   Mouvement : docs/v3/direction-artistique.md §6 (classe « anim » posée avant le premier rendu si le mouvement est permis). */
 (function (w, d) {
   'use strict';
   var root = d.documentElement;
@@ -11,6 +12,8 @@
   var ecrire = function (k, v) { try { if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   var params = new URLSearchParams(w.location.search);
   var TEL = '+41 22 771 20 15';
+  root.classList.add('js-ok');
+  var bouge = root.classList.contains('anim');
 
   /* 1. Bandeau de la version de validation */
   on($('.vbar__close'), 'click', function () {
@@ -507,5 +510,71 @@
       var lien = $('[data-lien-service]', bloc);
       if (lien && filtres.indexOf(m.service) > -1) { lien.href = 'realisations.html?filtre=' + m.service; lien.textContent = 'En attendant, voir nos réalisations en ' + noms[m.service]; }
     }
+  }
+  /* 8. En-tête compacté au défilement (transformations seulement : aucun décalage de mise en page) */
+  var hdr = $('.site-header');
+  if (hdr) {
+    var tic = false;
+    var majHdr = function () { tic = false; hdr.classList.toggle('is-compact', (w.pageYOffset || 0) > 40); };
+    w.addEventListener('scroll', function () { if (!tic) { tic = true; w.requestAnimationFrame(majHdr); } }, { passive: true });
+    majHdr();
+  }
+
+  /* 9. Révélations sobres des sections clés et chiffres qui comptent : une seule fois, à la première apparition */
+  var compter = function (el) {
+    var n = +el.getAttribute('data-count'), t0 = null;
+    var pas = function (t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / 1400);
+      el.textContent = Math.round(n * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) w.requestAnimationFrame(pas);
+    };
+    w.requestAnimationFrame(pas);
+  };
+  if (bouge && w.IntersectionObserver) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        en.target.classList.add('is-in');
+        $$('[data-count]', en.target).forEach(compter);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    $$('[data-reveal]').forEach(function (g) {
+      Array.prototype.forEach.call(g.children, function (c, i) { c.style.transitionDelay = Math.min(i, 11) * 50 + 'ms'; });
+      $$('[data-count]', g).forEach(function (el) { el.textContent = '0'; });
+      io.observe(g);
+    });
+  }
+
+  /* 10. Bande des logos : défilement continu (~40 px/s) si le mouvement est permis ; pause au survol et au bouton */
+  $$('[data-mq]').forEach(function (mq) {
+    var sec = mq.closest('section'), btn = sec && $('[data-mq-pause]', sec), tr = $('.mq__track', mq);
+    if (!bouge || !tr) { if (btn) btn.hidden = true; return; }
+    var rail = d.createElement('div'), copie = tr.cloneNode(true);
+    rail.className = 'mq__rail';
+    copie.setAttribute('aria-hidden', 'true');
+    $$('img', copie).forEach(function (i) { i.alt = ''; });
+    mq.insertBefore(rail, tr); rail.appendChild(tr); rail.appendChild(copie);
+    mq.classList.add('is-on');
+    mq.style.setProperty('--mq-d', Math.max(40, Math.round(tr.scrollWidth / 40)) + 's');
+    on(btn, 'click', function () {
+      var p = btn.getAttribute('aria-pressed') !== 'true';
+      btn.setAttribute('aria-pressed', p ? 'true' : 'false');
+      btn.textContent = p ? 'Reprendre le défilement' : 'Mettre en pause';
+      mq.classList.toggle('is-paused', p);
+    });
+  });
+
+  /* 11. Tests A/B (drapeaux.js) : ordre des sections, puis mesure de l'exposition, une fois par drapeau présent */
+  var ab = w.acAB;
+  if (ab && ab.v) {
+    if (ab.v['ordre-sections'] === 'b') {
+      var sp = $('[data-ordre="prestations"]'), sr = $('[data-ordre="realisations"]');
+      if (sp && sr) { sp.parentNode.insertBefore(sr, sp); sr.classList.remove('section--mist'); sp.classList.add('section--mist'); }
+    }
+    if (!ab.force) Object.keys(ab.v).forEach(function (n) {
+      if ($('[data-flag="' + n + '"]')) suivi('exposition_variante', { flag: n, variante: ab.v[n] });
+    });
   }
 })(window, document);

@@ -136,7 +136,9 @@ def drapeaux_css():
 
 def _early_js():
     base = ("(function(d){d.className=d.className.replace('no-js','js');"
-            "try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}})(document.documentElement);")
+            "try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}"
+            "try{if('IntersectionObserver'in window&&matchMedia('(prefers-reduced-motion: no-preference)').matches)d.classList.add('anim')}catch(e){}"
+            "})(document.documentElement);")
     cfg = _ab_config()
     if not cfg:
         return base

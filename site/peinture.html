@@ -24,12 +24,18 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
-  <link rel="preload" href="assets/fonts/source-sans-3-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="assets/css/styles.css?v=19b2ce8d56">
-  <script>(function(d){d.className=d.className.replace('no-js','js');try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}})(document.documentElement);</script>
+  <link rel="preload" href="assets/fonts/archivo-v3-wdth-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/styles.css?v=e5f4e8b6d3">
+  <script>(function(d){d.className=d.className.replace('no-js','js');try{if(sessionStorage.getItem('ac-bandeau')==='1')d.classList.add('vbar-off')}catch(e){}try{if('IntersectionObserver'in window&&matchMedia('(prefers-reduced-motion: no-preference)').matches)d.classList.add('anim')}catch(e){}})(document.documentElement);window.AC_AB={"hero-titre":{"v":["a","b"],"p":[50,50]},"cta-libelle":{"v":["a","b"],"p":[50,50]},"ordre-sections":{"v":["a","b"],"p":[50,50]}};(function(w,h){var C=w.AC_AB,K='ac_ab',A={},S=null,F={},q,n;if(!C)return;try{S=JSON.parse(w.localStorage.getItem(K)||'{}')||{};}catch(e){S=null;}
+q=/[?&]flag=([^&#]*)/.exec(w.location.search);if(q)decodeURIComponent(q[1]).split(',').forEach(function(x){var p=x.split(':');if(p[0]==='reset'){if(S)S={};}else if(p[1])F[p[0]]=p[1];});for(n in C){var c=C[n],v=c.v,p=c.p,t=0,k=0,r;if(F[n]&&v.indexOf(F[n])>-1){A[n]=F[n];if(S){S[n]=F[n];S._f=1;}continue;}
+if(!S)continue;if(S[n]&&v.indexOf(S[n])>-1){A[n]=S[n];continue;}
+r=Math.random()*p.reduce(function(a,b){return a+b;},0);for(;k<v.length-1;k++){t+=p[k];if(r<t)break;}
+A[n]=S[n]=v[k];}
+if(S){try{w.localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+for(n in A)h.setAttribute('data-ab-'+n,A[n]);w.acAB={v:A,force:!!(S&&S._f)||!S};})(window,document.documentElement);</script>
   <script src="assets/js/suivi.js?v=036dc06d1c" defer></script>
-  <script src="assets/js/main.js?v=a2d1f067b2" defer></script>
+  <script src="assets/js/main.js?v=814e7b36a8" defer></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://www.andyconstruct.ch/peinture.html#page","url":"https://www.andyconstruct.ch/peinture.html","name":"Entreprise de peinture intérieure à Genève | Andy Construct","inLanguage":"fr-CH","isPartOf":{"@id":"https://www.andyconstruct.ch/#site"},"publisher":{"@id":"https://www.andyconstruct.ch/#entreprise"},"breadcrumb":{"@id":"https://www.andyconstruct.ch/peinture.html#fil"},"about":{"@id":"https://www.andyconstruct.ch/peinture.html#service"}},{"@type":"BreadcrumbList","@id":"https://www.andyconstruct.ch/peinture.html#fil","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://www.andyconstruct.ch/"},{"@type":"ListItem","position":2,"name":"Peinture","item":"https://www.andyconstruct.ch/peinture.html"}]},{"@type":"Service","@id":"https://www.andyconstruct.ch/peinture.html#service","name":"Peinture","serviceType":"Peinture intérieure","description":"Peinture intérieure des murs et plafonds : logements, fins de bail, cages d'escalier et bureaux, à Genève et en Suisse romande.","provider":{"@id":"https://www.andyconstruct.ch/#entreprise"},"url":"https://www.andyconstruct.ch/peinture.html","areaServed":[{"@type":"AdministrativeArea","name":"Canton de Genève"},{"@type":"AdministrativeArea","name":"Canton de Vaud"},{"@type":"AdministrativeArea","name":"Canton de Neuchâtel"},{"@type":"AdministrativeArea","name":"Canton de Fribourg"},{"@type":"AdministrativeArea","name":"Valais romand"},{"@type":"AdministrativeArea","name":"Canton du Jura"},{"@type":"AdministrativeArea","name":"Jura bernois"}]}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.andyconstruct.ch/peinture.html#faq","inLanguage":"fr-CH","mainEntity":[{"@type":"Question","name":"Combien coûte la peinture d'un appartement ?","acceptedAnswer":{"@type":"Answer","text":"Le prix dépend de la surface des murs et des plafonds, de leur état, de la hauteur, des meubles à déplacer et du nombre de teintes."}},{"@type":"Question","name":"Combien de temps faut-il pour repeindre un appartement ?","acceptedAnswer":{"@type":"Answer","text":"Cela dépend de la surface et de l'état des murs. La durée figure dans l'offre écrite."}},{"@type":"Question","name":"Peut-on rester chez soi pendant les travaux ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Nous travaillons pièce par pièce, couvrons les meubles et gardons un passage libre. Il suffit de dégager l'accès aux murs."}},{"@type":"Question","name":"Faut-il vider les pièces ?","acceptedAnswer":{"@type":"Answer","text":"Non. Retirez les objets fragiles et ce qui est accroché aux murs ; nous déplaçons et couvrons les meubles."}},{"@type":"Question","name":"Travaillez-vous pour les fins de bail ?","acceptedAnswer":{"@type":"Answer","text":"Oui, pour les régies et les propriétaires. Donnez-nous la date de l'état des lieux : nous planifions les travaux pour que le logement soit prêt."}},{"@type":"Question","name":"Peignez-vous aussi les façades ?","acceptedAnswer":{"@type":"Answer","text":"Non. Nous travaillons à l'intérieur : murs, plafonds, cages d'escalier et parties communes. Pour une façade, adressez-vous à une entreprise de peinture extérieure."}}]}</script>
 </head>
@@ -48,11 +54,13 @@
         <ul class="nav-list">
           <li class="nav-svc"><details class="nav-drop is-current"><summary>Prestations</summary><ul class="nav-drop__panel"><li><a href="placo.html"><b>Placo</b><span>Cloisons, doublages, faux-plafonds</span></a></li><li><a href="peinture.html" aria-current="page"><b>Peinture</b><span>Murs et plafonds, à l'intérieur</span></a></li><li><a href="isolation-acoustique.html"><b>Isolation acoustique</b><span>Contre le bruit et l'écho</span></a></li><li><a href="cloisons-isothermes.html"><b>Cloisons isolantes</b><span>Caves, garages, combles</span></a></li></ul></details></li>
           <li><a href="realisations.html">Réalisations</a></li><li><a href="professionnels.html">Professionnels</a></li><li><a href="entreprise.html">L'entreprise</a></li><li><a href="contact.html">Contact</a></li>
-          <li class="nav-extra"><a class="btn btn--ghost" href="tel:+41227712015" data-suivi-numero="fixe" data-suivi-emplacement="menu">Appeler le +41 22 771 20 15</a><a class="btn" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="menu" data-suivi-service="peinture">Demander un devis</a></li>
+          <li class="nav-extra"><a class="btn btn--ghost" href="tel:+41227712015" data-suivi-numero="fixe" data-suivi-emplacement="menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/></svg> Appeler le +41 22 771 20 15</a><a class="btn" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="menu" data-suivi-service="peinture"><span data-flag="cta-libelle" data-variant="a">Demander un devis</span><span data-flag="cta-libelle" data-variant="b">Demander une visite</span></a></li>
         </ul>
       </nav>
-      <a class="header-phone" href="tel:+41227712015" data-suivi-numero="fixe"><small>Lun-ven, 7 h – 18 h</small><span>+41 22 771 20 15</span></a>
-      <a class="btn header-cta" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="entete" data-suivi-service="peinture">Demander un devis</a>
+      <div class="header-actions">
+        <a class="header-phone" href="tel:+41227712015" data-suivi-numero="fixe"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/></svg><span>+41 22 771 20 15</span></a>
+        <a class="btn btn--sm header-cta" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="entete" data-suivi-service="peinture"><span data-flag="cta-libelle" data-variant="a">Demander un devis</span><span data-flag="cta-libelle" data-variant="b">Demander une visite</span></a>
+      </div>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span class="nav-toggle__icon" aria-hidden="true"><span></span></span><span class="nav-toggle__label">Menu</span></button>
     </div>
   </header>
@@ -203,7 +211,7 @@
           <p>Bureau : <a href="tel:+41227712015" class="big" data-suivi-numero="fixe">+41 22 771 20 15</a></p>
           <p>Sur les chantiers : <a href="tel:+41786311434" class="big" data-suivi-numero="mobile">+41 78 631 14 34</a></p><p class="phone-box__h">Du lundi au vendredi, 7 h – 18 h</p>
         </div>
-        <p class="refs-line refs-line--aside"><b>Ils nous ont confié des travaux :</b> Ville de Genève · Conservatoire de musique de Genève · HEAD – Genève · Mairie de <span class="nowrap">Plan-les-Ouates</span> · Salle communale de <span class="nowrap">Collonge-Bellerive</span> · et des particuliers de toute la région.</p>
+        <div class="refs-line refs-line--aside"><p><b>Ils nous ont confié des travaux</b></p><ul class="refs-line__logos"><li><img class="logo e140" src="assets/img/references/couleur/ville-de-geneve.svg" width="169" height="100" alt="Ville de Genève" loading="lazy" decoding="async"></li><li><img class="logo e090" src="assets/img/references/couleur/conservatoire-musique-geneve.svg" width="436" height="100" alt="Conservatoire de musique de Genève" loading="lazy" decoding="async"></li><li><img class="logo e095" src="assets/img/references/couleur/head-geneve.png" width="488" height="240" alt="HEAD – Genève" loading="lazy" decoding="async"></li><li><img class="logo e090" src="assets/img/references/couleur/ubs.svg" width="282" height="100" alt="UBS" loading="lazy" decoding="async"></li><li><img class="logo e095" src="assets/img/references/couleur/piaget.svg" width="256" height="100" alt="Piaget" loading="lazy" decoding="async"></li><li><img class="logo e115" src="assets/img/references/couleur/plan-les-ouates.svg" width="174" height="100" alt="Mairie de Plan-les-Ouates" loading="lazy" decoding="async"></li></ul><p class="refs-line__part">et des particuliers de toute la région.</p></div>
           </div>
         </div>
       </div>
@@ -211,6 +219,9 @@
   </main>
 
   <footer class="site-footer on-dark" data-suivi-zone="pied">
+    <div class="container footer-refs">
+      <p class="footer-refs__title">Ils nous ont confié des travaux</p><ul class="pills"><li class="pill"><img class="logo e140" src="assets/img/references/couleur/ville-de-geneve.svg" width="169" height="100" alt="Ville de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/conservatoire-musique-geneve.svg" width="436" height="100" alt="Conservatoire de musique de Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/head-geneve.png" width="488" height="240" alt="HEAD – Genève" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e105" src="assets/img/references/couleur/omc.png" width="795" height="240" alt="OMC" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e090" src="assets/img/references/couleur/ubs.svg" width="282" height="100" alt="UBS" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e095" src="assets/img/references/couleur/piaget.svg" width="256" height="100" alt="Piaget" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e115" src="assets/img/references/couleur/plan-les-ouates.svg" width="174" height="100" alt="Mairie de Plan-les-Ouates" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e070" src="assets/img/references/couleur/collonge-bellerive.png" width="1532" height="240" alt="Salle communale de Collonge-Bellerive" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e130" src="assets/img/references/couleur/j-safra-sarasin.png" width="562" height="240" alt="J. Safra Sarasin" loading="lazy" decoding="async"></li><li class="pill"><img class="logo e075" src="assets/img/references/couleur/labcorp.svg" width="376" height="100" alt="Labcorp (ex-Covance)" loading="lazy" decoding="async"></li></ul><p class="footer-refs__part">et des particuliers de toute la région. <a href="professionnels.html#references">Toutes nos références</a></p>
+    </div>
     <div class="container footer-top">
       <div class="footer-brand">
         <img src="assets/img/brand/logo-andy-construct-blanc-380.png" width="380" height="138" alt="Andy Construct" loading="lazy">
@@ -236,9 +247,6 @@
         </ul>
       </nav>
     </div>
-    <div class="container footer-refs">
-      <p class="footer-refs__title">Ils nous ont confié des travaux</p><ul class="refs refs--pied"><li class="ref ref--nom"><span>Ville de Genève</span></li><li class="ref ref--logo e100"><img src="assets/img/references/conservatoire-musique-geneve-blanc.svg" width="436" height="100" alt="Conservatoire de musique de Genève" loading="lazy"></li><li class="ref ref--logo e095"><img src="assets/img/references/head-geneve-blanc.png" width="244" height="120" alt="HEAD – Genève" loading="lazy"></li><li class="ref ref--nom"><span>OMC</span></li><li class="ref ref--logo e090"><img src="assets/img/references/ubs-blanc.svg" width="276" height="100" alt="UBS" loading="lazy"></li><li class="ref ref--logo e100"><img src="assets/img/references/piaget-blanc.svg" width="256" height="100" alt="Piaget" loading="lazy"></li><li class="ref ref--nom"><span>Mairie de <span class="nowrap">Plan-les-Ouates</span></span></li><li class="ref ref--nom"><span>Salle communale de <span class="nowrap">Collonge-Bellerive</span></span></li><li class="ref ref--nom ref--part"><span>et des particuliers de toute la région</span></li></ul>
-    </div>
     <div class="footer-bottom">
       <div class="container">
         <p>© 2026 Andy Construct, Chanton & Cie · <span class="nowrap">IDE CHE-113.706.162</span></p>
@@ -252,7 +260,7 @@
   </footer>
   <div class="callbar" role="region" aria-label="Contact rapide" data-suivi-zone="barre_mobile">
     <a class="btn btn--ghost" href="tel:+41227712015" data-suivi-numero="fixe"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/></svg> Appeler</a>
-    <a class="btn" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="barre_mobile" data-suivi-service="peinture">Demander un devis</a>
+    <a class="btn" href="#demande" data-suivi="devis_clic" data-suivi-emplacement="barre_mobile" data-suivi-service="peinture"><span data-flag="cta-libelle" data-variant="a">Demander un devis</span><span data-flag="cta-libelle" data-variant="b">Demander une visite</span></a>
   </div>
 </body>
 </html>
