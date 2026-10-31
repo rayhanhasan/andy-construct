@@ -111,12 +111,23 @@ def doc(cle):
 ASSETS = {'css': 'assets/css/styles.css', 'js': 'assets/js/main.js', 'suivi': 'assets/js/suivi.js'}
 
 def _ab_config():
-    """Configuration des drapeaux A/B (donnees/config.json → ab), réduite à ce dont le navigateur a besoin."""
+    """Configuration des drapeaux A/B (donnees/config.json → ab), réduite à ce dont le navigateur a besoin.
+    Les drapeaux inactifs restent présents (off) pour la recette par ?flag=, sans tirage ni mesure."""
     ab = ctx.CONFIG.get('ab') or {}
     if not ab.get('actif'):
         return None
-    dr = {n: {'v': c['variantes'], 'p': c.get('poids') or [1] * len(c['variantes'])}
-          for n, c in (ab.get('drapeaux') or {}).items() if c.get('actif', True) and len(c.get('variantes') or []) > 1}
+    dr = {}
+    for n, c in (ab.get('drapeaux') or {}).items():
+        if len(c.get('variantes') or []) < 2:
+            continue
+        d = {'v': c['variantes'], 'p': c.get('poids') or [1] * len(c['variantes']), 'n': c.get('version', 1)}
+        if c.get('pages') and '*' not in c['pages']:
+            d['pg'] = c['pages']
+        if c.get('exposition', 'chargement') != 'chargement':
+            d['x'] = c['exposition']
+        if not c.get('actif', True):
+            d['off'] = 1
+        dr[n] = d
     return dr or None
 
 
@@ -250,7 +261,7 @@ def libelle_devis(defaut='Demander un devis'):
     toutes dans le HTML et la feuille de style n'affiche que celle attribuée au visiteur."""
     d = ((ctx.CONFIG.get('ab') or {}).get('drapeaux') or {}).get('cta-libelle') or {}
     textes = d.get('textes') or {}
-    if not (ctx.CONFIG.get('ab') or {}).get('actif') or not d.get('actif', True) or len(textes) < 2:
+    if not (ctx.CONFIG.get('ab') or {}).get('actif') or len(textes) < 2:
         return defaut
     return ''.join('<span data-flag="cta-libelle" data-variant="%s">%s</span>' % (v, e(textes[v]))
                    for v in d.get('variantes', []) if v in textes)
@@ -278,7 +289,7 @@ def header(p):
         <ul class="nav-list">
           <li class="nav-svc"><details class="nav-drop%(svc_actif)s"><summary>Prestations</summary><ul class="nav-drop__panel">%(svc_items)s</ul></details></li>
           %(items)s
-          <li class="nav-extra"><a class="btn btn--ghost" href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="menu">%(icon)s Appeler le %(tel)s</a>%(devis)s</li>
+          <li class="nav-extra"><a class="btn btn--ghost" href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="menu">%(icon)s Appeler le %(tel)s</a>%(devis)s%(badges)s</li>
         </ul>
       </nav>
       <div class="header-actions">
@@ -289,6 +300,7 @@ def header(p):
     </div>
   </header>
 ''' % dict(svc_items=svc_items, svc_actif=svc_actif, items=items, tel_uri=TEL_URI, tel=TEL, icon=ICON_PHONE,
+           badges=__import__('composants').badges(['B1', 'B3'], cls='badges--clair badges--menu'),
            devis='' if p.get('sans_devis') else devis_btn(p, 'menu'),
            cta='' if p.get('sans_devis') else devis_btn(p, 'entete', cls='btn btn--sm header-cta'))
 
@@ -307,6 +319,7 @@ def footer(p):
   <footer class="site-footer on-dark" data-suivi-zone="pied">
     <div class="container footer-refs">
       %(refs)s
+      %(badges)s
     </div>
     <div class="container footer-top">
       <div class="footer-brand">
@@ -346,7 +359,7 @@ def footer(p):
   </footer>%(callbar)s
 ''' % dict(isol=V('C16', 'cloisons isolantes', 'cloisons isothermes'), nap=nap(), maps=MAPS, pdf=pdf,
            svc=''.join('<li><a href="%s">%s</a></li>' % (svc_url(s), svc_nom(s)) for s in SERVICES),
-           refs=composants.refs_pied(), annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
+           refs=composants.refs_pied(), badges=composants.badges(['B1', 'B2', 'B3', 'B7'], cls='badges--pied'), annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
 
 
 # ---------------------------------------------------------------- en-tête de page secondaire (composant page-head)

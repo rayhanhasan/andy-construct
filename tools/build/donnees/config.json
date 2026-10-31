@@ -4,26 +4,130 @@
   "_aide": "umami_src : URL du script Umami (ex. https://stats.andyconstruct.ch/script.js) ; umami_id : identifiant du site. Vides : aucun script de mesure n'est chargé.",
   "ab": {
     "actif": true,
-    "_aide": "Drapeaux de test A/B (docs/v3/direction-artistique.md §9). actif=false : tout le monde voit la variante « a », aucun événement. Par drapeau : actif, variantes (la première, « a », est le témoin), poids (répartition), textes éventuels. Recette : ?flag=hero-titre:b ; ?flag=reset. Mesure Umami : exposition_variante {flag, variante}.",
+    "_aide": "Drapeaux de test A/B (docs/v3/direction-artistique.md §9, docs/v3/cro-v3.md §5). Un seul test actif à la fois (§5.3). actif=false (global) : tout le monde voit « a », aucun événement. Par drapeau : actif (false = visible seulement en recette par ?flag=nom:b), version (changer = nouveau tirage), variantes (« a » = témoin), poids, pages (« * » = toutes), exposition (« chargement » ou un sélecteur : vu à 50 % pendant 1 s), textes éventuels. Recette : ?flag=hero-titre:b ; ?flag=reset. Mesure Umami : exposition_variante {flag, variante, xp}, propriétés f_<drapeau> sur les conversions, intention_contact.",
     "drapeaux": {
-      "hero-titre": {
+      "aa-temoin": {
         "actif": true,
-        "variantes": ["a", "b"],
-        "poids": [50, 50],
-        "description": "Titre du héro de l'accueil : métiers et région (a) contre preuve par les références (b)."
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "index.html"
+        ],
+        "exposition": "chargement",
+        "description": "Rodage (semaines 1-2) : test A/A sans changement visible ; vérifie la mesure, la répartition (SRM) et les taux de base."
       },
-      "cta-libelle": {
-        "actif": true,
-        "variantes": ["a", "b"],
-        "poids": [50, 50],
-        "textes": {"a": "Demander un devis", "b": "Demander une visite"},
-        "description": "Libellé de tous les boutons de demande (en-tête, héro, sections, barre mobile)."
+      "hero-titre": {
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "index.html"
+        ],
+        "exposition": "chargement",
+        "description": "XP1 (semaines 3-8). A : « Placo, peinture, acoustique : la rigueur des chantiers publics » · B : « Du Conservatoire à votre salon : placo, acoustique, peinture »"
       },
       "ordre-sections": {
-        "actif": true,
-        "variantes": ["a", "b"],
-        "poids": [50, 50],
-        "description": "Accueil : prestations puis réalisations (a) contre réalisations puis prestations (b)."
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "index.html"
+        ],
+        "exposition": "chargement",
+        "description": "XP2 (semaines 9-14). A : prestations puis projets de référence · B : projets de référence puis prestations (déplacement dans le DOM)."
+      },
+      "cta-libelle": {
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "*"
+        ],
+        "exposition": "chargement",
+        "textes": {
+          "a": "Demander un devis",
+          "b": "Demander une visite"
+        },
+        "description": "XP3 (semaines 15-20, site entier, rien d'autre en parallèle). Libellé de tous les boutons de demande et du titre du bloc."
+      },
+      "entree-demande": {
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "*"
+        ],
+        "exposition": "#demande",
+        "description": "XP4 (semaines 3-11, peut tourner avec XP1). A : rappel replié · B : carte de rappel ouverte dans la colonne du bloc de demande."
+      },
+      "etape3-allegee": {
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "*"
+        ],
+        "exposition": "#demande",
+        "description": "XP5, non testable sous l'hypothèse de trafic (cro-v3 §5.2) : balisage de la variante B à faire seulement si l'étape 3 dépasse 150 visites par mois."
+      },
+      "hero-media": {
+        "actif": false,
+        "version": 1,
+        "variantes": [
+          "a",
+          "b"
+        ],
+        "poids": [
+          50,
+          50
+        ],
+        "pages": [
+          "index.html"
+        ],
+        "exposition": "chargement",
+        "description": "Recette seulement : A = vraie photo d'Andy Construct (référence) · B = vidéo d'illustration sous licence (mention « Illustration », ordinateur seulement)."
       }
     }
   }

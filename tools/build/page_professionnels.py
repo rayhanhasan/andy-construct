@@ -142,7 +142,8 @@ def build():
 ''' % (marque('C22', '18 maîtres d\'ouvrage publics et privés, à Genève et dans le canton de Vaud.'), c.refs_grille(), accord)
 
     # 6. Dossier de soumission
-    visite = T('C40', '<li>Vous préférez voir notre travail sur place ? Nous vous faisons visiter un chantier en cours.</li>', '')
+    visite = T('C40', 'Vous préférez voir notre travail sur place ? Nous vous faisons visiter un chantier en cours.', '')
+    visite = ('<li>%s</li>' % visite) if visite else ''     # la marque de vérification reste dans l'élément de liste
     corps += '''    <section class="section" id="soumission" aria-labelledby="soumission-titre" data-suivi-zone="soumission">
       <div class="container">
         <div class="encadre encadre--soumission">

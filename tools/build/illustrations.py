@@ -52,7 +52,8 @@ def _src(it):
     w, h = it.get('largeur') or it.get('width') or 1200, it.get('hauteur') or it.get('height') or 800
     if base:
         b = base if base.startswith('assets/') else 'assets/img/illustrations/' + base
-        larg = [x for x in (it.get('largeurs') or [400, 800, 1200]) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, x)))]
+        larg = [x for x in sorted({400} | set(it.get('largeurs') or [800, 1200])) if x <= 1600
+                and os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, x)))]   # 400 : vignettes (dérivées, images.py)
         srcset = ', '.join('%s-%d.webp %dw' % (b, x, x) for x in larg)
         jpgs = [x for x in (800, 1200, 400, 1600) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.jpg' % (b, x)))]
         jpg = ('%s-%d.jpg' % (b, jpgs[0])) if jpgs else '%s-%d.webp' % (b, larg[0])

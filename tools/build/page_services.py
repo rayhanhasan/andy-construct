@@ -12,7 +12,18 @@ PRIX_REPLI = 'Le prix dépend'
 
 
 def figure(pid, legende, sizes='(min-width: 1000px) 520px, 100vw', eager=False):
-    return '<figure class="ph">%s<figcaption>%s</figcaption></figure>' % (c.pic(pid, sizes, pf.alt(pid), eager=eager), legende)
+    """Vraie photo, en recadrage éditorial 16:9 quand il existe (credits-images.md §3)."""
+    return '<figure class="ph">%s<figcaption>%s</figcaption></figure>' % (c.pic_crop(pid, '16x9', sizes, pf.alt(pid), eager=eager), legende)
+
+
+def figure_ill(ident, legende):
+    """Image d'illustration sous licence, signalée (jamais présentée comme un chantier d'Andy Construct)."""
+    import illustrations
+    it = illustrations.trouver(ident=ident)
+    if not it:
+        return ''
+    return '<figure class="ph ph--ill">%s<figcaption>%s</figcaption></figure>' % (
+        illustrations.picture(it, '(min-width: 1000px) 520px, 100vw', lazy=False), legende)
 
 
 def figure_aa(pid, legende, eager=False):
@@ -113,7 +124,8 @@ def real_placo():
 def peinture():
     s = 'peinture'
     aa6_ok = definitif('C26')   # « Séjour repeint » : la prestation peinture doit être confirmée (C26) en production
-    photo = marque('C26', figure_aa('aa6', 'Séjour repeint, avec un faux-plafond et des spots', eager=True), bloc=True) if aa6_ok else ''
+    photo = (marque('C26', figure_aa('aa6', 'Séjour repeint, avec un faux-plafond et des spots', eager=True), bloc=True) if aa6_ok
+             else figure_ill('peinture-sejour-murs-blancs', 'Image d\'illustration : un séjour fraîchement repeint'))
     return dict(
         service=s, crumb='Peinture', title='Entreprise de peinture intérieure à Genève | Andy Construct',
         desc='Peinture des murs et plafonds : appartements, fins de bail, cages d\'escalier, bureaux. Supports préparés, chantier protégé. Genève et Suisse romande.',
@@ -191,7 +203,8 @@ def acoustique():
                 + T('C18', ' Et nous réduisons l\'écho des salles trop sonores.', ''),
         btn='Demander un devis pour une isolation acoustique',
         bref=['Logements, bureaux, écoles, salles communales', 'Des travaux choisis selon le bruit que vous entendez', 'Aucune promesse chiffrée sans mesure'],
-        photo=figure('chantier-suspentes-ossature-01', 'Pendant les travaux : suspentes et ossature d\'un faux-plafond, sous une dalle isolée', eager=True),
+        photo=(figure('panneaux-acoustiques-muraux-01', pf.legende('panneaux-acoustiques-muraux-01'), eager=True) if pf.photo_ok('panneaux-acoustiques-muraux-01')
+               else figure_ill('acoustique-couloir-panneaux-plafond', 'Image d\'illustration : panneaux acoustiques suspendus dans un couloir')),
         faire='''<h2 id="faire-titre">Isoler ou corriger : deux problèmes différents</h2>
         <div class="prose-cols">
           <p><strong>Isoler</strong>, c'est empêcher le bruit de passer d'un local à l'autre : celui du voisin, de l'étage, de la pièce d'à côté. Il faut alors une paroi à la fois lourde et souple, sans contact rigide avec la structure du bâtiment.</p>

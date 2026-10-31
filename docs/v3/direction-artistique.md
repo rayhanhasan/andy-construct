@@ -233,6 +233,31 @@ Module source `tools/build/static/drapeaux.js`, injecté (minifié) dans le scri
 
 Accessoire retiré avant de sortir (Chanel) : voir la note d'autocritique en fin de construction (`§11`).
 
-## 11. Autocritique après captures
+## 11. Intégration, arbitrages et autocritique (31.10.2026)
 
-À compléter après les captures `v3-shots/` (1440, 1024, 390 ; en-tête au repos et compacté).
+### 11.1 Ce qui a été intégré
+- **Copy et structure** : `docs/v3/cro-v3.md` fait foi pour l'accueil (H1 à H10), l'en-tête (§3), les badges B1-B13 (§4, rendus selon `confirmations.json`), la microcopie du formulaire (§7) et le module de drapeaux (§5.4).
+- **Logos** : décision client, logos officiels **en couleur** (`references/couleur/`, `fichier_couleur`), de Grisogono compris ; en production, tant qu'aucun logo n'est `autorise`, chaque cellule devient un wordmark (« générique » en maigre au-dessus, nom propre en demi-gras, taille calée sur la cellule par requête de conteneur). Le rendu de production a été vérifié : grille homogène, 17 noms.
+- **Images** : vraies photos en recadrages éditoriaux (héro 4:5 sur ordinateur, 16:9 sur mobile ; méthode ; lieux de référence), illustrations sous licence signalées « Illustration » (prestations peinture et cloisons, en-têtes des pages peinture et acoustique en production). Des variantes 400 px ont été dérivées pour les vignettes (`illustrations/*-400.webp`).
+
+### 11.2 Arbitrages
+| Sujet | Décision | Pourquoi |
+|---|---|---|
+| Vidéo d'ambiance dans le héro | **Variante B du drapeau `hero-media`, inactif** (recette : `?flag=hero-media:b`). Le héro garde la vraie photo | Une vidéo de banque d'images à côté de « la rigueur des chantiers publics » se lirait comme un chantier d'Andy Construct (DA §4) ; la photo réelle est la preuve et le LCP. La variante est prête si le client la préfère : ordinateur seulement, pas en mouvement réduit ni en économie de données, mention « Illustration », bouton pause |
+| Titre du héro : un masque par ligne | **Un masque par mot** | Avec le titre CRO (8 mots, 61 signes), les lignes changent selon la largeur ; les mots montent en cascade (40 ms) et les lignes se forment naturellement (4 lignes à 390 px) |
+| Taille du H1 | 48 px au bureau (au lieu de 60) | Trois lignes nettes dans 7 colonnes ; le premier écran laisse voir la 1re rangée du mur à 1440 × 900 |
+| Panneau du héro | 7 colonnes, photo 5 colonnes | Le titre CRO est plus long que celui de la v2 |
+| Écarts CRO §2.5 | Tous tranchés en faveur du CRO | « références, publiques et privées » ; wordmarks à deux niveaux ; « +41 22 771 20 15 » partout ; 3 badges + 1 confirmable |
+| Drapeaux | Un seul test actif : `aa-temoin` (rodage A/A) ; les autres inactifs mais forçables en recette | cro-v3 §5.3 |
+| En-tête 900-1259 px | Numéro complet (avec icône) plutôt qu'un bouton « Appeler » | Le numéro visible est une exigence de la charte ; il tient |
+
+### 11.3 Autocritique (captures `scratchpad/v3-shots/`)
+- Retiré avant de sortir (Chanel) : les petits traits rouges au-dessus des chiffres. Le rouge reste au héro (trait laser), à la page active, aux étapes de la méthode et sur les cartes de lieux.
+- Corrigé après captures : cellules du mur invisibles au premier écran (seuil de révélation trop strict, fond gris visible) ; badges clairs illisibles (contraste 1,65, spécificité) ; région « Ils nous ont confié des travaux » en double (bande devenue un groupe) ; bouton rouge du menu mobile en texte foncé ; marques de vérification autour d'éléments de liste.
+- Reste perfectible : le logo de la Ville de Genève est très aéré et paraît petit malgré son échelle 1,4 (un fichier recadré au plus près aiderait) ; Collonge-Bellerive, très allongé, est limité par la largeur de cellule ; les cartes typographiques de lieux attendent de vraies photos rattachées (`C25`).
+
+### 11.4 Mesures
+- axe 4.10 : **0 violation** sur les 13 pages, 1440 et 390 px, en preview, vérification et production (et menu mobile ouvert).
+- Lighthouse mobile, accueil de production servi compressé (comme avec le `.htaccess`) : **performance 98-99**, accessibilité, bonnes pratiques et SEO 100 ; LCP 2,2-2,3 s (photo du héro, 11 Ko), CLS 0, TBT 0 ms, 221 Kio. Sans compression (serveur PHP intégré) : 96, LCP 2,7 s.
+- Défilement : aucun décalage (CLS 0) pendant le compactage de l'en-tête. Sans JavaScript : variante A, tout visible. Mouvement réduit : rien ne bouge, chiffres finaux.
+- Budgets du générateur relevés à 64 Ko de CSS et 32 Ko de JS non compressés (13 Ko et 10 Ko compressés). Polices : 88 Ko (Archivo 59 Ko + Source Sans 3 29 Ko). Les fichiers Montserrat restent dans `assets/fonts/` pour `livrables/sources/generer_supports.py`, mais le site ne les charge plus.

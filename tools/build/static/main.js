@@ -39,6 +39,13 @@
     var onMq = function () { if (large.matches) ouvrir(false); };
     if (large.addEventListener) large.addEventListener('change', onMq);
     on(d, 'keydown', function (e) {
+      if (e.key === 'Tab' && toggle.getAttribute('aria-expanded') === 'true') {
+        var f = [toggle].concat($$('a[href], summary, button', nav).filter(function (x) { return x.offsetParent !== null; }));
+        var i = f.indexOf(d.activeElement);
+        e.preventDefault();
+        f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+        return;
+      }
       if (e.key !== 'Escape') return;
       if (toggle.getAttribute('aria-expanded') === 'true') { ouvrir(false); toggle.focus(); }
       else if (drop && drop.open && large.matches) { drop.open = false; $('summary', drop).focus(); }
@@ -321,7 +328,8 @@
       }
       envoyer(f, function (r) {
         var pref = $('[name="preference_contact"]:checked', f);
-        if (r.ref) suivi('formulaire_envoye', { formulaire: 'devis', service: service(), type_client: val(f, 'type_client') });
+        if (r.ref) suivi('formulaire_envoye', { formulaire: 'devis', service: service(), type_client: val(f, 'type_client'),
+          avec_message: val(f, 'message') ? 'oui' : 'non', avec_fichiers: liste.length ? 'oui' : 'non', nb_travaux: String(travaux().length) });
         ecrire('ac_merci', { f: 'devis', ref: r.ref, message: r.message, travaux: travaux().map(function (x) { return NOMS[x]; }), service: service(),
           commune: val(f, 'commune'), pref: pref ? $('span', pref.closest('label')).textContent : '', email: !!val(f, 'email') });
         ecrire(BROUILLON, null);
@@ -375,7 +383,8 @@
     var a = e.target.closest('[data-vers-rappel]');
     if (!a || !rf) return;
     e.preventDefault();
-    var t = rf.elements.telephone, src = df && df.elements.telephone;
+    var t = rf.elements.telephone, src = df && df.elements.telephone, det = rf.closest('details');
+    if (det) det.open = true;
     if (src && src.value && !t.value) t.value = src.value;
     $('#rappel').scrollIntoView({ block: 'start' });
     t.focus({ preventScroll: true });
@@ -539,7 +548,7 @@
         en.target.classList.add('is-in');
         $$('[data-count]', en.target).forEach(compter);
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    }, { rootMargin: '0px 0px -24px 0px', threshold: 0.01 });
     $$('[data-reveal]').forEach(function (g) {
       Array.prototype.forEach.call(g.children, function (c, i) { c.style.transitionDelay = Math.min(i, 11) * 50 + 'ms'; });
       $$('[data-count]', g).forEach(function (el) { el.textContent = '0'; });
@@ -549,7 +558,7 @@
 
   /* 10. Bande des logos : défilement continu (~40 px/s) si le mouvement est permis ; pause au survol et au bouton */
   $$('[data-mq]').forEach(function (mq) {
-    var sec = mq.closest('section'), btn = sec && $('[data-mq-pause]', sec), tr = $('.mq__track', mq);
+    var sec = mq.closest('.defile'), btn = sec && $('[data-mq-pause]', sec), tr = $('.mq__track', mq);
     if (!bouge || !tr) { if (btn) btn.hidden = true; return; }
     var rail = d.createElement('div'), copie = tr.cloneNode(true);
     rail.className = 'mq__rail';
@@ -566,15 +575,81 @@
     });
   });
 
-  /* 11. Tests A/B (drapeaux.js) : ordre des sections, puis mesure de l'exposition, une fois par drapeau présent */
-  var ab = w.acAB;
+  /* 11. Tests A/B (drapeaux.js, cro-v3 §5.4) : variantes structurelles, puis mesure dédoublonnée par visiteur */
+  var ab = w.acAB, lsLire = function (k) { try { return JSON.parse(w.localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
+  var lsEcrire = function (k, v) { try { w.localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   if (ab && ab.v) {
     if (ab.v['ordre-sections'] === 'b') {
       var sp = $('[data-ordre="prestations"]'), sr = $('[data-ordre="realisations"]');
       if (sp && sr) { sp.parentNode.insertBefore(sr, sp); sr.classList.remove('section--mist'); sp.classList.add('section--mist'); }
     }
-    if (!ab.force) Object.keys(ab.v).forEach(function (n) {
-      if ($('[data-flag="' + n + '"]')) suivi('exposition_variante', { flag: n, variante: ab.v[n] });
-    });
+    if (ab.v['entree-demande'] === 'b') $$('[data-entree-demande]').forEach(function (x) { x.open = true; x.classList.add('is-ouvert'); });
+    if (!ab.force) {
+      var vus = lsLire('ac_ab_vus'), ic = lsLire('ac_ic');
+      var cle = function (n) { return ab.v[n] + '.' + ((ab.c[n] || {}).n || 1); };
+      var fProps = function (seulsNonComptes) {
+        var o = {};
+        Object.keys(vus).forEach(function (n) {
+          if (!ab.v[n] || vus[n] !== cle(n) || (seulsNonComptes && ic[n] === vus[n])) return;
+          o['f_' + n.replace(/-/g, '_')] = ab.v[n];
+        });
+        return o;
+      };
+      var exposer = function (n) {
+        if (vus[n] === cle(n)) return;
+        vus[n] = cle(n); lsEcrire('ac_ab_vus', vus);
+        suivi('exposition_variante', { flag: n, variante: ab.v[n], xp: n + ':' + ab.v[n] });
+      };
+      Object.keys(ab.v).forEach(function (n) {
+        var x = (ab.c[n] || {}).x, cible = x && $(x);
+        if (!x) return exposer(n);
+        if (!cible || !w.IntersectionObserver) return;
+        var minuterie = null, obs = new IntersectionObserver(function (es) {
+          if (es[0].isIntersecting) minuterie = minuterie || setTimeout(function () { exposer(n); obs.disconnect(); }, 1000);
+          else { clearTimeout(minuterie); minuterie = null; }
+        }, { threshold: 0.5 });
+        obs.observe(cible);
+      });
+      // Propriétés f_<drapeau> ajoutées aux conversions envoyées par suivi.js (crochet Umami « data-before-send »)
+      var CONV = /^(devis_clic|appel_clic|rappel_ouvert|formulaire_debut|formulaire_etape|formulaire_envoye|telechargement)$/;
+      var avant = w.acUmamiAvantEnvoi;
+      if (avant) w.acUmamiAvantEnvoi = function (t, c) {
+        c = avant(t, c);
+        if (c && c.name && CONV.test(c.name)) { var f = fProps(false), k; c.data = c.data || {}; for (k in f) if (!(k in c.data)) c.data[k] = f[k]; }
+        return c;
+      };
+      // intention_contact : une fois par visiteur et par drapeau exposé, au premier geste de contact
+      var intention = function () {
+        var o = fProps(true);
+        if (!Object.keys(o).length) return;
+        Object.keys(vus).forEach(function (n) { if (vus[n] === cle(n)) ic[n] = vus[n]; });
+        lsEcrire('ac_ic', ic);
+        suivi('intention_contact', o);
+      };
+      d.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('[data-suivi="devis_clic"], a[href^="tel:"], [data-vers-rappel], .rappel-repli > summary')) intention();
+      }, true);
+      d.addEventListener('focusin', function (e) { if (e.target.closest && e.target.closest('form[data-suivi-formulaire]')) intention(); });
+    }
+  }
+
+  /* 12. Héro, variante « hero-media » B (recette) : vidéo d'illustration, ordinateur seulement, jamais en mouvement réduit
+     ni en économie de données ; l'affiche reste visible sinon. Bouton pause accessible. */
+  var hv = $('.hero__video[data-video]');
+  if (hv && w.getComputedStyle(hv).display !== 'none') {
+    var cx = navigator.connection || {};
+    if (bouge && w.matchMedia('(min-width: 900px)').matches && !cx.saveData && !/(^|-)2g$/.test(cx.effectiveType || '')) {
+      var v = d.createElement('video'), base = hv.getAttribute('data-video'), bp = $('.hero__pause', hv);
+      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
+      v.poster = base + '-poster.webp'; v.preload = 'auto';
+      [['webm', 'video/webm'], ['mp4', 'video/mp4']].forEach(function (x) { var so = d.createElement('source'); so.src = base + '-720.' + x[0]; so.type = x[1]; v.appendChild(so); });
+      hv.insertBefore(v, hv.firstChild);
+      bp.hidden = false;
+      on(bp, 'click', function () {
+        var pause = !v.paused; if (pause) v.pause(); else v.play();
+        bp.setAttribute('aria-pressed', pause ? 'true' : 'false');
+        bp.textContent = pause ? 'Relancer la vidéo' : 'Mettre la vidéo en pause';
+      });
+    }
   }
 })(window, document);

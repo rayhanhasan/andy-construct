@@ -5,7 +5,7 @@ import json, os, re, struct
 import ctx
 from ctx import e, T, V, definitif, marque, insec, M
 from common import (TEL, TEL_URI, MOB, MOB_URI, tel_link, horaires, mob_label, mail, svc_nom, svc_url, SERVICES,
-                    devis_btn, ICON_PHONE)
+                    devis_btn, ICON_PHONE, ZEFIX, GGE, AUJOURDHUI, libelle_devis)
 from icons import ICONS, INFO
 
 # ---------------------------------------------------------------- références et logos (v3 : logos officiels en couleur)
@@ -82,7 +82,7 @@ WORDMARKS = {
     'collonge-bellerive': ('Salle communale de', ['Collonge-Bellerive']),
     'plan-les-ouates': ('Salle communale de', ['Plan-les-Ouates']),
     'alhambra': ('Salle de', ['l\'Alhambra']),
-    'conservatoire-musique-geneve': (None, ['Conservatoire de musique', 'de Genève']),
+    'conservatoire-musique-geneve': (None, ['Conservatoire de', 'musique de Genève']),
     'harmonie-nautique': (None, ['Harmonie Nautique', 'de Genève']),
     'everness': (None, ['Everness', 'Hotel & Resort']),
     'domaine-des-perrieres': ('Domaine des', ['Perrières']),
@@ -160,25 +160,22 @@ def _ids(ids):
     return out
 
 
-def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux', intro=None):
-    """Section « mur de logos » juste sous le héro : grille de cellules blanches séparées par des filets."""
-    if intro is None:
-        intro = T('C04', 'Collectivités, institutions et entreprises, et des particuliers pour une cloison, un plafond ou une pièce à repeindre.',
-                  'Collectivités, institutions et entreprises, et des particuliers de toute la région.')
-    cells = ''.join('<li class="logo-cell" data-ref="%s">%s</li>' % (rid, logo_img(rid)) for rid in _ids(MUR))
+def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux'):
+    """Mur de références juste sous le héro (cro-v3 §2.2 H2) : cellules blanches identiques séparées par des filets ;
+    6 × 2 (ordinateur), 3 × 4 (tablette), 2 × 4 (mobile) ; logos en couleur ou wordmarks selon le mode."""
+    part = T('C04', 'Et des <b>particuliers</b>, pour une cloison, un plafond ou une pièce à repeindre.',
+             'Et des <b>particuliers</b>, à Genève et dans toute la région.')
+    cells = ''.join('<li class="logo-cell">%s</li>' % logo_img(rid) for rid in _ids(MUR))
     accords = ('<p class="logos__accord">Références citées avec l\'accord des maîtres d\'ouvrage.</p>'
                if ctx.prod() and ctx.confirme('C22') else '')
     return '''    <section class="logos" aria-labelledby="%s" data-suivi-zone="references">
       <div class="container">
-        <div class="logos__head">
-          <h2 id="%s">%s</h2>
-          <p>%s</p>
-          <a class="link-arrow" href="professionnels.html#references">Toutes nos références</a>
-        </div>
-        %s%s
+        <h2 id="%s" class="logos__titre">%s</h2>
+        %s
+        <div class="logos__foot"><p>%s</p><a class="link-arrow" href="professionnels.html#references">Voir les %d références</a></div>%s
       </div>
     </section>
-''' % (titre_id, titre_id, h2, intro, marque('C22', '<ul class="logo-wall" data-reveal="cells">%s</ul>' % cells, bloc=True), accords)
+''' % (titre_id, titre_id, h2, marque('C22', '<ul class="logo-wall" data-reveal="cells">%s</ul>' % cells, bloc=True), part, nb_refs(), accords)
 
 
 def refs_bandeau(p):
@@ -190,13 +187,13 @@ def bande_logos(titre='Ils nous ont confié des travaux', titre_id='defile-titre
     """Bande défilante (rappel avant un appel à l'action) : logos en couleur, pause au survol, au focus et au bouton.
     Sans JavaScript ou en mouvement réduit : une rangée statique. La copie qui assure la boucle est créée par main.js."""
     items = ''.join('<li class="mq__item">%s</li>' % logo_img(rid) for rid in _ids(DEFILE))
-    return '''    <section class="defile%s" aria-labelledby="%s">
+    return '''    <div class="defile%s" role="group" aria-labelledby="%s">
       <div class="container defile__head">
         <h2 id="%s" class="defile__titre">%s</h2>
         <button type="button" class="defile__pause js-only" aria-pressed="false" data-mq-pause>Mettre en pause</button>
       </div>
       <div class="mq" data-mq><ul class="mq__track">%s</ul></div>
-    </section>
+    </div>
 ''' % ((' ' + cls) if cls else '', titre_id, titre_id, titre, items)
 
 
@@ -239,7 +236,7 @@ def refs_grille():
         for rid in ids:
             if rid == 'omc':
                 if definitif('C22'):
-                    items += marque('C22', ref_item(rid)) if ctx.MODE == 'verification' else ref_item(rid)
+                    items += re.sub(r'^<li class="([^"]*)">(.*)</li>$', lambda m: '<li class="%s">%s</li>' % (m.group(1), marque('C22', m.group(2))), ref_item(rid))
                 continue
             if rid == 'everness' and not definitif('C22'):
                 items += ref_item(rid, nom='Hôtel à Chavannes-de-Bogis')
@@ -252,6 +249,75 @@ def refs_grille():
                 items += ref_item(rid, nom=nom)
         cols += '<div class="refs-grid__col"><h3>%s</h3><ul class="refs refs--grid">%s</ul></div>' % (titre, items)
     return '<div class="refs-grid">%s</div>' % cols
+
+
+# ---------------------------------------------------------------- badges de confiance (cro-v3 §4) : rendus selon confirmations.json
+def ans_activite():
+    """Années révolues depuis l'inscription au registre du commerce (1.6.2007)."""
+    return AUJOURDHUI.year - 2007 - (1 if (AUJOURDHUI.month, AUJOURDHUI.day) < (6, 1) else 0)
+
+
+I_BADGE = {
+    'registre': '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path class="accent" d="M9 14l2.5 2.5L16 12"/>',
+    'calendrier': '<path d="M4 6h16v14H4z"/><path d="M4 10h16M8 3v5M16 3v5"/><path class="accent" d="M8 15h3"/>',
+    'lieu': '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle class="accent" cx="12" cy="10" r="2.2"/>',
+    'offre': '<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6"/><path class="accent" d="M9 16h4"/>',
+    'facade': '<path d="M3 21h18M4 9h16M12 3l9 6H3z"/><path d="M6 9v9M10 9v9M14 9v9M18 9v9"/><path class="accent" d="M3 21h18"/>',
+    'visite': '<path d="M7 4h10v17H7z"/><path d="M10 3h4v3h-4z"/><path class="accent" d="M9.5 13l2 2 3.5-4"/>',
+    'groupe': '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 11h6"/>',
+    'assurance': '<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path class="accent" d="M9 12l2 2 4-4"/>',
+    'rappel': '<path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/><path class="accent" d="M15 3.5a5.5 5.5 0 0 1 5.5 5.5"/>',
+    'etoile': '<path class="accent" d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+}
+
+
+def _badge(icone, titre, sous, href=None, ext=False, codes=None):
+    t = ('<a href="%s"%s>%s</a>' % (href, ' rel="noopener"' if ext else '', titre)) if href else titre
+    txt = '<span><b>%s</b> %s</span>' % (t, sous)
+    return ('<li><svg class="badge__i" viewBox="0 0 24 24" aria-hidden="true" focusable="false">%s</svg>%s</li>'
+            % (I_BADGE[icone], marque(codes, txt) if codes else txt))
+
+
+def badge(cle):
+    """Un badge (li) ou '' s'il n'est pas publiable dans ce mode."""
+    a = ctx.AVIS or {}
+    if cle == 'B1':
+        return _badge('registre', 'Registre du commerce', 'Inscrite, vérifiable sur Zefix', ZEFIX, ext=True)
+    if cle == 'B2':
+        return _badge('calendrier', 'Depuis 2007', '%d ans d\'activité' % ans_activite())
+    if cle == 'B3':
+        return _badge('lieu', 'Siège à Carouge', 'Toute la Suisse romande', 'contact.html#zone')
+    if cle == 'B4':
+        return _badge('offre', 'Offre écrite', 'Après visite sur place')
+    if cle == 'B5':
+        return _badge('facade', '%d références' % nb_refs(), 'Dont la Ville de Genève', 'professionnels.html#references')
+    if cle == 'B6':
+        return _badge('visite', 'Visite et devis gratuits', 'Sans engagement', codes='C02') if definitif('C02') else ''
+    if cle == 'B7':
+        return _badge('groupe', 'Membre du GGE', 'Entreprises genevoises du bâtiment', GGE, ext=True, codes='C11') if definitif('C11') else ''
+    if cle == 'B8':
+        return _badge('assurance', 'Assurance responsabilité civile', 'Attestation sur demande', codes='C12') if definitif('C12') else ''
+    if cle == 'B9':
+        return _badge('rappel', 'Rappel le jour même', 'Ou le jour ouvrable suivant', codes='C01') if definitif('C01') else ''
+    if cle == 'B13':
+        if (a.get('nombre') or 0) >= 5 and a.get('note'):
+            return _badge('etoile', '%s sur 5' % str(a['note']).replace('.', ','), '%d avis Google' % a['nombre'], a.get('url') or None, ext=True)
+        return ''
+    raise KeyError(cle)
+
+
+def premier(*cles):
+    for k in cles:
+        b = badge(k)
+        if b:
+            return b
+    return ''
+
+
+def badges(cles, cls='', label='En bref'):
+    items = ''.join(badge(k) if not k.startswith('|') else premier(*k[1:].split('|')) for k in cles)
+    return '<ul class="badges%s" aria-label="%s">%s</ul>' % ((' ' + cls) if cls else '', label, items) if items else ''
+
 
 
 # ---------------------------------------------------------------- méthode en 4 étapes (texte unique)
@@ -330,6 +396,24 @@ def pic(pid, sizes, alt, eager=False, cls=''):
             % ((' class="%s"' % cls) if cls else '', srcset, sizes, b, w, h, e(alt), load))
 
 
+_REC = os.path.join(ctx.SITE, 'assets/img/portfolio/recadrages.json')
+RECADRAGES = {r['id']: r.get('recadrages', {}) for r in (json.load(open(_REC, encoding='utf-8')) if os.path.exists(_REC) else [])}
+
+
+def pic_crop(pid, fmt, sizes, alt, eager=False, cls=''):
+    """Recadrage éditorial d'une vraie photo (« 16x9 » ou « 4x5 », credits-images.md §3) ; repli : photo d'origine."""
+    r = RECADRAGES.get(pid, {}).get(fmt)
+    if not r:
+        return pic(pid, sizes, alt, eager=eager, cls=cls)
+    b = r['base']
+    larg = [x for x in r['largeurs'] if x <= 1600]
+    srcset = ', '.join('%s-%d.webp %dw' % (b, x, x) for x in larg)
+    w, h = (1600, round(1600 * r['hauteur'] / r['largeur']))
+    load = 'fetchpriority="high"' if eager else 'loading="lazy"'
+    return ('<picture%s><source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="%d" height="%d" alt="%s" %s decoding="async"></picture>'
+            % ((' class="%s"' % cls) if cls else '', srcset, sizes, b, w, h, e(alt), load))
+
+
 def pic_data(pid):
     """Attributs de la visionneuse (grande image) pour une photo."""
     it = MANIFEST[pid]
@@ -394,6 +478,21 @@ def radios(fid, name, options, legend, statut, aide='', cls='', required=False, 
             % ((' ' + cls) if cls else '', fid, desc, name, legend, statut, aide_html, opts, erreur(fid)))
 
 
+def radios_groupes(fid, name, groupes, legend, statut):
+    """Un seul groupe de boutons radio, présenté en sous-groupes titrés (mêmes name et valeurs : API inchangée)."""
+    blocs, i = '', 0
+    for k, (titre, options) in enumerate(groupes):
+        opts = ''
+        for v, l in options:
+            opts += ('<label class="choice" for="%s-%s"><input type="radio" id="%s-%s" name="%s" value="%s"%s><span>%s</span></label>'
+                     % (fid, v, fid, v, name, v, ' required' if i == 0 else '', l))
+            i += 1
+        blocs += ('<p class="choices__titre" id="%s-g%d">%s</p><div class="choices" role="group" aria-labelledby="%s-g%d">%s</div>'
+                  % (fid, k, titre, fid, k, opts))
+    return ('<fieldset class="group" id="%s" aria-describedby="%s-err" data-champ="%s"><legend>%s%s</legend>%s%s</fieldset>'
+            % (fid, fid, name, legend, statut, blocs, erreur(fid)))
+
+
 def champ(fid, name, label, statut, typ='text', aide='', attrs='', cls=''):
     desc = ' '.join(x for x in [('%s-aide' % fid) if aide else '', '%s-err' % fid] if x)
     aide_html = ('<p class="hint" id="%s-aide">%s</p>' % (fid, aide)) if aide else ''
@@ -422,13 +521,15 @@ def form_devis(source, service=None):
     etape1 = '''<fieldset class="dform__step" data-step="1" data-titre="vos travaux">
             <legend class="dform__legend" tabindex="-1"><span class="dform__num">Étape 1 sur 3</span> Quels travaux souhaitez-vous ?</legend>
             <div class="group" id="d-travaux" data-champ="travaux" aria-describedby="d-travaux-aide d-travaux-err">
-              <p class="hint" id="d-travaux-aide">Vous pouvez en cocher plusieurs.</p>
+              <p class="hint" id="d-travaux-aide">Plusieurs choix possibles.</p>
               <div class="cards">%s</div>
               %s
             </div>
             <div class="dform__actions js-only"><button type="button" class="btn" data-suivant>Continuer : votre projet</button></div>
+            <p class="dform__rassure">%s</p>
             %s
-          </fieldset>''' % (cartes, erreur('d-travaux'), rappel_lien(1))
+          </fieldset>''' % (cartes, erreur('d-travaux'),
+                            T('C02', 'La visite et le devis sont gratuits et sans engagement.', 'Vous décidez une fois l\'offre écrite reçue.'), rappel_lien(1))
 
     etape2 = '''<fieldset class="dform__step" data-step="2" data-titre="votre projet">
             <legend class="dform__legend" tabindex="-1"><span class="dform__num">Étape 2 sur 3</span> Votre projet</legend>
@@ -439,9 +540,10 @@ def form_devis(source, service=None):
             %s
             %s
             <div class="dform__actions js-only"><button type="button" class="btn btn--ghost" data-retour>Retour</button><button type="button" class="btn" data-suivant>Continuer : vos coordonnées</button></div>
+            <p class="dform__rassure">Ces réponses nous aident à préparer la visite.</p>
             %s
           </fieldset>''' % (
-        radios('d-type', 'type_client', TYPE_CLIENT, 'Vous êtes', OBL, required=True),
+        radios_groupes('d-type', 'type_client', [('Particulier', TYPE_CLIENT[:2]), ('Professionnel', TYPE_CLIENT[2:])], 'Vous êtes', OBL),
         champ('d-commune', 'commune', 'Commune des travaux', OBL, aide='Commune ou NPA, par exemple Lancy ou 1212.',
               attrs=' autocomplete="address-level2" required maxlength="80"'),
         radios('d-delai', 'delai', DELAI, 'Quand souhaitez-vous faire les travaux ?', FAC),
@@ -455,10 +557,13 @@ def form_devis(source, service=None):
             <p class="dform__oblig">Les champs obligatoires sont indiqués.</p>
             %(civ)s
             %(nom)s
+            <fieldset class="group group--joindre"><legend>Comment vous joindre ?</legend><p class="hint">Un des deux suffit.</p>
             %(tel)s
             %(mail)s
+            </fieldset>
             %(pref)s
             %(creneau)s
+            <p class="dform__sous">Si vous le souhaitez</p>
             %(msg)s
             <div class="field file-field" data-champ="fichiers">
               <span class="label" id="d-fichiers-label">Photos ou plans%(fac)s</span>
@@ -471,15 +576,17 @@ def form_devis(source, service=None):
             <div class="field" data-champ="connu_par"><label for="d-connu">Comment nous avez-vous connus ?%(fac)s</label><select id="d-connu" name="connu_par" aria-describedby="d-connu-err"><option value="">Choisissez dans la liste</option>%(connu)s</select>%(err_c)s</div>
             %(reco)s
             <div class="dform__actions"><button type="button" class="btn btn--ghost js-only" data-retour>Retour</button><button type="submit" class="btn" data-envoi>Envoyer ma demande</button></div>
+            <p class="dform__rassure">%(rappel)s</p>
             <p class="dform__info">En envoyant ce formulaire, vous nous transmettez vos coordonnées pour traiter votre demande. Elles ne servent à rien d'autre. <a href="confidentialite.html">Protection des données</a></p>
             %(rap)s
           </fieldset>''' % dict(
         civ=radios('d-civ', 'civilite', [('madame', 'Madame'), ('monsieur', 'Monsieur')], 'Civilité', FAC, cls='group--inline'),
         nom=champ('d-nom', 'nom', 'Nom et prénom', OBL, attrs=' autocomplete="name" required maxlength="100"'),
-        tel=champ('d-tel', 'telephone', 'Téléphone', ' <span class="req">(obligatoire si pas d\'e-mail)</span>', typ='tel',
+        tel=champ('d-tel', 'telephone', 'Téléphone', '', typ='tel',
                   aide='Pour vous rappeler et convenir de la visite. Exemple : 079 123 45 67.', attrs=' inputmode="tel" autocomplete="tel" maxlength="30"'),
-        mail=champ('d-mail', 'email', 'E-mail', ' <span class="req">(obligatoire si pas de téléphone)</span>', typ='email',
-                   aide='Pour vous envoyer la confirmation et l\'offre.', attrs=' autocomplete="email" maxlength="254"'),
+        mail=champ('d-mail', 'email', 'E-mail', '', typ='email',
+                   aide='Pour la confirmation et l\'offre écrite.', attrs=' autocomplete="email" maxlength="254"'),
+        rappel=T('C01', 'Nous vous rappelons le jour même ou le jour ouvrable suivant.', 'Nous vous rappelons pendant nos heures de bureau.'),
         pref=radios('d-pref', 'preference_contact', PREF, 'Comment préférez-vous être recontacté(e) ?', FAC),
         creneau=radios('d-creneau', 'creneau', CRENEAU, 'Plutôt…', FAC, aide=creneau_aide, cls='group--inline js-cond'),
         msg=champ('d-msg', 'message', 'Votre projet en quelques mots', FAC, typ='textarea',
@@ -490,10 +597,6 @@ def form_devis(source, service=None):
                    attrs=' maxlength="100"', cls='js-cond'),
         rap=rappel_lien(3))
 
-    reassurance = ''.join('<li>%s</li>' % x for x in [
-        T('C01', 'Nous vous rappelons le jour même ou le jour ouvrable suivant.', 'Nous vous rappelons pendant nos heures de bureau.'),
-        T('C02', 'La visite et le devis sont gratuits et sans engagement.', 'Vous décidez une fois l\'offre écrite reçue.'),
-        'Vos coordonnées servent uniquement à votre demande. Pas de publicité.'])
     return '''<form class="dform" id="d-form" action="api/demande.php" method="post" enctype="multipart/form-data" data-form="devis" data-suivi-formulaire="devis" aria-labelledby="demande-titre"%s>
           %s
           <div class="dform__head js-only" aria-hidden="true"><p class="dform__etape">Étape 1 sur 3</p><div class="dform__bar"><span></span></div></div>
@@ -504,9 +607,7 @@ def form_devis(source, service=None):
           %s
           %s
           <div class="dform__alerte" role="alert" hidden><p data-alerte-texte></p><button type="button" class="btn btn--ghost" data-reessayer>Réessayer</button></div>
-        </form>
-        <ul class="reassurance">%s</ul>''' % ((' data-service="%s"' % service) if service else '', cachés('devis', source),
-                                              etape1, etape2, etape3, reassurance)
+        </form>''' % ((' data-service="%s"' % service) if service else '', cachés('devis', source), etape1, etape2, etape3)
 
 
 def module_rappel(source, seul=False, niveau='h3', service=None):
@@ -534,24 +635,29 @@ def module_rappel(source, seul=False, niveau='h3', service=None):
 
 
 def par_telephone():
-    h = horaires()
-    return '''<div class="phone-box" data-suivi-zone="bloc_demande">
-          <h3>Par téléphone</h3>
-          <p>Bureau : %s</p>
-          <p>%s : %s</p>%s
-        </div>''' % (tel_link(cls='big'), mob_label(), tel_link(numero='mobile', cls='big'), ('<p class="phone-box__h">%s</p>' % h) if h else '')
+    h = horaires(long=False)
+    return ('<div class="appel-box" data-suivi-zone="bloc_demande"><p class="appel-box__t">Ou appelez le</p>'
+            '<p class="appel-box__n">%s</p>%s</div>' % (tel_link(cls='big', emplacement='bloc_demande'), ('<p class="appel-box__h">%s</p>' % h) if h else ''))
 
 
-def bloc_demande(p, service=None, h2='Demander un devis', intro=None, refs=True, source='accueil', surtitre=True):
-    """source : valeur du champ caché (contrat d'interface §3) : accueil, page-placo, professionnels…"""
+def temoignage_court():
+    if not ctx.TEMOIGNAGES:
+        return ''
+    t = ctx.TEMOIGNAGES[0]
+    qui = ', '.join(x for x in [t.get('auteur'), t.get('organisation'), t.get('commune')] if x)
+    return '<figure class="quote quote--court"><blockquote><p>« %s »</p></blockquote><figcaption>%s</figcaption></figure>' % (e(t['texte']), e(qui))
+
+
+def bloc_demande(p, service=None, h2=None, intro=None, refs=True, source='accueil', surtitre=False):
+    """Bloc de demande v3 : formulaire en 3 étapes ; colonne = téléphone, badges B1 B3 B4 (B9 si C01), premier témoignage,
+    rappel replié (ouvert d'office en variante B du drapeau entree-demande). refs : liste courte de références en colonne
+    (pages sans bande défilante juste au-dessus). source : champ caché (contrat d'interface §3)."""
     if intro is None:
-        intro = ('Encore 2 étapes, moins d\'une minute. Nous vous rappelons pour convenir d\'une visite.' if service
-                 else '3 étapes, environ une minute. Nous vous rappelons pour convenir d\'une visite.')
-    st = '<p class="eyebrow">Votre demande</p>\n          ' if surtitre else ''
+        intro = ('Encore <b>2 étapes</b>, moins d\'une minute.' if service else '<b>3 étapes</b>, environ <b>une minute</b>.')
     return '''    <section class="section section--mist demande" id="demande" aria-labelledby="demande-titre" data-suivi-zone="bloc_demande">
       <div class="container">
         <div class="demande__head">
-          %s<h2 id="demande-titre">%s</h2>
+          <h2 id="demande-titre">%s</h2>
           <p class="lead">%s</p>
         </div>
         <div class="demande__grid">
@@ -562,12 +668,15 @@ def bloc_demande(p, service=None, h2='Demander un devis', intro=None, refs=True,
         %s
         %s
         %s
+        <details class="rappel-repli" data-entree-demande><summary>Vous préférez qu'on vous rappelle ?</summary>%s</details>
+        %s
           </div>
         </div>
       </div>
     </section>
-''' % (st, h2, intro, form_devis(source, service), module_rappel('rappel-colonne', service=service), par_telephone(),
-       refs_ligne('refs-line--aside') if refs else '')
+''' % (h2 or libelle_devis(), intro, form_devis(source, service), par_telephone(),
+       badges(['B1', 'B3', '|B9|B4'], cls='badges--clair badges--col', label='Garanties'), temoignage_court(),
+       module_rappel('rappel-colonne', service=service), refs_ligne('refs-line--aside') if refs else '')
 
 
 def cta_band(p, h2='Vous avez un projet ?', texte='Décrivez-le en trois étapes ou appelez-nous : nous convenons d\'une visite.'):

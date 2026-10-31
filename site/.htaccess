@@ -79,7 +79,7 @@ RewriteRule ^prestations\.html$ / [R=301,L]
   # CSP stricte : aucun script ni style en ligne, sauf le script d'amorçage (empreinte ci-dessous).
   # Umami : renseigner umami_src et umami_id dans tools/build/donnees/config.json, puis regénérer.
   <If "%{REQUEST_URI} !~ m#^/api/#">
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-7ZaXWonsvDmBwY+mRNieF+TZ1BpDlxuBmmDBp2S2M2M='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-j2l2RtRi5HpGP6WXkzpyfCT7RtTQvYLiwl0suTMDrD0='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
   </If>
   # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).
   # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
