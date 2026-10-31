@@ -1239,8 +1239,8 @@ def schema_doublage(d: Doc, x, y, w, h_couches):
     """Coupe d'un doublage acoustique : mur existant | écart | ossature + laine | plaques."""
     c = d.c
     yb = y
-    mur_w, ecart, oss_w, pl = 46 * mm, 4 * mm, 40 * mm, 3.2 * mm
-    xm = x + 22 * mm
+    mur_w, ecart, oss_w, pl = 44 * mm, 4 * mm, 38 * mm, 3.2 * mm
+    xm = x + 29 * mm
     hachures(c, xm, yb, mur_w, h_couches)
     xo = xm + mur_w + ecart
     laine(c, xo, yb, oss_w, h_couches)
@@ -1309,8 +1309,8 @@ def schema_contourne(d: Doc, x, y, w, h):
     c.setStrokeColor(GRAPH)
     c.setLineWidth(0.8)
     c.rect(mx + 8.4 * mm, y + ep, 2.6 * mm, h - 2 * ep, stroke=1, fill=1)
-    tv(c, x + 14 * mm, y + ep)
-    arcs(c, x + 29 * mm, y + ep + 8 * mm, [5 * mm, 9.5 * mm, 14 * mm], -40, 80, ROUGE, 1.4)
+    tv(c, x + 6 * mm, y + ep)
+    arcs(c, x + 21 * mm, y + ep + 8 * mm, [5 * mm, 9.5 * mm, 14 * mm], -40, 80, ROUGE, 1.4)
     # Le chemin direct est arrêté
     yd = y + h / 2
     fleche(c, x + 46 * mm, yd, mx - 4.2 * mm, yd, ROUGE, 1.3)
@@ -1326,8 +1326,8 @@ def schema_contourne(d: Doc, x, y, w, h):
         c.setStrokeColor(ROUGE)
         c.setLineWidth(1.3)
         p = c.beginPath()
-        p.moveTo(x + 40 * mm, y1)
-        p.lineTo(x + 46 * mm, ys)
+        p.moveTo(x + 38 * mm, y1)
+        p.lineTo(x + 44 * mm, ys)
         p.lineTo(mx + 22 * mm, ys)
         c.drawPath(p, stroke=1, fill=0)
         c.setDash([], 0)
@@ -1340,60 +1340,62 @@ def schema_contourne(d: Doc, x, y, w, h):
 
 
 def schema_immeuble(d: Doc, x, y, w, h):
-    """Coupe d'un petit immeuble en PPE : lot privé, mur mitoyen, structure, parties communes."""
+    """Coupe d'un petit immeuble en PPE : lot privé, mur mitoyen, structure, partie commune."""
     c = d.c
-    bw = w * 0.56
+    yb = y + 9 * mm                     # place pour l'étiquette du mur mitoyen, sous le dessin
+    h = h - 9 * mm
+    bw = w * 0.58
     ep = 2.6 * mm
     et = (h - ep) / 3
     cage = bw * 0.2
     lot_w = (bw - cage - 3 * ep) / 2
-    # Lot mis en évidence (étage du milieu, à gauche)
-    c.setFillColor(BRUME)
-    c.rect(x + ep, y + ep + et, lot_w, et - ep, stroke=0, fill=1)
-    c.setFillColor(GRIS_M)
-    c.rect(x + ep, y + ep + et, lot_w, et - ep, stroke=0, fill=1)
-    # Cage d'escalier (partie commune) : marches stylisées
     xc = x + bw - ep - cage
+    # Lot privé mis en évidence (étage du milieu, à gauche)
+    c.setFillColor(GRIS_M)
+    c.rect(x + ep, yb + ep + et, lot_w, et - ep, stroke=0, fill=1)
+    # Cage d'escalier (partie commune) : volées stylisées
     c.setStrokeColor(GRAPH)
     c.setLineWidth(0.6)
     for k in range(3):
-        y0 = y + ep + k * et
+        y0 = yb + ep + k * et
         n = 6
         for s in range(n):
-            xs = xc + s * cage / n
+            xs = xc + 1.5 * mm + s * (cage - 3 * mm) / n
             ys = y0 + s * (et - ep) / n
-            c.line(xs, ys, xs + cage / n, ys)
-            c.line(xs + cage / n, ys, xs + cage / n, ys + (et - ep) / n)
-    # Structure : dalles et murs (hachurés)
+            c.line(xs, ys, xs + (cage - 3 * mm) / n, ys)
+            c.line(xs + (cage - 3 * mm) / n, ys, xs + (cage - 3 * mm) / n, ys + (et - ep) / n)
+    # Structure : dalles et murs porteurs (hachurés)
     for k in range(4):
-        hachures(c, x, y + k * et, bw, ep, pas=1.6 * mm)
-    hachures(c, x, y, ep, h, pas=1.6 * mm)
-    hachures(c, x + bw - ep, y, ep, h, pas=1.6 * mm)
-    hachures(c, x + ep + lot_w, y, ep, h, pas=1.6 * mm)            # mur mitoyen entre les deux logements
+        hachures(c, x, yb + k * et, bw, ep, pas=1.6 * mm)
+    hachures(c, x, yb, ep, h, pas=1.6 * mm)
+    hachures(c, x + bw - ep, yb, ep, h, pas=1.6 * mm)
+    hachures(c, x + ep + lot_w, yb, ep, h, pas=1.6 * mm)           # mur mitoyen entre les deux logements
     c.setStrokeColor(GRAPH)
     c.setLineWidth(0.8)
-    c.line(xc, y, xc, y + h)                                        # cloison de la cage d'escalier
+    c.line(xc, yb, xc, yb + h)                                      # cloison de la cage d'escalier
     c.setStrokeColor(ROUGE)
-    c.setLineWidth(1.6)
-    c.rect(x + ep, y + ep + et, lot_w, et - ep, stroke=1, fill=0)
+    c.setLineWidth(1.8)
+    c.rect(x + ep, yb + ep + et, lot_w, et - ep, stroke=1, fill=0)
+    d.para('<font name="Sans-600" color="#1D1F22">Votre lot</font>', ST['schema_c'], x=x + ep, largeur=lot_w,
+           y=yb + ep + et + (et - ep) / 2 + 5, avancer=False, verifier=False)
+    # Mur mitoyen : étiquette sous le dessin
+    xm = x + ep + lot_w + ep / 2
+    c.setStrokeColor(GRAPH)
+    c.setLineWidth(0.5)
+    c.line(xm, yb + 3 * mm, xm, yb - 4 * mm)
+    d.para('Mur mitoyen', ST['schema_c'], x=xm - 20 * mm, largeur=40 * mm, y=yb - 4.6 * mm, avancer=False, verifier=False)
+    # Étiquettes à droite, sans croiser le dessin
+    xl = x + bw + 9 * mm
 
-    xl = x + bw + 8 * mm
-
-    def etiquette(xa, ya, txt, yl):
+    def etiquette(xa, ya, txt):
         c.setStrokeColor(GRAPH)
         c.setLineWidth(0.5)
         c.setFillColor(GRAPH)
         c.circle(xa, ya, 0.6 * mm, stroke=0, fill=1)
-        p = c.beginPath()
-        p.moveTo(xa, ya)
-        p.lineTo(xl - 6 * mm, yl)
-        p.lineTo(xl - 1.5 * mm, yl)
-        c.drawPath(p, stroke=1, fill=0)
-        d.para(txt, ST['schema'], x=xl, largeur=x + w - xl, y=yl + 4.2, avancer=False, verifier=False)
-    etiquette(x + ep + lot_w * 0.5, y + ep + et * 1.5, '<font name="Sans-600" color="#1D1F22">Votre lot</font>', y + h * 0.92)
-    etiquette(x + ep + lot_w + ep / 2, y + h * 0.2, 'Mur mitoyen', y + h * 0.7)
-    etiquette(x + bw * 0.3, y + et * 2 + ep / 2, 'Structure : dalles, murs porteurs', y + h * 0.48)
-    etiquette(xc + cage * 0.5, y + et * 2.5, 'Partie commune : cage d\'escalier', y + h * 0.26)
+        c.line(xa, ya, xl - 1.5 * mm, ya)
+        d.para(txt, ST['schema'], x=xl, largeur=x + w - xl, y=ya + 5.2, avancer=False, verifier=False)
+    etiquette(x + bw - ep / 2, yb + h - ep / 2, 'Structure : dalles, murs porteurs')
+    etiquette(xc + cage * 0.62, yb + ep + et * 1.5, 'Partie commune : cage d\'escalier')
 
 
 def encadre(d: Doc, contenu, pad=6 * mm, barre=True, fond=BRUME, largeur=TXT_W, x=ML):
