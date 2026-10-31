@@ -1,0 +1,384 @@
+[
+  {
+    "id": "faux-plafond-placo-gorge-lumineuse-01",
+    "fichier_source": "P1000782.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          240,
+          4000,
+          2490
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-4x5",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 3000,
+        "cadre_source_px": [
+          880,
+          0,
+          3280,
+          3000
+        ]
+      }
+    }
+  },
+  {
+    "id": "faux-plafond-placo-gorge-lumineuse-02",
+    "fichier_source": "P1000796.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          540,
+          4000,
+          2790
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-4x5",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 3000,
+        "cadre_source_px": [
+          800,
+          0,
+          3200,
+          3000
+        ]
+      }
+    }
+  },
+  {
+    "id": "panneaux-acoustiques-muraux-01",
+    "fichier_source": "P1000517.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          450,
+          4000,
+          2700
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-4x5",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 3000,
+        "cadre_source_px": [
+          480,
+          0,
+          2880,
+          3000
+        ]
+      }
+    }
+  },
+  {
+    "id": "cadre-acoustique-salle-de-reunion-01",
+    "fichier_source": "IMG_3261.jpg",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/cadre-acoustique-salle-de-reunion-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          539,
+          3264,
+          2375
+        ]
+      }
+    }
+  },
+  {
+    "id": "plafond-placo-ilot-ovale-01",
+    "fichier_source": "P1000435.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/plafond-placo-ilot-ovale-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          180,
+          3450,
+          2121
+        ]
+      }
+    }
+  },
+  {
+    "id": "chantier-ossature-puits-de-lumiere-01",
+    "fichier_source": "IMG_5922.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          612,
+          3264,
+          2448
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-4x5",
+        "largeurs": [
+          800,
+          1600
+        ],
+        "largeur": 1600,
+        "hauteur": 2000,
+        "cadre_source_px": [
+          1306,
+          0,
+          3264,
+          2448
+        ]
+      }
+    }
+  },
+  {
+    "id": "chantier-ossature-puits-de-lumiere-02",
+    "fichier_source": "IMG_5924.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          196,
+          2448,
+          1573
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-4x5",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 3000,
+        "cadre_source_px": [
+          0,
+          65,
+          2448,
+          3125
+        ]
+      }
+    }
+  },
+  {
+    "id": "habillage-placo-niches-arrondies-01",
+    "fichier_source": "IMG_3661.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          881,
+          2448,
+          2258
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-4x5",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 3000,
+        "cadre_source_px": [
+          0,
+          163,
+          2448,
+          3223
+        ]
+      }
+    }
+  },
+  {
+    "id": "chantier-suspentes-ossature-01",
+    "fichier_source": "IMG_4395.jpg",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/chantier-suspentes-ossature-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          490,
+          3264,
+          2326
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/chantier-suspentes-ossature-01-4x5",
+        "largeurs": [
+          800,
+          1600
+        ],
+        "largeur": 1600,
+        "hauteur": 1999,
+        "cadre_source_px": [
+          979,
+          0,
+          2938,
+          2448
+        ]
+      }
+    }
+  },
+  {
+    "id": "chantier-salle-de-spectacle-01",
+    "fichier_source": "IMG_6636.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          245,
+          3264,
+          2081
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-4x5",
+        "largeurs": [
+          800,
+          1600
+        ],
+        "largeur": 1600,
+        "hauteur": 2000,
+        "cadre_source_px": [
+          653,
+          0,
+          2611,
+          2448
+        ]
+      }
+    }
+  },
+  {
+    "id": "chantier-salle-de-spectacle-02",
+    "fichier_source": "IMG_6632.JPG",
+    "recadrages": {
+      "16x9": {
+        "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-16x9",
+        "largeurs": [
+          800,
+          1600,
+          2400
+        ],
+        "largeur": 2400,
+        "hauteur": 1350,
+        "cadre_source_px": [
+          0,
+          245,
+          3264,
+          2081
+        ]
+      },
+      "4x5": {
+        "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-4x5",
+        "largeurs": [
+          800,
+          1600
+        ],
+        "largeur": 1600,
+        "hauteur": 1999,
+        "cadre_source_px": [
+          261,
+          0,
+          2220,
+          2448
+        ]
+      }
+    }
+  }
+]

@@ -417,5 +417,35 @@
     "url_page": "https://unsplash.com/photos/white-textured-plaster-wall-surface-0tgMnMIYQ9Y",
     "licence": "Licence Unsplash (https://unsplash.com/license)",
     "illustratif": true
+  },
+  {
+    "id": "hero-lissage-enduit",
+    "type": "video",
+    "base": "assets/video/hero-lissage-enduit",
+    "fichiers": {
+      "webm": "assets/video/hero-lissage-enduit-720.webm",
+      "mp4": "assets/video/hero-lissage-enduit-720.mp4",
+      "poster_webp": "assets/video/hero-lissage-enduit-poster.webp",
+      "poster_jpg": "assets/video/hero-lissage-enduit-poster.jpg"
+    },
+    "sujet": "Lissage d'un enduit à la lame sur un mur blanc (plan de 6,2 s, bouclé par un bref passage au noir)",
+    "usage_conseille": "hero",
+    "orientation": "paysage",
+    "ratio": "16:9",
+    "largeur": 1280,
+    "hauteur": 720,
+    "duree_s": 6.2,
+    "son": false,
+    "poids_octets": {
+      "webm": 505466,
+      "mp4": 1123376
+    },
+    "alt": "Vidéo d'ambiance sans son : un ouvrier lisse l'enduit d'un mur blanc avec une lame à lisser.",
+    "source": "pexels",
+    "auteur": "Tima Miroshnichenko",
+    "url_page": "https://www.pexels.com/video/a-man-using-a-skimming-blade-on-a-wall-6474082/",
+    "licence": "Licence Pexels (https://www.pexels.com/license/)",
+    "illustratif": true,
+    "integration": "<video autoplay muted loop playsinline preload=\"metadata\" poster=\"…-poster.webp\"> : WebM d'abord, MP4 ensuite ; ne pas lancer si prefers-reduced-motion (afficher le poster) ; voile anthracite par-dessus comme pour l'image du héro."
   }
 ]
