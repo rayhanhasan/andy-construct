@@ -38,7 +38,7 @@
 <!-- modele: objections -->
 ```texte
 « Nous avons déjà nos entreprises. »
-→ « C'est normal. Beaucoup de régies gardent une deuxième entreprise pour les périodes chargées. Je vous envoie le dossier, sans engagement ? »
+→ « C'est normal. Certaines régies gardent une deuxième entreprise pour les périodes chargées. Je vous envoie le dossier, sans engagement ? »
 
 « Envoyez-moi un e-mail. »
 → « Volontiers. À quelle adresse ? Je vous envoie le dossier et deux exemples aujourd'hui. » (e-mail de la touche 3 ci-dessous)
@@ -90,3 +90,9 @@ Meilleures salutations,
 
 {{signature}}
 ```
+
+## À valider
+
+- Attestations « prêtes » ou « disponibles sur simple demande » `[À CONFIRMER C12, C13]` : sinon retirer la phrase de l'objection et de l'e-mail.
+- Visite d'un chantier en cours `[À CONFIRMER C40]` : seulement avec l'accord du maître d'ouvrage et des occupants.
+- Lettre trimestrielle : l'accord donné au téléphone est noté (date, canal, associé), puis **confirmé par écrit** (lien de double opt-in) avant tout envoi.

@@ -9,7 +9,9 @@
 | Format | A4, une page, logo en tête, texte 11-12 pt, coordonnées complètes et IDE en pied (identification de l'expéditeur). |
 | Arrêt | Une demande d'arrêt (téléphone, lettre, e-mail) est notée « Ne plus contacter » le jour même. |
 
-Variables : `civilite_destinataire` (« Madame », « Monsieur »), `nom_destinataire`, `fonction`, `organisation`, `adresse_destinataire`, `date`, `reference_1`, `reference_2` (références **publiques et validées** uniquement), `associe`, `mobile_associe`, `commune_chantier`, `description_chantier`.
+Variables : `civilite_destinataire` (« Madame », « Monsieur »), `nom_destinataire`, `fonction`, `organisation`, `adresse_destinataire`, `date`, `reference_1`, `reference_2` (références **publiques et validées** uniquement), `associe`, `mobile_associe`, `commune_chantier`, `description_chantier`, `source_coordonnees` (« l'annuaire local.ch », « le site internet de votre commune » : la source réelle, notée dans le CRM).
+
+Information sur la source des données (touche 1) : les coordonnées du destinataire ne viennent pas de lui ; la première lettre l'informe donc de leur provenance et renvoie à la politique de confidentialité (nLPD art. 19 al. 3 et 5).
 
 ## Touche 1 · Régie, gérance, coopérative
 
@@ -53,6 +55,8 @@ Avec mes meilleures salutations,
 {{associe}}
 Associé · Andy Construct
 {{mobile_associe}} · +41 22 771 20 15
+
+Vos coordonnées professionnelles proviennent de {{source_coordonnees}}. Elles servent uniquement à vous présenter notre entreprise. Comment nous les traitons : www.andyconstruct.ch/confidentialite.html
 ```
 
 ## Touche 1 · Commune, service des bâtiments
@@ -74,6 +78,8 @@ Avec mes meilleures salutations,
 {{associe}}
 Associé · Andy Construct
 {{mobile_associe}} · +41 22 771 20 15
+
+Vos coordonnées professionnelles proviennent de {{source_coordonnees}}. Elles servent uniquement à vous présenter notre entreprise. Comment nous les traitons : www.andyconstruct.ch/confidentialite.html
 ```
 
 ## Touche 4 · Deuxième courrier (contact non joint au téléphone, J+45)
@@ -97,6 +103,7 @@ Associé · Andy Construct
 
 ## À valider avant tout envoi
 
-- « Inscrite au registre du commerce depuis 2007 » (`C` du copy deck) et les références citées (accord écrit pour toute marque privée ; armoiries publiques jamais en logo, programme v2 §4).
-- Disponibilité réelle des attestations (`stratégie` §3.7).
-- Pied de page de la lettre : raison sociale complète, adresse, IDE CHE-113.706.162.
+- « Inscrite au registre du commerce depuis 2007 » et les références citées (`C22` : accord écrit pour toute marque privée ; armoiries publiques jamais en logo, programme v2 §4). Les références sont des travaux réalisés, pas une relation en cours : jamais « nous travaillons pour » ni « partenaire » (décision D5).
+- Disponibilité réelle des attestations `[À CONFIRMER C12, C13, C35]` : sinon retirer la phrase.
+- Lettre régie : protection des lieux, information des locataires, nettoyage `[À CONFIRMER C07, C20]`. Lettre architecte : lots CFC `[C14]` (repli : « CFC 271 »), systèmes acoustiques `[C18]`. « Contre le froid » : définition des cloisons isothermes `[C16]`.
+- Pied de page de la lettre : raison de commerce complète « Andy Construct, Chanton & Cie », adresse, IDE CHE-113.706.162 (art. 954a CO).

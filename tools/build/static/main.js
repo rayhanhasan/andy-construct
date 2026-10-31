@@ -153,6 +153,15 @@
     if (el) el.focus();
   });
 
+  // Une erreur déjà affichée se corrige pendant la frappe : rien ne bouge sous le pointeur au moment de quitter le champ
+  on(d, 'input', function (e) {
+    var f = e.target.form, b = e.target.closest && e.target.closest('[data-champ]');
+    if (!f || !b || !f.hasAttribute('data-form')) return;
+    if (b.classList.contains('has-error')) verifier(f, b.getAttribute('data-champ'));
+    var t = boite(f, 'telephone');
+    if (b.getAttribute('data-champ') === 'email' && t && t.classList.contains('has-error')) verifier(f, 'telephone');
+  });
+
   function alerte(f, msg) {
     var a = $('.dform__alerte', f);
     if (!a) return;
@@ -257,10 +266,10 @@
     on(f, 'input', sauver); on(f, 'change', function (e) { sauver(); conditions(); var b = e.target.closest('[data-champ]'); if (b && b.classList.contains('has-error')) verifier(f, b.getAttribute('data-champ')); });
     on(f, 'focusout', function (e) {
       var b = e.target.closest('[data-champ]');
-      if (!b || e.target.type === 'radio' || e.target.type === 'checkbox') return;
+      if (!b || !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.type === 'radio' || e.target.type === 'checkbox') return;
       var c = b.getAttribute('data-champ');
       if (e.target.value || b.classList.contains('has-error')) verifier(f, c);
-      if (c === 'email') suggestion(e.target);
+      if (c === 'email' && !(e.relatedTarget && e.relatedTarget.closest('.suggestion'))) suggestion(e.target);
       if (c === 'email' && boite(f, 'telephone').classList.contains('has-error')) verifier(f, 'telephone');
     });
     conditions();
@@ -338,7 +347,7 @@
     s.className = 'suggestion';
     s.textContent = 'Vouliez-vous dire ' + p[0] + '@' + mieux + ' ? ';
     btn.type = 'button'; btn.textContent = 'Oui, corriger';
-    on(btn, 'click', function () { inp.value = p[0] + '@' + mieux; s.remove(); inp.focus(); inp.dispatchEvent(new Event('input', { bubbles: true })); });
+    on(btn, 'click', function () { inp.value = p[0] + '@' + mieux; inp.focus(); s.remove(); inp.dispatchEvent(new Event('input', { bubbles: true })); });
     s.appendChild(btn);
     inp.insertAdjacentElement('afterend', s);
   }

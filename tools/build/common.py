@@ -103,7 +103,8 @@ def doc(cle):
         return None
     o = os.path.getsize(src)
     poids = ('%d Ko' % max(1, round(o / 1024))) if o < 1024 * 1024 else ('%s Mo' % ('%.1f' % (o / 1048576)).replace('.', ','))
-    return chemin, '%s, %s' % (fmt, poids)
+    pages = len(re.findall(rb'/Type\s*/Page[^s]', open(src, 'rb').read())) if chemin.endswith('.pdf') else 0
+    return chemin, '%s, %s' % (fmt, poids), pages
 
 
 # ---------------------------------------------------------------- ressources versionnées (remplies par build.py)

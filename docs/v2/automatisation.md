@@ -297,18 +297,20 @@ Entreprise de moins de 250 personnes sans traitement à risque élevé : dispens
 
 | Traitement | Finalité | Personnes | Données | Fondement / justification | Destinataires et sous-traitants (pays) | Durée de conservation | Mesures |
 |---|---|---|---|---|---|---|---|
-| Demandes de devis et de rappel | Répondre à la demande, rappeler, établir une offre | Prospects, clients | Civilité, nom, téléphone, e-mail, commune ou NPA, type de travaux, surface, délai, message, photos et plans, préférence de contact, source de la visite | Demande de la personne (exécution précontractuelle) ; information (art. 19) | Associés ; hébergeur du site (*pays à confirmer*) ; Infomaniak (n8n, CH) ; Pipedrive (UE) ; messagerie du domaine (*CH à confirmer*) ; ASPSMS (CH) ; agence (gestion) | Prospect non converti : 24 mois après le dernier contact (purge WF04p) ; fichiers sur le serveur web : 30 jours ; client : voir « contrats » | HTTPS, HMAC, accès par rôles, journaux sans données personnelles, purge automatique |
-| Priorisation des demandes (score) | Ordonner les rappels | Prospects | Données de la demande | Intérêt prépondérant ; profilage simple, **sans décision automatisée** (toutes les demandes sont rappelées, un humain décide) | Idem | Avec la demande | Grille documentée, recalibrée |
-| Suivi des offres et des chantiers | Relances de service, organisation, réception, demande d'avis | Clients | Coordonnées, montants, dates, étapes | Contrat | Pipedrive (UE), SMTP, ASPSMS (CH) | Pièces comptables et contractuelles : 10 ans (CO 958f) ; données CRM : 5 ans après la réception (responsabilité pour les défauts, CO 371), puis revue | Accès limité aux associés et à l'agence |
-| Envoi postal des guides et conseils par e-mail | Envoyer le guide imprimé ; deux conseils par e-mail si demandés | Visiteurs | Nom, adresse postale, e-mail facultatif, profil | Demande de la personne ; accord explicite pour les conseils (case non cochée) | Pipedrive (UE), Brevo (UE), Pingen (CH) si utilisé | Adresse : jusqu'à l'envoi + 3 mois ; contact Brevo : jusqu'à la désinscription ou 24 mois sans interaction | Désinscription en un clic, liste d'opposition |
-| Entretien et informations aux clients | Proposer un contrôle, rafraîchissements des régies | Clients informés de leur droit d'opposition | Coordonnées, type de travaux, date | Exception « clients » (LCD art. 3 al. 1 let. o) | SMTP | Tant que la relation dure, opposition possible à tout moment | Plafond d'un message par 30 jours |
-| Prospection B2B | Se faire connaître des régies, architectes, communes | Contacts professionnels nommés | Nom, fonction, organisation, adresse postale et téléphone professionnels (annuaires), résultats d'appel | Intérêt prépondérant ; courrier et appel (astérisque respecté) ; **aucun e-mail sans accord** | Pipedrive (UE), Pingen (CH) | « Ne plus contacter » : conservé pour respecter l'opposition ; autres : 24 mois sans réponse | Vérification de l'astérisque, arrêt immédiat sur demande |
-| Statistiques du site | Mesurer l'audience et les contacts web | Visiteurs | Pages vues, référent, appareil, pays, événements (sans donnée saisie), UTM | Intérêt prépondérant ; données anonymes, sans cookie ; Do Not Track respecté | Umami auto-hébergé (CH) | 24 mois (*réglage Umami à confirmer*) | Pas d'adresse IP stockée par Umami, pas de cookie |
-| Attribution des demandes | Savoir quelle campagne amène des demandes | Visiteurs qui envoient un formulaire | UTM, référent, page d'entrée (stockage de session de l'onglet) | Intérêt prépondérant, information et opposition (Do Not Track) | Avec la demande | Effacé à la fermeture de l'onglet ; puis avec la demande | Aucun envoi à un tiers |
-| Sécurité du formulaire | Bloquer les robots et les abus | Visiteurs | Empreinte hachée de l'adresse IP, horodatages | Intérêt prépondérant (sécurité) | Hébergeur | 24 h | Hachage avec secret, purge automatique |
+| Demandes de devis et de rappel | Répondre à la demande, rappeler, établir une offre ; remercier la personne qui a recommandé | Prospects, clients ; personne qui a recommandé (nom seulement) | Civilité, nom, téléphone, e-mail, commune ou NPA, type de client, type de travaux, surface, délai, message, photos et plans, préférence de contact et créneau, « connu par », nom de la personne qui a recommandé, source de la visite (page d'envoi, page d'entrée, référent, UTM ; `gclid` seulement avec consentement) | Demande de la personne (mesures précontractuelles) ; information (art. 19) par la mention sous le formulaire et la politique | Associés ; agence ; hébergeur du site (*pays à confirmer*) ; messagerie du domaine (*fournisseur et pays à confirmer*) ; Infomaniak (n8n, CH) ; Pipedrive (UE) ; ASPSMS (CH) | Prospect non converti : 24 mois après le dernier contact (WF04p : liste envoyée à l'agence, effacement manuel tant que `AC_PURGE_AUTO=false`) ; e-mails internes et pièces jointes dans les boîtes des associés : même durée (*purge manuelle à organiser*) ; fichiers sur le serveur web : 30 jours ; historique des exécutions n8n : 30 jours ; client : voir « Suivi » | HTTPS, HMAC, accès par rôles, journaux sans données personnelles, purge des fichiers |
+| Priorisation des demandes (score) | Ordonner les rappels | Prospects | Données de la demande, dont la source de la visite | Intérêt prépondérant ; profilage simple, **sans décision automatisée** (toutes les demandes sont rappelées, un humain décide) ; mentionné dans la politique | Idem | Avec la demande | Grille documentée, recalibrée |
+| Suivi des offres et des chantiers | Relances de service (3 au plus en 3 semaines), organisation, réception, demande d'avis (J+2, relance J+9), recontact unique à 6 mois si la personne l'a demandé | Prospects ayant reçu une offre, clients | Coordonnées, montants, dates, étapes, motif de perte, `recontact_autorise` | Contrat et mesures précontractuelles ; demande expresse pour le recontact à 6 mois | Pipedrive (UE), messagerie du domaine, ASPSMS (CH) | Pièces comptables et contractuelles : 10 ans (CO 958f) ; données CRM : 5 ans après la réception (responsabilité pour les défauts, CO 371), puis revue | Accès limité aux associés et à l'agence ; toute réponse ou « STOP » arrête les relances (WF14 ; *WF03d à corriger*) |
+| Publication de photos et de témoignages | Montrer des réalisations | Clients | Photos du chantier (sans visage), commune, texte du témoignage, choix et date de l'accord | Consentement (e-mail J+14), révocable | Public : site, fiche Google (Google, Irlande / États-Unis), page LinkedIn, dossier de références | Tant que l'accord n'est pas retiré ; preuve de l'accord conservée avec le dossier client | Aucune publication sans accord daté dans le CRM |
+| Envoi postal des guides et conseils par e-mail | Envoyer le guide imprimé ; deux conseils par e-mail si demandés | Visiteurs | Civilité, nom, adresse postale, e-mail facultatif, profil, accord pour les conseils | Demande de la personne ; accord explicite pour les conseils (case non cochée) | Pipedrive (UE), Brevo (UE, seulement si conseils), Pingen (CH) si utilisé | Adresse postale : 3 mois après l'envoi (*procédure à créer : l'adresse est dans la note de la tâche Pipedrive*) ; contact Brevo : jusqu'à la désinscription, 24 mois au plus | Désinscription par lien ou « STOP », liste d'opposition. **WF07 crée aussi une tâche « Appel de courtoisie » pour les profils professionnels : finalité non annoncée, à désactiver ou à annoncer** |
+| Entretien et informations aux clients | Proposer un contrôle, faire le point à un an, rafraîchissements des régies | Clients informés de leur droit d'opposition | Coordonnées, type de travaux, date de réception | Exception « clients » (LCD art. 3 al. 1 let. o) ; information donnée à la commande | Messagerie du domaine | Tant que la relation dure, opposition possible à tout moment | Un message marketing par 30 jours au plus ; `opposition_marketing` vérifié |
+| Prospection B2B | Se faire connaître des régies, architectes, communes | Contacts professionnels nommés | Nom, fonction, organisation, adresse postale et téléphone professionnels, source des coordonnées (annuaire, site de l'organisation), résultats d'appel | Intérêt prépondérant ; courrier et appel (astérisque respecté) ; **aucun e-mail sans accord** ; source indiquée dans la première lettre (art. 19 al. 3) | Pipedrive (UE), Pingen (CH) | « Ne plus contacter » : conservé pour respecter l'opposition ; autres : 24 mois sans réponse | Vérification de l'astérisque, arrêt immédiat sur demande |
+| Statistiques du site | Mesurer l'audience et les contacts web | Visiteurs | Pages vues, référent, appareil et navigateur, pays ou région (déduits de l'adresse IP, qui n'est pas conservée), événements (sans donnée saisie), UTM | Intérêt prépondérant ; données sans nom, sans cookie ; Do Not Track et GPC respectés | Umami auto-hébergé (VPS Infomaniak, CH) | 24 mois (*Umami n'efface rien seul : tâche de purge à prévoir*) | Pas d'adresse IP stockée par Umami, pas de cookie |
+| Attribution des demandes | Savoir quelle campagne amène des demandes | Visiteurs qui envoient un formulaire | Page d'entrée, référent, UTM, repère « formulaire commencé » (stockage de session de l'onglet) | Intérêt prépondérant ; information (art. 45c LTC) et refus possible (Do Not Track, GPC, réglages du navigateur) | Avec la demande | Effacé à la fermeture de l'onglet ; puis avec la demande | Aucun envoi à un tiers |
+| Sécurité du formulaire | Bloquer les robots et les abus | Visiteurs | Empreinte HMAC de l'adresse IP, horodatages | Intérêt prépondérant (sécurité) | Hébergeur | Empreinte complète : 24 h ; 12 caractères de l'empreinte dans le journal : 30 jours | Hachage avec secret, purge automatique |
+| Journaux du serveur web | Exploitation et sécurité de l'hébergement | Visiteurs | Adresse IP, date, page demandée, navigateur | Intérêt prépondérant (sécurité) | Hébergeur (*pays à confirmer*) | *Durée de l'hébergeur à relever* | Accès réservé à l'hébergeur et à l'agence |
 | Supervision technique | Détecter les pannes | — | Références de demandes, messages d'erreur nettoyés | Intérêt prépondérant | Healthchecks.io (UE), agence | 30 jours | Masquage des adresses et numéros |
 
-**Sous-traitants** (DPA à archiver) : hébergeur du site, Infomaniak (VPS), Pipedrive OÜ (UE, *région d'hébergement à confirmer dans le DPA*), Sendinblue SAS / Brevo (UE), ASPSMS (CH), Pingen (CH, si utilisé), Healthchecks.io (UE), agence Harbor Digital. **Transferts hors de Suisse** : vers l'UE uniquement (niveau adéquat, OPDo annexe 1). Google (Places, Search Console) ne reçoit **aucune** donnée de prospect.
+**Sous-traitants** (DPA à archiver) : hébergeur du site, fournisseur de messagerie du domaine, Infomaniak (VPS), Pipedrive OÜ (UE, *région d'hébergement à confirmer dans le DPA*), Sendinblue SAS / Brevo (UE), ASPSMS (CH), Pingen (CH, si utilisé), Healthchecks.io (UE), agence Harbor Digital (*pays à confirmer*). **Transferts hors de Suisse** : vers l'UE (niveau adéquat, OPDo annexe 1), *sous réserve des sous-traitants ultérieurs de Pipedrive et de Brevo, à vérifier dans leurs DPA* ; photos publiées avec accord sur la fiche Google (Google, communication publique). Google (Places, Search Console) ne reçoit **aucune** donnée de prospect.
 
 ---
 
@@ -324,44 +326,72 @@ Entreprise de moins de 250 personnes sans traitement à risque élevé : dispens
 > Andy Construct, Chanton & Cie, société en nom collectif, Route des Acacias 48, 1227 Carouge, IDE CHE-113.706.162. Pour toute question sur vos données : contact@andyconstruct.ch [à confirmer] ou +41 22 771 20 15.
 >
 > #### Ce que nous recevons quand vous nous écrivez
-> Quand vous demandez un devis ou un rappel, nous recevons les informations que vous saisissez : votre nom, votre numéro de téléphone ou votre adresse e-mail, la commune des travaux, le type de travaux, la surface et le délai si vous les indiquez, votre message et les photos ou plans que vous joignez. Nous recevons aussi, pour savoir comment notre site est trouvé, la page par laquelle vous êtes arrivé(e) et, le cas échéant, le nom de la campagne publicitaire (paramètres « utm »).
+> Quand vous demandez un devis ou un rappel, nous recevons ce que vous saisissez : votre nom (et votre civilité si vous l'indiquez), votre numéro de téléphone ou votre adresse e-mail, la commune des travaux, le type de travaux, votre situation (propriétaire, régie, architecte…), la surface et le délai, votre préférence de contact, votre message et les photos ou plans que vous joignez. Si vous nous dites comment vous nous avez connus, ou qui vous a recommandé Andy Construct, nous le recevons aussi.
 >
-> Ces informations servent **uniquement** à traiter votre demande : vous rappeler, convenir d'une visite, vous remettre une offre et, si vous nous confiez les travaux, organiser le chantier. Elles ne sont ni vendues ni utilisées pour de la publicité.
+> Le formulaire nous transmet aussi, pour savoir comment notre site est trouvé : la page d'où vous l'envoyez, la page par laquelle vous êtes arrivé(e), le site d'où vous veniez (un moteur de recherche, par exemple) et, le cas échéant, le nom de la campagne publicitaire (paramètres « utm »).
+>
+> #### À quoi elles servent
+> Ces informations servent à traiter votre demande : vous rappeler, convenir d'une visite, vous remettre une offre et, si vous nous confiez les travaux, organiser et suivre le chantier. La provenance de votre visite nous sert aussi à compter, sans vous nommer, les pages et les campagnes qui amènent des demandes. Le nom de la personne qui vous a recommandé(e) sert uniquement à la remercier.
+>
+> Nous ne vendons pas vos données et nous ne les utilisons pas pour de la publicité. Seule exception : si vous devenez client et que nous vous en avons informé(e) à la commande, nous pouvons vous écrire au sujet de prestations semblables (voir « Après un chantier »).
 >
 > #### Comment nous traitons votre demande
-> Pour rappeler chacun dans un délai raisonnable, nous classons les demandes par ordre de priorité, selon le type de travaux, leur ampleur, le lieu et le délai indiqués. **Toutes les demandes sont rappelées** et c'est toujours une personne qui décide de la suite.
+> Pour rappeler chacun dans un délai raisonnable, nous classons les demandes par ordre de priorité, selon les informations de la demande (type de travaux et de client, ampleur, lieu, délai, provenance). **Toutes les demandes sont rappelées** et c'est toujours une personne qui décide de la suite.
 >
-> Vous recevez un e-mail de confirmation si vous avez donné votre adresse, ou un SMS si vous n'avez laissé qu'un numéro de portable. Si nous vous envoyons une offre, nous pouvons vous demander, une ou deux fois, si vous avez des questions. Une simple réponse arrête ces messages.
+> Vous recevez un e-mail de confirmation si vous avez donné votre adresse, ou un SMS si vous n'avez laissé qu'un numéro de portable. Si nous n'arrivons pas à vous joindre, nous vous l'écrivons ; après trois essais sans réponse, nous classons la demande et ne vous relançons plus.
+>
+> Après l'envoi d'une offre, nous pouvons vous écrire ou vous appeler au plus trois fois en trois semaines, pour savoir si vous avez des questions. Une simple réponse arrête ces messages. Si vous nous dites que votre projet est reporté et que nous pouvons vous recontacter, nous vous écrivons une seule fois, environ six mois plus tard.
 >
 > #### Le guide imprimé et les conseils par e-mail
-> Nos guides se téléchargent librement, sans inscription. Si vous demandez la version imprimée, nous utilisons votre nom et votre adresse uniquement pour vous l'envoyer. Si vous avez coché la case prévue, nous vous envoyons aussi deux e-mails de conseils sur le même sujet, puis plus rien. Chaque e-mail contient un lien pour vous désinscrire ; vous pouvez aussi répondre « STOP ».
+> Nos guides se téléchargent librement, sans inscription. Si vous demandez la version imprimée, nous utilisons votre nom et votre adresse postale uniquement pour vous l'envoyer. Si vous donnez votre e-mail, vous recevez une confirmation. Si vous avez coché la case prévue, nous vous envoyons aussi deux e-mails de conseils sur le même sujet, puis plus rien. Chaque e-mail contient un lien pour vous désinscrire ; vous pouvez aussi répondre « STOP ».
 >
 > #### Après un chantier
-> Nous vous demandons un avis une fois le chantier terminé (une seule relance au plus). Si nous vous avons informé(e) de ce droit au moment de la commande, nous pouvons vous écrire occasionnellement au sujet de prestations semblables, par exemple un contrôle des peintures deux ans après. Vous pouvez vous y opposer à tout moment, gratuitement, en répondant « STOP » ou par le lien en bas de chaque message.
+> Une fois le chantier terminé, nous vous demandons votre avis, par e-mail (et par SMS pour les particuliers), avec une seule relance au plus. Nous le demandons à tous nos clients, sans tri et sans contrepartie. Nous vous demandons aussi si nous pouvons montrer des photos de votre chantier : nous ne publions rien sans votre accord, et vous pouvez le retirer à tout moment.
+>
+> Si nous vous avons informé(e) de ce droit au moment de la commande, nous pouvons vous écrire de temps en temps au sujet de prestations semblables, par exemple pour faire le point un an après les travaux. Vous pouvez vous y opposer à tout moment, gratuitement, en répondant « STOP » ou par le lien en bas de chaque message.
+>
+> #### Si vous êtes un professionnel que nous contactons
+> Nous écrivons et téléphonons à des régies, des bureaux d'architectes, des communes et des entreprises pour présenter notre travail. Nous utilisons alors le nom, la fonction et les coordonnées professionnelles (adresse, téléphone) d'une personne de contact, trouvés dans un annuaire public ou sur le site de son organisation, et nos notes sur la suite donnée. Nous n'envoyons pas d'e-mail publicitaire sans votre accord et nous respectons l'astérisque de l'annuaire. Sur simple demande, nous ne vous contactons plus. Sans suite de votre part, ces données sont effacées après 24 mois.
 >
 > #### Qui d'autre voit vos données
-> Seuls les associés d'Andy Construct et notre agence web (Harbor Digital, pour la maintenance) y ont accès. Nous faisons appel à des prestataires techniques, liés par un contrat de protection des données :
-> - [hébergeur du site, pays] pour la réception du formulaire ;
-> - Infomaniak (Suisse) pour l'outil d'automatisation et les statistiques ;
-> - Pipedrive (Union européenne) pour le suivi des demandes ;
-> - Brevo (France, UE) pour les e-mails de conseils, si vous les avez demandés ;
-> - ASPSMS (Suisse) pour l'envoi des SMS.
+> Seuls les associés d'Andy Construct et notre agence web (Harbor Digital, [pays], pour la mise en place et la maintenance) y ont accès. Nous faisons appel à des prestataires techniques, liés par un contrat de protection des données :
+> - [hébergeur du site, pays] pour le site et la réception du formulaire ;
+> - [fournisseur de messagerie, pays] pour nos e-mails ;
+> - Infomaniak (Suisse) pour le serveur de l'outil d'automatisation et des statistiques ;
+> - Pipedrive (Union européenne) pour le suivi des demandes et des chantiers ;
+> - Brevo (France, Union européenne) pour les e-mails de conseils, si vous les avez demandés ;
+> - ASPSMS (Suisse) pour l'envoi des SMS ;
+> - [Pingen (Suisse) pour l'impression et l'envoi des courriers, si utilisé] ;
+> - Healthchecks.io (Union européenne) pour la surveillance technique, sans vos coordonnées.
 >
-> Vos données sont hébergées en Suisse ou dans l'Union européenne, dont le niveau de protection est reconnu par le Conseil fédéral.
+> Vos données sont hébergées en Suisse ou dans l'Union européenne, dont le niveau de protection est reconnu par le Conseil fédéral. [Si un prestataire ultérieur de Pipedrive ou de Brevo accède aux données depuis un autre pays, l'indiquer ici avec la garantie utilisée.] Les photos que vous nous autorisez à publier sont visibles par tous sur les supports choisis, dont notre fiche Google.
 >
 > #### Combien de temps nous les gardons
-> - Photos et plans envoyés par le formulaire : 30 jours sur notre serveur web, ensuite seulement dans le dossier de votre demande.
 > - Demande sans suite : 24 mois après notre dernier contact, puis effacement.
-> - Clients : les documents comptables et contractuels 10 ans (obligation légale), les autres données le temps de la garantie des travaux (5 ans au plus), puis revue.
-> - Adresse IP (protection contre les abus du formulaire) : sous forme chiffrée, 24 heures au plus.
+> - Photos et plans envoyés par le formulaire : 30 jours sur le serveur du site ; ensuite seulement dans le dossier de votre demande (outil de suivi et messagerie des associés), avec la même durée que la demande.
+> - Clients : les documents comptables et contractuels 10 ans (obligation légale) ; les autres données le temps de notre responsabilité pour les défauts (5 ans après la réception des travaux), puis revue.
+> - Adresse postale donnée pour le guide imprimé : 3 mois après l'envoi.
+> - Adresse e-mail donnée pour les conseils : jusqu'à votre désinscription, et 24 mois au plus.
+> - Si vous refusez nos messages : nous gardons votre adresse sous une forme codée, uniquement pour respecter ce refus.
+> - Adresse IP : notre formulaire ne l'enregistre jamais en clair. Une empreinte codée sert 24 heures à bloquer les abus ; un extrait de cette empreinte reste 30 jours dans le journal technique.
+> - Journaux techniques de l'hébergeur (adresse IP, pages demandées) : [durée à confirmer auprès de l'hébergeur].
+> - Historique de l'outil d'automatisation : 30 jours. Sauvegardes : remplacées en quatre semaines au plus.
 >
 > #### Statistiques du site, sans cookie
-> Notre site n'utilise **aucun cookie**. Nous mesurons l'audience avec Umami, installé sur notre propre serveur en Suisse : il compte les pages vues et les clics sur le téléphone ou les boutons, sans vous identifier et sans conserver votre adresse IP. Le site garde aussi, le temps que l'onglet reste ouvert (« stockage de session » de votre navigateur), la provenance de votre visite, pour la joindre à votre demande si vous en envoyez une ; rien n'est transmis à un tiers.
+> Notre site n'utilise **aucun cookie**. Nous mesurons l'audience avec Umami, installé sur un serveur que nous louons en Suisse (Infomaniak). Il compte les pages vues et les clics sur le téléphone ou les boutons, et note le site d'où vous venez, le type d'appareil et de navigateur, et le pays ou la région. Il ne vous identifie pas et ne conserve pas votre adresse IP. Ce que vous tapez dans les formulaires ne lui est jamais envoyé. Ces statistiques sont gardées [24 mois].
 >
-> Si votre navigateur envoie le signal « Ne pas me pister » (Do Not Track) ou « Global Privacy Control », aucune mesure n'est faite et rien n'est enregistré dans votre navigateur. [Si un bandeau de consentement est ajouté pour Google Ads : décrire ici les balises, leur finalité, Google comme destinataire (États-Unis, cadre de protection des données Suisse–États-Unis), et le lien « Paramètres des cookies ».]
+> Le site garde aussi dans votre navigateur, le temps que l'onglet reste ouvert (« stockage de session »), la provenance de votre visite, pour la joindre à votre demande si vous en envoyez une, et un repère indiquant que vous avez commencé un formulaire. Rien n'est transmis à un tiers, et tout disparaît quand vous fermez l'onglet.
+>
+> Si votre navigateur envoie le signal « Ne pas me pister » (Do Not Track) ou « Global Privacy Control », aucune mesure n'est faite et rien n'est enregistré dans votre navigateur. Vous pouvez aussi bloquer ce stockage dans les réglages de votre navigateur : le site et le formulaire fonctionnent quand même. [Si un bandeau de consentement est ajouté pour Google Ads : décrire ici les balises, leur finalité, Google comme destinataire (États-Unis, cadre de protection des données Suisse–États-Unis), et le lien « Paramètres des cookies ».]
 >
 > #### Vos droits
-> Vous pouvez à tout moment demander quelles données nous avons sur vous, les faire corriger ou effacer (sous réserve de nos obligations légales de conservation), et vous opposer à tout message de notre part. Écrivez-nous à contact@andyconstruct.ch [à confirmer] ou par courrier à l'adresse ci-dessus : nous répondons dans les 30 jours. Si vous estimez que vos droits ne sont pas respectés, vous pouvez vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT), www.edoeb.admin.ch.
+> Vous pouvez à tout moment, gratuitement :
+> - savoir quelles données nous avons sur vous et en recevoir une copie, sous forme électronique si vous le souhaitez ;
+> - les faire corriger ;
+> - les faire effacer, sous réserve de nos obligations légales de conservation ;
+> - retirer un accord donné (conseils par e-mail, photos) et vous opposer à tout message de notre part.
+>
+> Écrivez-nous à contact@andyconstruct.ch [à confirmer] ou par courrier à l'adresse ci-dessus : nous répondons dans les 30 jours. Si vous estimez que vos droits ne sont pas respectés, vous pouvez vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT), www.edoeb.admin.ch.
 >
 > *Dernière mise à jour : [date de mise en ligne].*
 
@@ -373,7 +403,8 @@ Entreprise de moins de 250 personnes sans traitement à risque élevé : dispens
 - [ ] DPA signés ou acceptés (hébergeur, Infomaniak, Pipedrive, Brevo, ASPSMS, Pingen, agence) et archivés
 - [ ] SPF, DKIM, DMARC en place ; test mail-tester ≥ 9/10 pour `site@` et pour Brevo
 - [ ] Rôles « bureau » et « terrain » confirmés ; horaires et délais de rappel confirmés (copy deck C01, C03)
-- [ ] Politique de confidentialité relue par le juriste et publiée (`/confidentialite.html`)
+- [ ] Politique de confidentialité relue par le juriste et publiée (`/confidentialite.html`) ; le texte de `tools/build/page_autres.py` reprend la version corrigée du §9 (relecture du 31.10.2026)
+- [ ] Points bloquants de `docs/v2/qa/relecture-juridique-copy.md` (check-list) levés
 
 **Hébergement PHP**
 - [ ] `config.php` rempli, **`mode_test => false`**, `n8n.simuler => false`, trois secrets distincts de 64 caractères

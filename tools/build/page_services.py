@@ -175,10 +175,10 @@ def acoustique():
     if guide:
         specifique = '''<div class="guide">
           <h2 id="guide-titre">Guide : réduire le bruit chez soi</h2>
-          <p>Ce qui marche, ce qui ne marche pas, et les questions à poser à une entreprise, quelle qu'elle soit. 8 pages, 10 minutes de lecture.</p>
+          <p>Ce qui marche, ce qui ne marche pas, et les questions à poser à une entreprise, quelle qu'elle soit. %d pages, 10 minutes de lecture.</p>
           <p><a class="btn" href="%s" %s>Télécharger le guide (%s)</a></p>
           %s
-        </div>''' % (guide[0], suivi_doc('guide-bruit'), guide[1], c.form_guide_poste('guide-reduire-le-bruit'))
+        </div>''' % (guide[2], guide[0], suivi_doc('guide-bruit'), guide[1], c.form_guide_poste('guide-reduire-le-bruit'))
     p6, p7 = pf.PROJ['projet-correction-acoustique'], pf.PROJ['projet-salle-de-reunion']
     cartes = ''.join(pf.carte_projet(p, '(min-width: 1000px) 560px, (min-width: 640px) 45vw, 100vw', ancre=False) for p in (p6, p7) if pf.proj_ok(p))
     refs = (marque('C23', '<div class="refs-svc"><p>Réalisé notamment pour :</p>%s</div>' % c.refs_service(['conservatoire-musique-geneve', 'head-geneve', 'collonge-bellerive']), bloc=True)

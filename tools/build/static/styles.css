@@ -360,7 +360,10 @@ div.vc > .vc__code { position: absolute; top: -10px; right: -6px; font-size: 1re
 .section--mist .encadre { background: var(--white); }
 .encadre h2 { font-size: clamp(1.375rem, 1.2rem + .7vw, 1.75rem); }
 .encadre p:last-child, .encadre ul:last-child { margin-bottom: 0; }
-.guide { display: grid; gap: 8px; }
+.guide { padding: clamp(24px, 3vw, 36px); background: var(--mist); border-left: 4px solid var(--red); }
+.guide h2 { font-size: clamp(1.375rem, 1.2rem + .7vw, 1.75rem); }
+.guide .poste { margin-top: 4px; }
+.guide .gform { background: var(--white); }
 
 /* 15. Projets et visionneuse */
 .projets { display: grid; gap: 36px var(--gap); }
@@ -571,7 +574,7 @@ div.vc > .vc__code { position: absolute; top: -10px; right: -6px; font-size: 1re
 /* 19. Contact */
 .contact__grid { display: grid; gap: var(--gap); }
 @media (min-width: 1000px) {
-  .contact__grid { grid-template-columns: 5fr 7fr; grid-template-areas: "appel forms" "reste forms"; align-items: start; column-gap: calc(var(--gap) * 1.5); }
+  .contact__grid { grid-template-columns: 5fr 7fr; grid-template-rows: auto 1fr; grid-template-areas: "appel forms" "reste forms"; align-items: start; column-gap: calc(var(--gap) * 1.5); }
   .contact__appel { grid-area: appel; } .contact__forms { grid-area: forms; } .contact__reste { grid-area: reste; }
 }
 .contact__forms { display: grid; gap: 24px; }

@@ -303,6 +303,32 @@ echo json_encode(['corps' => $corps, 'ts' => (string) $ts, 'sig' => Webhook::sig
         ok('jeton : créé par n8n, vérifié par le PHP')
     else:
         erreur('wf12', f'jeton n8n refusé par le PHP : {verif}')
+    # Sécurité (docs/v2/qa/securite.md) : jeton suivi d'une injection HTML → refusé ; valeur échappée.
+    injection = '."><meta http-equiv="refresh" content="0;url=https://evil.example/">'
+    for fichier, nom_noeud, donnees in (('wf02-actions-un-clic.json', 'Page de confirmation', "{ a: 'offre-autre', d: 42 }"),
+                                        ('wf12-desinscription.json', 'Page de confirmation', "{ a: 'stop', e: 'x@exemple.ch' }")):
+        r = executer(code_page[debut:fin] + f"\nreturn creerJeton({donnees}, 3600);", env=env)
+        jeton_ok = r.get('resultat', '')
+        page_ok = executer(noeud(fichier, nom_noeud), entrees=[{'query': {'t': jeton_ok}}], env=env).get('resultat', [{}])[0].get('json', {})
+        page_inj = executer(noeud(fichier, nom_noeud), entrees=[{'query': {'t': jeton_ok + injection}}], env=env).get('resultat', [{}])[0].get('json', {})
+        if ('value="' + jeton_ok + '"') in page_ok.get('html', '') and 'evil.example' not in page_inj.get('html', '') and '<form' not in page_inj.get('html', ''):
+            ok(f'sécurité : {fichier[:4]} refuse un jeton suivi de HTML (« jeton.<balise> ») et n\'injecte rien dans la page')
+        else:
+            erreur(fichier, f'injection HTML par le paramètre t : {page_inj.get("html", "")[:300]}')
+    # Signature de même longueur en caractères mais pas en octets : refus propre, sans exception.
+    sig_multi = 'sha256=' + 'é' * 64
+    r = executer(code_hmac, entrees=[{**entete, 'headers': {'x-ac-timestamp': p['ts'], 'x-ac-signature': sig_multi}}], env=env, binaire=p['corps'])
+    if r.get('resultat', [{}])[0].get('json', {}).get('valide') is False and 'exception' not in r:
+        ok('sécurité : signature HMAC à caractères multi-octets refusée sans exception (comparaison en octets)')
+    else:
+        erreur('wf01', f'signature multi-octets : {r}')
+    code_action = noeud('wf02-actions-un-clic.json', "Vérifier le jeton et l'usage unique")
+    r = executer(code_action, entrees=[{'body': {'t': p['jeton'][:-1] + 'é', 'choix': 'contact-etabli'}}], env=env)
+    if r.get('resultat', [{}])[0].get('json', {}).get('valide') is False and 'exception' not in r:
+        ok('sécurité : jeton à signature multi-octets refusé sans exception (WF02)')
+    else:
+        erreur('wf02', f'jeton multi-octets : {r}')
+
     # Exécution à blanc de « Préparer la demande » (luxon nécessaire)
     r = executer(noeud('wf01-nouvelle-demande.json', 'Préparer la demande'), entrees=[{'demande': json.loads(p['corps'])}], env=env, luxon=True)
     if r.get('ignore'):
@@ -333,6 +359,15 @@ echo json_encode(['corps' => $corps, 'ts' => (string) $ts, 'sig' => Webhook::sig
         ok('WF02 à blanc : « Pas de réponse » → SMS sans lien, tâche demain 10 h, tentatives = 1')
     else:
         erreur('wf02', f'« Pas de réponse » inattendu : {r}')
+    # WF03 à blanc : nom saisi dans le formulaire (repris par Pipedrive) échappé dans l'e-mail d'escalade.
+    retard = {'id': 7, 'k_ref': 'AC-2026-0007', 'k_sla': '2020-01-06T08:00:00+01:00', 'k_niv': 0, 'k_prio': 'A', 'k_com': '<b>Lancy</b>',
+              'person_id': {'name': '<img src=//evil.example/p.gif>', 'phone': []}, 'user_id': {'id': 11, 'name': 'Caroline'}}
+    r = executer(noeud('wf03-rappel-non-fait.json', 'Délais dépassés'), entrees=[{'data': [retard]}], env=env, luxon=True)
+    html = ((r.get('resultat') or [{}])[0].get('json', {}).get('courriel') or {}).get('html', '')
+    if html and '<img' not in html and '&lt;img' in html and '<b>' not in html:
+        ok('sécurité : WF03 échappe le nom et la commune dans l\'e-mail d\'escalade (HTML)')
+    else:
+        erreur('wf03', f'e-mail d\'escalade non échappé : {r if not html else html[:300]}')
 
 
 def main():

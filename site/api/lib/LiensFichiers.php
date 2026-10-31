@@ -10,7 +10,7 @@ namespace AndyConstruct\Api;
  */
 final class LiensFichiers
 {
-    public const MOTIF_ID = '/^[a-f0-9]{32}\.(jpg|png|heic|pdf)$/';
+    public const MOTIF_ID = '/^[a-f0-9]{32}\.(jpg|png|heic|pdf)$/D';
 
     public function __construct(private string $urlApi, private string $secret)
     {
@@ -28,7 +28,7 @@ final class LiensFichiers
 
     public function verifier(string $id, string $exp, string $sig, ?int $maintenant = null): bool
     {
-        if (!preg_match(self::MOTIF_ID, $id) || !ctype_digit($exp) || !preg_match('/^[a-f0-9]{64}$/', $sig)) {
+        if (!preg_match(self::MOTIF_ID, $id) || !ctype_digit($exp) || !preg_match('/^[a-f0-9]{64}$/D', $sig)) {
             return false;
         }
         if ((int) $exp < ($maintenant ?? time())) {

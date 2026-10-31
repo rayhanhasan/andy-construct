@@ -39,7 +39,7 @@ Objet : Des questions sur notre offre ?
 
 {{salutation}},
 
-Il est normal de comparer plusieurs offres. Pour faciliter la comparaison, la nôtre détaille chaque poste ; elle comprend la protection des lieux, le nettoyage et la réception du chantier avec vous.
+Il est normal de comparer plusieurs offres. Si un point de la nôtre mérite une explication, je vous la donne volontiers.
 
 Si un détail mérite d'être revu sur place, je peux repasser. Une réponse à ce message suffit.
 
@@ -105,5 +105,6 @@ Sans action, elle sera close automatiquement à J+45, sans message au client.
 
 ## À valider avant la mise en production
 
-- J+10 : « protection des lieux, nettoyage et réception du chantier » doit correspondre à la méthode réellement appliquée (`contenus-a-valider.md`).
+- J+10 : texte de repli tant que `C06` et `C07` ne sont pas confirmés. Une fois confirmés, la 1re phrase peut redevenir : « Pour faciliter la comparaison, la nôtre détaille chaque poste ; elle comprend la protection des lieux, le nettoyage et la réception du chantier avec vous. »
 - Validité des offres : si elle est inférieure à 45 jours, le J+21 mentionne la date de validité **réelle**, jamais une fausse échéance.
+- Nombre de messages écrits : avec un téléphone connu, J+3 et J+21 (J+10 devient un appel) ; **sans téléphone, J+3, J+10 et J+21 font trois e-mails**, au-delà du plafond « deux relances écrites ». Choisir : ne pas envoyer le J+10 par e-mail, ou assumer trois messages (la politique de confidentialité dit « au plus trois fois en trois semaines »).

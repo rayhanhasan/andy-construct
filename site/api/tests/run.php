@@ -8,6 +8,10 @@
  */
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404); // jamais depuis le web (hébergeur qui ignorerait tests/.htaccess)
+    exit;
+}
 require dirname(__DIR__) . '/lib/bootstrap.php';
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
@@ -637,6 +641,101 @@ viderMails($stock);
 $r = $tr->executer(serveur(['REMOTE_ADDR' => '192.0.2.62']), [], $guidePoste + ['email' => 'claire@exemple.ch', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 5)], [], $maintenantTr);
 $guide = (string) current(array_filter(array_map('texteMail', mails($stock)), static fn ($m) => str_contains($m, 'claire@exemple.ch') && str_contains($m, 'nous vous envoyons le guide')));
 ok($guide !== '' && !str_contains($guide, 'conseils sur ce sujet') && !str_contains($guide, 'ac-stop'), 'guide sans accord : aucun conseil annoncé, aucune séquence');
+viderMails($stock);
+
+// ------------------------------------------- sécurité (constats de docs/v2/qa/securite.md)
+groupe('Sécurité : limite de débit, IPv6 et en-têtes de proxy (S-04, S-05)');
+egal('2001:db8:1:2::/64', LimiteDebit::cle('2001:db8:1:2:aaaa:bbbb:cccc:dddd'), 'IPv6 ramenée à son préfixe /64');
+egal('198.51.100.7', LimiteDebit::cle('::ffff:198.51.100.7'), 'IPv4 encapsulée (::ffff:…) ramenée à l\'IPv4');
+$ld6 = new LimiteDebit(new Stockage($tmp . '/limites-ipv6'), SECRET_LOCAL);
+$res = [];
+for ($i = 1; $i <= 6; $i++) {
+    $res[] = $ld6->tenter('2001:db8:1:2::' . dechex($i * 4099), 'demandes', 5, 1_800_000_000 + $i)['autorise'];
+}
+egal([true, true, true, true, true, false], $res, 'IPv6 : changer d\'adresse dans le même /64 ne contourne pas la limite');
+ok($ld6->tenter('2001:db8:1:3::1', 'demandes', 5, 1_800_000_010)['autorise'], 'IPv6 : un autre /64 n\'est pas concerné');
+$forge = ['REMOTE_ADDR' => '203.0.113.50', 'HTTP_X_FORWARDED_FOR' => '6.6.6.6, 198.51.100.9', 'HTTP_CF_CONNECTING_IP' => '7.7.7.7'];
+egal('203.0.113.50', LimiteDebit::ipClient($forge, false), 'sans confiance au proxy : REMOTE_ADDR, en-têtes ignorés');
+egal('203.0.113.50', LimiteDebit::ipClient($forge, true, ['173.245.48.0/20']), 'connexion directe (hors proxys de confiance) : en-têtes forgés ignorés');
+egal('7.7.7.7', LimiteDebit::ipClient(['REMOTE_ADDR' => '173.245.48.10'] + $forge, true, ['173.245.48.0/20']), 'via un proxy de confiance (Cloudflare) : CF-Connecting-IP');
+egal('198.51.100.9', LimiteDebit::ipClient(['REMOTE_ADDR' => '10.0.0.2', 'HTTP_X_FORWARDED_FOR' => '6.6.6.6, 198.51.100.9, 10.0.0.1'], true, ['10.0.0.0/8']), 'X-Forwarded-For lu de droite à gauche : l\'entrée forgée (à gauche) est ignorée');
+egal('198.51.100.9', LimiteDebit::ipClient(['REMOTE_ADDR' => '10.0.0.2', 'HTTP_X_FORWARDED_FOR' => '6.6.6.6, 198.51.100.9'], true), 'sans liste de proxys : entrée la plus à droite (ajoutée par le proxy)');
+ok(LimiteDebit::dansPlages('2400:cb00::1', ['2400:cb00::/32']) && !LimiteDebit::dansPlages('2400:cb01::1', ['2400:cb00::/32'])
+    && LimiteDebit::dansPlages('10.1.2.3', ['10.0.0.0/8']) && !LimiteDebit::dansPlages('11.0.0.1', ['10.0.0.0/8']) && LimiteDebit::dansPlages('192.0.2.1', ['192.0.2.1']), 'plages CIDR IPv4 et IPv6');
+
+groupe('Sécurité : formulaire utilisé comme relais d\'e-mails (S-01)');
+$stockRelais = dossierTemporaire();
+$trR = new Traitement(configTest($stockRelais, ['anti_spam' => ['accuses_par_heure' => 4]]), false);
+$nbMails = static fn (string $categorie): int => count(glob($stockRelais . "/test-mails/*-$categorie-*.eml") ?: []);
+for ($i = 1; $i <= 4; $i++) {
+    $r = $trR->executer(serveur(['REMOTE_ADDR' => "198.51.100.$i"]), [], postDevis(['email' => 'victime@exemple.org', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)]), [], $maintenantTr);
+}
+ok($r->statut === 200 && $nbMails('interne') === 4, 'même adresse depuis 4 IP : les 4 demandes sont traitées (e-mail interne)');
+egal(3, $nbMails('accuse'), 'accusés de réception plafonnés à 3 par adresse sur 24 h');
+$statutsAccuse = array_map(static fn ($f) => json_decode(explode("\n\n", (string) file_get_contents($f), 2)[1], true)['accuse_reception'] ?? null, glob($stockRelais . '/test-webhooks/*.json') ?: []);
+sort($statutsAccuse);
+egal(['envoye', 'envoye', 'envoye', 'limite'], $statutsAccuse, 'webhook : accuse_reception = « limite » pour la 4e demande');
+foreach (['autre1@exemple.org', 'autre2@exemple.org'] as $i => $adresse) {
+    $trR->executer(serveur(['REMOTE_ADDR' => '198.51.100.' . (10 + $i)]), [], postDevis(['email' => $adresse, 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)]), [], $maintenantTr);
+}
+egal(4, $nbMails('accuse'), 'plafond global des accusés par heure (ici 4) : le suivant ne part pas');
+viderMails($stockRelais);
+$r = $trR->executer(serveur(['REMOTE_ADDR' => '198.51.100.20']), [], array_merge($guidePoste, ['adresse' => 'https://evil.example/phish?gagne=1', 'email' => 'cible@exemple.org', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 5)]), [], $maintenantTr);
+ok($r->statut === 200 && $r->corps['ref'] === null && mails($stockRelais) === [], 'lien dans l\'adresse d\'envoi du guide → leurre, aucun e-mail');
+$trR2 = new Traitement(configTest(dossierTemporaire()), false);
+$r = $trR2->executer(serveur(['REMOTE_ADDR' => '198.51.100.21']), [], postDevis(['nom' => 'GAGNANT iPhone reclamez-le sur bit.ly/xyz ou gain-facile.com', 'email' => 'cible@exemple.org', 'message' => 'Offre : promo-casino.net/bonus', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)]), [], $maintenantTr);
+$stockR2 = (new \ReflectionProperty($trR2, 'stockage'))->getValue($trR2)->racine();
+$accuseR = texteMail((string) current(glob($stockR2 . '/test-mails/*-accuse-*.eml') ?: ['']) ? (string) file_get_contents((string) current(glob($stockR2 . '/test-mails/*-accuse-*.eml'))) : '');
+preg_match_all('~href="([^"]+)"~', $accuseR, $liensAccuse);
+ok($accuseR !== '' && !str_contains($accuseR, 'bit.ly') && !str_contains($accuseR, 'gain-facile.com') && !str_contains($accuseR, 'promo-casino') && str_contains($accuseR, '[lien]'), 'accusé : domaines saisis par le visiteur masqués (nom, message), y compris l\'en-tête To');
+ok($liensAccuse[1] !== [] && array_filter($liensAccuse[1], static fn ($u) => !str_starts_with($u, 'https://www.andyconstruct.ch/')) === [], 'accusé : seuls des liens vers le site de l\'entreprise sont cliquables');
+egal('Rte.de Lausanne 12, St.Gallen', Modeles::neutraliserLiens('Rte.de Lausanne 12, St.Gallen'), 'abréviations courantes (« Rte.de », « St.Gallen ») non touchées');
+supprimer($stockRelais);
+supprimer($stockR2);
+
+groupe('Sécurité : balisage dans les champs d\'identité (S-07)');
+$stockHtml = dossierTemporaire();
+$trH = new Traitement(configTest($stockHtml), false);
+$trH->executer(serveur(['REMOTE_ADDR' => '198.51.100.30']), [], postDevis(['nom' => '<img src=//evil.example/p.gif>Dupont', 'commune' => '<b>Carouge</b>', 'form_t0' => $as->creerJeton($maintenantTr->getTimestamp() - 40)]), [], $maintenantTr);
+$chargeH = json_decode(explode("\n\n", (string) file_get_contents((string) current(glob($stockHtml . '/test-webhooks/*.json') ?: [''])), 2)[1] ?? 'null', true);
+ok(is_array($chargeH) && !str_contains($chargeH['contact']['nom'] . $chargeH['projet']['commune'], '<') && str_contains($chargeH['contact']['nom'], 'Dupont'), 'webhook : chevrons retirés du nom et de la commune (aucune balise transmise à n8n / Pipedrive)');
+supprimer($stockHtml);
+
+groupe('Sécurité : PDF actifs cachés (S-03)');
+$objstm = static function (string $corps, bool $double = false, string $prefixe = ''): string {
+    $z = gzcompress($prefixe . '3 0 ' . $corps);
+    $z = $double ? gzcompress($z) : $z;
+    return "%PDF-1.5\n1 0 obj\n<< /Type /Catalog /OpenAction 3 0 R >>\nendobj\n4 0 obj\n<< /Type /ObjStm /N 1 /First 4 /Filter /FlateDecode /Length " . strlen($z) . " >>\nstream\n$z\nendstream\nendobj\n%%EOF\n";
+};
+$dossierPdf = dossierTemporaire();
+$pdfs = [
+    'objstm' => [$objstm('<< /S /JavaScript /JS (app.alert(1)) >>'), 'JavaScript dans un flux d\'objets compressé (/ObjStm)'],
+    'double' => [$objstm('<< /S /JavaScript /JS (app.alert(1)) >>', true), 'JavaScript sous deux couches FlateDecode'],
+    'commentaire_long' => [$objstm('<< /S /Launch /F (cmd.exe) >>', false, '%' . str_repeat('x', 5000) . "\n"), 'action Launch derrière un long commentaire'],
+    'commentaire' => ["%PDF-1.4\n1 0 obj << /Type /Catalog /OpenAction 2 0 R >> endobj\n2 0 obj << /S/JavaScript>> /JS%x\n(app.alert(1)) >> endobj\n%%EOF\n", '« /S/JavaScript>> » et « /JS%commentaire »'],
+    'xfa' => ["%PDF-1.7\n1 0 obj << /AcroForm << /XFA 5 0 R >> >> endobj\n%%EOF\n", 'formulaire XFA'],
+    'ascii85' => ["%PDF-1.4\n1 0 obj << /Filter /ASCII85Decode /Length 3 >> stream\nabc\nendstream endobj\n%%EOF\n", 'filtre ASCII85 (non inspectable)'],
+];
+foreach ($pdfs as $cle => [$contenu, $description]) {
+    file_put_contents("$dossierPdf/$cle.pdf", $contenu);
+    [$enr, $err, $raison] = $tv->traiter([entreeFichier("$dossierPdf/$cle.pdf")]);
+    ok($enr === [] && $raison === 'contenu_actif', "PDF refusé : $description", (string) $raison);
+}
+$c = deflate_init(ZLIB_ENCODING_DEFLATE);
+$page = deflate_add($c, str_repeat("0.5 w 10 20 m 30 40 l S\n", 20000), ZLIB_FINISH);
+file_put_contents("$dossierPdf/plan.pdf", $objstm('<< /Type /Page /MediaBox [0 0 595 842] /Contents 5 0 R >>') . "5 0 obj\n<< /Filter /FlateDecode /Length " . strlen($page) . " >>\nstream\n$page\nendstream\nendobj\n");
+[$enr, $err] = $tv->traiter([entreeFichier("$dossierPdf/plan.pdf")]);
+egal(null, $err, 'PDF de plan ordinaire (flux d\'objets et dessin compressés) accepté');
+supprimer($dossierPdf);
+
+groupe('Sécurité : robustesse et en-têtes (S-12, S-14, S-15)');
+$r = $tr->executer(serveur(['REMOTE_ADDR' => '198.51.100.40']), [], ['formulaire' => ['x'], 'nom' => 'X'], [], $maintenantTr);
+egal(422, $r->statut, 'formulaire envoyé en tableau → 422, sans avertissement PHP');
+egal([['name' => 'a', 'tmp_name' => '', 'error' => UPLOAD_ERR_OK, 'size' => 0]], Televersement::aplatir(['fichier' => ['name' => 'a', 'tmp_name' => ['x'], 'error' => '0', 'size' => ['z']]]), 'structure $_FILES forgée : aucun avertissement, chemin vide');
+$exp = 1_800_000_000;
+ok(!$lf->verifier(str_repeat('a', 32) . ".pdf\n", (string) $exp, hash_hmac('sha256', 'fichier|' . str_repeat('a', 32) . ".pdf\n|$exp", SECRET_LOCAL), 1_700_000_000), 'fichier.php : identifiant terminé par un saut de ligne refusé (ancre $ avec /D)');
+$r = $tr->executer(['REQUEST_METHOD' => 'POST', 'REMOTE_ADDR' => '198.51.100.41', 'HTTP_REFERER' => "javascript://www.andyconstruct.ch/%0Aalert(1)"], [], ['formulaire' => 'devis'], [], $maintenantTr);
+ok($r->forme === 'html' && !str_contains($r->html, 'javascript:') && str_contains($r->html, '/contact.html#formulaire'), 'page d\'erreur : référent « javascript: » ignoré (lien de retour par défaut)');
 viderMails($stock);
 
 // ------------------------------------------------------ webhook réel (faux n8n)

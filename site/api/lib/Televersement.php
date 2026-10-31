@@ -196,24 +196,30 @@ final class Televersement
             && in_array(substr($debut, 8, 4), self::MARQUES_HEIF, true);
     }
 
-    /** Volume décompressé inspecté au plus par PDF (au-delà : refus prudent). */
-    private const PDF_BUDGET_DECOMPRESSION = 48 * 1048576;
+    /** Volume décompressé inspecté au plus par PDF (au-delà : refus prudent, bombe de décompression). */
+    private const PDF_BUDGET_DECOMPRESSION = 256 * 1048576;
+
+    /** Un nom PDF se termine sur un blanc ou un délimiteur, dont « > », « ] » et « % » (commentaire). */
+    private const FIN_NOM = '(?![^\s\0()<>\[\]{}/%])';
 
     /**
      * Un PDF qui contient du JavaScript, des actions de lancement, des fichiers intégrés,
-     * du contenu riche ou un formulaire XFA est refusé. Les objets peuvent être cachés
-     * dans des flux compressés (FlateDecode, flux d'objets /ObjStm) : ces flux sont
-     * décompressés (volume plafonné) et inspectés. Un PDF qu'on ne peut pas inspecter
-     * (filtres LZW / ASCII85 / ASCIIHex, flux d'objets chiffrés, bombe de décompression)
-     * est refusé par prudence : le visiteur est invité à l'envoyer par e-mail.
+     * du contenu riche ou un formulaire XFA est refusé.
+     *
+     * Ces objets peuvent être cachés dans des flux compressés (FlateDecode, flux d'objets
+     * /ObjStm, filtres en cascade) : les flux zlib qui contiennent des objets ou du texte
+     * sont décompressés (volume plafonné) et inspectés ; les images sont ignorées. Un PDF
+     * qu'on ne peut pas inspecter (filtres LZW / ASCII85 / ASCIIHex, flux d'objets
+     * chiffrés, bombe de décompression) est refusé par prudence : le visiteur est invité à
+     * l'envoyer par e-mail.
      */
     public static function pdfActif(string $contenu): bool
     {
-        if (self::nomsPdfActifs($contenu)) {
+        $normalise = self::normaliserNomsPdf($contenu);
+        if (preg_match('~/(JavaScript|JS|Launch|EmbeddedFiles?|RichMedia|XFA)' . self::FIN_NOM . '~', $normalise)) {
             return true;
         }
-        $normalise = self::normaliserNomsPdf($contenu);
-        if (preg_match('~/(LZWDecode|ASCII85Decode|ASCIIHexDecode|LZW|A85|AHx)(?![^\s()<>\[\]{}/%])~', $normalise)
+        if (preg_match('~/(LZWDecode|ASCII85Decode|ASCIIHexDecode|LZW|A85|AHx)' . self::FIN_NOM . '~', $normalise)
             || (str_contains($normalise, '/Encrypt') && str_contains($normalise, '/ObjStm'))) {
             return true;
         }
@@ -226,15 +232,8 @@ final class Televersement
             }
             $depart = $pos + (($contenu[$pos] ?? '') === "\r" ? 1 : 0);
             $depart += ($contenu[$depart] ?? '') === "\n" ? 1 : 0;
-            $flux = self::decompresser($contenu, $depart, $budget);
-            for ($niveau = 0; $flux !== null && $niveau < 3; $niveau++) {
-                if ($flux === false) {
-                    return true; // trop volumineux une fois décompressé
-                }
-                if (self::nomsPdfActifs($flux)) {
-                    return true;
-                }
-                $flux = self::decompresser($flux, 0, $budget); // filtres Flate en cascade
+            if (self::fluxActif($contenu, $depart, $budget, 0)) {
+                return true;
             }
         }
         return false;
@@ -246,52 +245,81 @@ final class Televersement
         return preg_replace_callback('/#([0-9A-Fa-f]{2})/', static fn ($m) => chr((int) hexdec($m[1])), $contenu) ?? $contenu;
     }
 
-    private static function nomsPdfActifs(string $contenu): bool
-    {
-        // Un nom PDF se termine sur un blanc ou un délimiteur, y compris « > », « ] » et « % »
-        // (commentaire) : « /S/JavaScript>> », « /JS%x\n(...) ».
-        return (bool) preg_match(
-            '~/(JavaScript|JS|Launch|EmbeddedFile|EmbeddedFiles|RichMedia|XFA)(?![^\s()<>\[\]{}/%])~',
-            self::normaliserNomsPdf($contenu)
-        );
-    }
-
-    /**
-     * Décompresse un flux zlib (FlateDecode) commençant à $depart, par morceaux, en
-     * s'arrêtant à la fin du flux zlib (et non au mot « endstream », que des données
-     * non compressées pourraient contenir pour tronquer l'inspection).
-     *
-     * @return string|false|null texte décompressé ; false si le budget est dépassé ;
-     *   null si ce n'est pas un flux zlib (image JPEG, etc.)
-     */
-    private static function decompresser(string $donnees, int $depart, int &$budget): string|false|null
+    private static function enteteZlib(string $donnees, int $depart): bool
     {
         $b0 = ord($donnees[$depart] ?? "\0");
         $b1 = ord($donnees[$depart + 1] ?? "\0");
-        if (($b0 & 0x0F) !== 8 || (($b0 << 8) | $b1) % 31 !== 0) {
-            return null;
+        return ($b0 & 0x0F) === 8 && (($b0 << 8) | $b1) % 31 === 0;
+    }
+
+    /**
+     * Décompresse par morceaux le flux zlib qui commence à $depart (s'il y en a un) et
+     * l'inspecte. La fin est celle du flux zlib, pas le mot « endstream » (que des
+     * données non compressées pourraient contenir pour tronquer l'inspection).
+     * Les noms courts (/JS) ne sont pas cherchés dans le décompressé : une action
+     * JavaScript exige aussi « /S /JavaScript », et « /JS » apparaîtrait par hasard
+     * dans des données binaires.
+     *
+     * @return bool true si un nom actif est trouvé ou si le budget est épuisé
+     */
+    private static function fluxActif(string $donnees, int $depart, int &$budget, int $niveau): bool
+    {
+        if (!self::enteteZlib($donnees, $depart)) {
+            return false;
         }
         $contexte = @inflate_init(ZLIB_ENCODING_DEFLATE);
         if ($contexte === false) {
-            return null;
+            return false;
         }
-        $sortie = '';
+        $motif = '~/(JavaScript|Launch|EmbeddedFiles?|RichMedia|XFA)' . self::FIN_NOM . '~';
+        $mode = null; // null : indécis ; texte : objets ou opérateurs ; imbrique : zlib dans zlib
+        $tampon = '';
         $longueur = strlen($donnees);
         for ($i = $depart; $i < $longueur; $i += 8192) {
             $morceau = @inflate_add($contexte, substr($donnees, $i, 8192), ZLIB_SYNC_FLUSH);
             if ($morceau === false) {
                 break; // données corrompues : on inspecte ce qui a été décompressé
             }
-            $sortie .= $morceau;
-            if (strlen($sortie) > $budget) {
-                return false;
+            $budget -= strlen($morceau);
+            if ($budget < 0) {
+                return true;
             }
-            if (inflate_get_status($contexte) === ZLIB_STREAM_END) {
+            $tampon .= $morceau;
+            $fini = inflate_get_status($contexte) === ZLIB_STREAM_END;
+            if ($mode === null) {
+                // Un flux d'objets commence par des paires d'entiers (après d'éventuels blancs ou
+                // commentaires) ; une image, par des octets quelconques : elle est ignorée.
+                $debut = preg_replace('/^(?:[\s\0]|%[^\r\n]*(?:\r\n?|\n))*/', '', $tampon) ?? '';
+                if (($debut === '' || $debut[0] === '%') && !$fini && strlen($tampon) < 1048576) {
+                    continue;
+                }
+                $mode = self::enteteZlib($tampon, 0) && $niveau < 3 ? 'imbrique'
+                    : (($debut === '' || $debut[0] === '%' || preg_match('/^[+\-]?\d/', $debut)) ? 'texte' : 'image');
+                if ($mode === 'image') {
+                    return false;
+                }
+            }
+            if ($mode === 'texte') {
+                if (preg_match($motif, self::normaliserNomsPdf($tampon))) {
+                    return true;
+                }
+                $tampon = substr($tampon, -64); // chevauchement : un nom à cheval sur deux morceaux
+            } elseif ($mode === 'imbrique' && strlen($tampon) > 32 * 1048576) {
+                return true; // filtre en cascade démesuré : refus prudent (mémoire)
+            }
+            if ($fini) {
                 break;
             }
         }
-        $budget -= strlen($sortie);
-        return $sortie;
+        if ($mode === 'imbrique') {
+            return self::fluxActif($tampon, 0, $budget, $niveau + 1);
+        }
+        if ($mode === null && $tampon !== '') {
+            return self::enteteZlib($tampon, 0) && $niveau < 3
+                ? self::fluxActif($tampon, 0, $budget, $niveau + 1)
+                : (bool) preg_match($motif, self::normaliserNomsPdf($tampon));
+        }
+        return false;
     }
 
     public static function nomAffichable(string $nom): string

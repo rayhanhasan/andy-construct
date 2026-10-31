@@ -122,8 +122,8 @@ L'année est produite au build.
 2. « La visite et le devis sont gratuits et sans engagement. » `[À CONFIRMER C02]` Repli : « Vous décidez une fois l'offre écrite reçue. »
 3. « Vos coordonnées servent uniquement à votre demande. Pas de publicité. »
 
-**Case de consentement** (tant que l'API l'exige) : « J'accepte que mes coordonnées servent uniquement à traiter ma demande (protection des données). »
-**Mention d'information** (si la case est retirée après avis du juriste) : « En envoyant ce formulaire, vous nous transmettez vos coordonnées pour traiter votre demande. Elles ne servent à rien d'autre. » + lien « Protection des données ».
+**Case de consentement** : abandonnée (décision D2 ; l'API ignore le champ `accord`). Ancien libellé, pour mémoire : « J'accepte que mes coordonnées servent uniquement à traiter ma demande (protection des données). »
+**Mention d'information** (texte retenu, D2), sous le bouton d'envoi : « En envoyant ce formulaire, vous nous transmettez vos coordonnées pour traiter votre demande. Elles ne servent à rien d'autre. » + lien « Protection des données ». `[À VÉRIFIER : relecture juridique, voir docs/v2/qa/relecture-juridique-copy.md]`
 
 **Sous chaque bouton d'étape** : « Vous préférez qu'on vous rappelle ? » (lien vers le module). Le numéro n'est pas répété ici : il figure dans la colonne « Par téléphone » à côté du formulaire, dans l'en-tête et dans la barre mobile.
 
@@ -975,7 +975,7 @@ Ligne de références courte (§A.6).
 - E-mail : contact@andyconstruct.ch `[C30]`
 
 **H2 « Hébergement »**
-- « Le site est hébergé par {{nom de l'hébergeur}}, {{adresse}}, en Suisse. » `[À CONFIRMER C34]` Repli : « Le site est hébergé en Suisse. »
+- « Le site est hébergé par {{nom de l'hébergeur}}, {{adresse}}, {{pays}}. » `[À CONFIRMER C34]` Repli : ligne masquée (ne jamais écrire « en Suisse » tant que l'hébergeur de production n'est pas connu ; la préproduction, sur harbor-digital.fr, ne l'est pas forcément).
 - « Conception et réalisation : Harbor Digital. »
 
 **H2 « Propriété des contenus »**
@@ -1402,7 +1402,7 @@ Une question par identifiant. **P1** = bloquant avant la mise en ligne (affiché
 | C25 | Photos : technique posée, type de bâtiment et commune de chaque projet (P1 à P8) ; accord du poseur visible (IMG_5922) ; accord du client dont le slogan est lisible (P1000435) ; prestation réalisée dans la salle de spectacle ; confirmez-vous que toutes les photos sont vos réalisations ? | Accueil, réalisations, pages services | Légendes de repli (ce que montre la photo) ; photos concernées retirées si l'accord manque |
 | C29 | Route des Acacias 48 : y a-t-il un bureau où l'on peut vous rencontrer, ou est-ce une adresse de domiciliation ? Peut-on retirer Chêne-Bourg partout ? | Contact, pied, fiche Google | Adresse affichée sans « sur rendez-vous » |
 | C30 | Adresse e-mail sur le domaine (contact@andyconstruct.ch) ? Numéro principal : le fixe ? Peut-on présenter le mobile comme « sur les chantiers » ? | Partout | andy.construct@bluewin.ch ; mobile présenté comme « Mobile » |
-| C34 | Nom et adresse de l'hébergeur de production | Mentions légales | « Le site est hébergé en Suisse » |
+| C34 | Nom, adresse et pays de l'hébergeur de production | Mentions légales, confidentialité | Ligne masquée (pas de « en Suisse » sans confirmation) |
 
 ### R.2 Priorité 2 (conversion et preuve)
 

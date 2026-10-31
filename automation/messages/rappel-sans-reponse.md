@@ -8,7 +8,9 @@
 | Expéditeur | Associé attribué, depuis son adresse du domaine (les réponses arrivent chez lui) |
 | Règles | 1er essai : ce message + tâche « Rappeler » le lendemain à 10 h. 3e essai en 5 jours ouvrables : message de clôture, affaire « perdue, sans réponse », **aucune relance à 6 mois**. Toute réponse arrête la séquence (WF14). |
 
-Variables : `salutation`, `associe`, `heure`, `service`, `ref`, `tel_fixe`, `signature`.
+Variables : `salutation`, `associe`, `heure`, `service` (« vos travaux de peinture », « votre isolation acoustique »), `ref`, `tel_fixe`, `signature`.
+
+Horaires : ils ne figurent plus dans ces messages tant que `C03` n'est pas confirmé (repli du copy deck : horaires masqués). Une fois confirmés, ajouter « , du lundi au vendredi, de 7 h à 18 h » après `{{tel_fixe}}` dans le premier message.
 
 ## 1er essai sans réponse
 
@@ -18,9 +20,9 @@ Objet : Nous avons essayé de vous joindre (réf. {{ref}})
 
 {{salutation}},
 
-J'ai essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}), sans parvenir à vous joindre.
+J'ai essayé de vous appeler aujourd'hui à {{heure}} au sujet de {{service}}, sans parvenir à vous joindre.
 
-Quand puis-je vous rappeler ? Répondez simplement à ce message en indiquant un moment qui vous convient, ou appelez-nous au {{tel_fixe}}, du lundi au vendredi de 7 h à 18 h.
+Quand puis-je vous rappeler ? Répondez simplement à ce message en indiquant un moment qui vous convient, ou appelez-nous au {{tel_fixe}}.
 
 Meilleures salutations,
 
@@ -35,7 +37,7 @@ Objet : Votre demande {{ref}}
 
 {{salutation}},
 
-Nous avons essayé de vous joindre à plusieurs reprises au sujet de votre demande ({{service}}), sans succès.
+Nous avons essayé de vous joindre à plusieurs reprises au sujet de {{service}}, sans succès.
 
 Votre demande reste enregistrée : si votre projet est toujours d'actualité, il suffit de répondre à ce message ou d'appeler le {{tel_fixe}}. Nous ne vous relancerons pas davantage.
 

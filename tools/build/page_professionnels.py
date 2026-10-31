@@ -25,7 +25,8 @@ def build():
     if ref:
         boutons = ('<a class="btn" href="%s" %s>Télécharger le dossier de références (%s)</a>'
                    '<a class="btn btn--ghost" href="#soumission">Envoyer un dossier de soumission</a>' % (ref[0], suivi_doc('references'), ref[1]))
-        sous = '<p class="page-head__note">6 pages : identité, références, méthode en immeuble habité, lots CFC, contacts. Libre téléchargement, sans inscription.</p>'
+        contenu = 'identité, références, méthode en immeuble habité, lots CFC, contacts' if ref[2] >= 6 else 'identité, références, lots CFC, contacts'
+        sous = '<p class="page-head__note">%d pages : %s. Libre téléchargement, sans inscription.</p>' % (ref[2], contenu)
     else:
         boutons = '<a class="btn" href="#soumission">Envoyer un dossier de soumission</a>' + devis_btn(p, 'entete_page', cls='btn btn--ghost')
         sous = ''
@@ -37,7 +38,7 @@ def build():
                       extra=extra)
 
     # 2. Selon votre métier (exposition 1 : noms des collectivités dans le texte)
-    act_regie = (('<a class="link-arrow" href="%s" %s>Télécharger la liste de contrôle « immeuble habité » (PDF)</a>' % (check[0], suivi_doc('checklist')))
+    act_regie = (('<a class="link-arrow" href="%s" %s>Télécharger la liste de contrôle « immeuble habité » (PDF, %d pages, %s)</a>' % (check[0], suivi_doc('checklist'), check[2], check[1].split(', ')[1]))
                  if check else devis_btn(p, 'metier', cls='link-arrow'))
     act_comm = (marque('C13', '<a class="link-arrow" href="%s" data-suivi-emplacement="metier">Demander nos attestations</a>' % mailto("Demande d'attestations"))
                 if definitif('C13') else '')
@@ -78,7 +79,7 @@ def build():
               ('C32', 'Réception avec photos et liste des retouches, levées dans le délai convenu.')]
     lis = ''.join('<li>%s</li>' % T(code, txt) for code, txt in points if definitif(code))
     if lis:
-        lien = ('<p class="section-foot"><a class="link-arrow" href="%s" %s>Télécharger la liste de contrôle « immeuble habité » (PDF, 2 pages)</a></p>' % (check[0], suivi_doc('checklist'))) if check else ''
+        lien = ('<p class="section-foot"><a class="link-arrow" href="%s" %s>Télécharger la liste de contrôle « immeuble habité » (PDF, %d pages, %s)</a></p>' % (check[0], suivi_doc('checklist'), check[2], check[1].split(', ')[1])) if check else ''
         corps += '''    <section class="section section--mist" aria-labelledby="site-occupe-titre">
       <div class="container">
         <div class="section-head">
@@ -98,11 +99,14 @@ def build():
                'Les performances visées sont celles du projet, précisées dans l\'offre.')
     lignes = []
     if ref:
-        lignes.append(('Dossier de références (6 pages)', '<a href="%s" %s>Télécharger (%s)</a>' % (ref[0], suivi_doc('references'), ref[1])))
+        lignes.append(('Dossier de références (%d pages)' % ref[2], '<a href="%s" %s>Télécharger (%s)</a>' % (ref[0], suivi_doc('references'), ref[1])))
     if check:
-        lignes.append(('Liste de contrôle : travaux en immeuble habité (2 pages)', '<a href="%s" %s>Télécharger (%s)</a>' % (check[0], suivi_doc('checklist'), check[1])))
+        lignes.append(('Liste de contrôle : travaux en immeuble habité (%d pages)' % check[2], '<a href="%s" %s>Télécharger (%s)</a>' % (check[0], suivi_doc('checklist'), check[1])))
     if avis and definitif('C20'):
         lignes.append(('Modèle d\'avis aux locataires', marque('C20', '<a href="%s" %s>Télécharger (%s)</a>' % (avis[0], suivi_doc('avis-locataires'), avis[1]))))
+    elif check and check[2] >= 3 and definitif('C20'):
+        # Pas de fichier Word : le modèle figure en page 3 de la liste de contrôle (livrables/README.md)
+        lignes.append(('Modèle d\'avis aux locataires', marque('C20', 'En page 3 de la <a href="%s" %s>liste de contrôle (%s)</a>' % (check[0], suivi_doc('checklist'), check[1]))))
     lignes.append(('Extrait du registre du commerce', '<a href="%s" rel="noopener">Consulter sur Zefix</a>' % ZEFIX))
     if definitif('C12'):
         lignes.append(('Attestation d\'assurance responsabilité civile', T('C12', 'Sur demande, par e-mail')))

@@ -7,8 +7,10 @@
 | Expéditeur | « AndyConstr » (expéditeur alphanumérique : on ne peut pas y répondre, d'où le numéro à rappeler dans chaque message) |
 | Alphabet | GSM : é, è, à, ù passent ; les modèles évitent « ê », « ô », « ç », « À » et les guillemets « » (un SMS tomberait à 70 caractères). Ceux qui viennent des données sont remplacés automatiquement. |
 | Horaires | En semaine de 8 h à 19 h 30, le samedi de 9 h à 12 h, jamais le dimanche ni un jour férié |
+| Longueur | **160 caractères au plus** (1 SMS), vérifiée avec les valeurs les plus longues : `ref` « AC-2026-0001 », `associe_court` « Un associé », `promesse` « le 30 septembre avant 16 h 45 », `service` « votre isolation acoustique », `heure` « 17 h 45 », `jour` « mercredi 4 novembre ». Résultats : accusé 158, essai d'appel 159, demande d'avis 158, veille de visite 150. Toute modification doit être recomptée. |
+| Opposition | La demande d'avis n'est pas indispensable au contrat : elle porte un moyen d'opposition. L'expéditeur alphanumérique ne reçoit pas de réponse : l'opposition passe par le téléphone (et par « STOP » ou le lien de l'e-mail envoyé le même jour). |
 
-Variables : `ref`, `associe_court` (prénom de l'associé, sinon « Un associé »), `promesse`, `heure`, `service`, `civilite_nom` (« Madame Dupont », sinon rien), `prenom_associe`.
+Variables : `ref`, `associe_court` (prénom de l'associé, sinon « Un associé »), `promesse`, `heure`, `service` (« vos travaux de peinture », « votre isolation acoustique »), `jour` (« mercredi »), `prenom_associe`.
 
 ## Accusé de réception par SMS (WF01)
 
@@ -16,7 +18,7 @@ Seulement si la personne n'a **pas** donné d'e-mail et que son numéro est un m
 
 <!-- modele: sms-accuse -->
 ```texte
-Andy Construct : votre demande (réf. {{ref}}) est bien arrivée. {{associe_court}} vous rappelle {{promesse}}, depuis le +41 22 771 20 15 ou le +41 78 631 14 34.
+Andy Construct : demande {{ref}} bien arrivée. {{associe_court}} vous rappelle {{promesse}}, depuis le +41 22 771 20 15 ou le +41 78 631 14 34.
 ```
 
 ## Après un appel sans réponse (WF02, bouton « Pas de réponse », 1er essai)
@@ -25,7 +27,7 @@ Si la personne n'a pas d'e-mail ; sinon l'e-mail de `rappel-sans-reponse.md`.
 
 <!-- modele: sms-essai-appel -->
 ```texte
-Andy Construct : {{associe_court}} a essayé de vous appeler aujourd'hui à {{heure}} au sujet de votre demande ({{service}}). Vous pouvez nous rappeler au +41 22 771 20 15, du lundi au vendredi de 7 h à 18 h.
+Andy Construct : nous avons essayé de vous joindre aujourd'hui à {{heure}} au sujet de {{service}}. Vous pouvez nous rappeler au +41 22 771 20 15.
 ```
 
 ## Demande d'avis, J+2 après la réception du chantier (WF03d)
@@ -34,12 +36,12 @@ Particuliers seulement, en complément de l'e-mail (qui, lui, contient le lien d
 
 <!-- modele: sms-demande-avis -->
 ```texte
-Bonjour{{#civilite_nom}} {{civilite_nom}}{{/civilite_nom}}, merci d'avoir confié votre chantier à Andy Construct. Si vous avez une minute, votre avis sur Google aide d'autres personnes à choisir : cherchez "Andy Construct" sur Google Maps, rubrique Avis. Le lien direct est dans notre e-mail. {{prenom_associe}}
+Andy Construct : merci de votre confiance. Si vous le souhaitez, laissez un avis sur notre fiche Google Maps. Pour ne plus recevoir nos SMS : +41 22 771 20 15
 ```
 
 ## Veille d'une visite (facultatif, saisi par l'associé dans le CRM)
 
 <!-- modele: sms-veille-visite -->
 ```texte
-Andy Construct : nous passons demain {{jour}} à {{heure}} pour votre projet ({{service}}). Un imprévu ? Appelez le +41 22 771 20 15. {{prenom_associe}}
+Andy Construct : nous passons demain {{jour}} à {{heure}} pour {{service}}. Un imprévu ? Appelez le +41 22 771 20 15. {{prenom_associe}}
 ```

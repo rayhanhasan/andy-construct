@@ -8,6 +8,11 @@
  */
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli-server') {
+    http_response_code(404); // uniquement sous « php -S » pendant les tests
+    exit;
+}
+
 $secret = (string) getenv('FAUX_N8N_SECRET');
 $journal = (string) getenv('FAUX_N8N_JOURNAL');
 $chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
