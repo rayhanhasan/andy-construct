@@ -8,7 +8,7 @@
 | Séquence de conseils | Annoncée seulement si la personne a coché « Recevoir aussi deux conseils par e-mail » (`conseils_email=oui`, case non cochée par défaut). Alors seulement, le pied porte la désinscription et n8n envoie E2 et E3 (`sequence-aimant.md`). |
 | Variables | `salutation`, `guide_titre`, `guide_url` (PDF en ligne, D7), `adresse_envoi` (rue, NPA et localité, sur deux lignes), `conseils_email`, `tel_fixe`, `horaires`, `signature`, `url_desinscription`, `url_confidentialite` |
 | Source technique | `site/api/modeles/accuse-guide.txt` (identique, contrôlé par `site/api/tests/run.php`) |
-| À valider | Délai d'envoi postal réellement tenu (« dans les prochains jours ouvrables »). |
+| À valider | Délai d'envoi postal réellement tenu (« dans les prochains jours ouvrables ») ; horaires `[À CONFIRMER C03]` (repli : `entreprise.horaires` vide). « Votre adresse postale sert uniquement à cet envoi » n'est vrai que si aucun autre usage n'est fait de la demande : la tâche « Appel de courtoisie » de WF07 (profils professionnels) contredit cette promesse et doit être désactivée ou annoncée sur le formulaire (`docs/v2/qa/relecture-juridique-copy.md`). |
 
 Conventions communes à tous les modèles de ce dossier :
 
@@ -29,13 +29,13 @@ Il partira dans les prochains jours ouvrables.{{#guide_url}} En attendant, vous 
 
 {{#conseils_email}}Comme vous l'avez demandé, vous recevrez aussi deux e-mails de conseils sur ce sujet, puis plus rien.
 
-{{/conseils_email}}Une question sur votre situation ? Répondez à ce message ou appelez le {{tel_fixe}}, {{horaires}}.
+{{/conseils_email}}Une question sur votre situation ? Répondez à ce message ou appelez le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}}.
 
 Meilleures salutations,
 
 {{signature}}
 
 --
-{{#conseils_email}}Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP à ce message{{#url_desinscription}}, ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
-{{/conseils_email}}Votre adresse sert uniquement à cet envoi. Confidentialité : {{url_confidentialite}}
+{{#conseils_email}}Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP » à ce message{{#url_desinscription}}, ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+{{/conseils_email}}Votre adresse postale sert uniquement à cet envoi. Confidentialité : {{url_confidentialite}}
 ```

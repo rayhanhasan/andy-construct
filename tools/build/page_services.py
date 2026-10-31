@@ -2,7 +2,7 @@
 """Pages services (architecture §4.2, copy deck §C à §F) : un gabarit, quatre jeux de textes."""
 import ctx
 from ctx import e, T, V, definitif, marque, M, PROD
-from common import page, page_head, ld_page, TEL, TEL_URI, devis_btn, svc_nom, svc_url, doc, nom_isolantes
+from common import page, page_head, ld_page, TEL, TEL_URI, devis_btn, svc_nom, svc_url, doc, nom_isolantes, suivi_doc
 import composants as c
 import portfolio as pf
 from icons import INFO
@@ -176,8 +176,9 @@ def acoustique():
         specifique = '''<div class="guide">
           <h2 id="guide-titre">Guide : réduire le bruit chez soi</h2>
           <p>Ce qui marche, ce qui ne marche pas, et les questions à poser à une entreprise, quelle qu'elle soit. 8 pages, 10 minutes de lecture.</p>
-          <p><a class="btn" href="%s" data-suivi="guide_telecharge" data-suivi-guide="guide-bruit">Télécharger le guide (%s)</a></p>
-        </div>''' % guide
+          <p><a class="btn" href="%s" %s>Télécharger le guide (%s)</a></p>
+          %s
+        </div>''' % (guide[0], suivi_doc('guide-bruit'), guide[1], c.form_guide_poste('guide-reduire-le-bruit'))
     p6, p7 = pf.PROJ['projet-correction-acoustique'], pf.PROJ['projet-salle-de-reunion']
     cartes = ''.join(pf.carte_projet(p, '(min-width: 1000px) 560px, (min-width: 640px) 45vw, 100vw', ancre=False) for p in (p6, p7) if pf.proj_ok(p))
     refs = (marque('C23', '<div class="refs-svc"><p>Réalisé notamment pour :</p>%s</div>' % c.refs_service(['conservatoire-musique-geneve', 'head-geneve', 'collonge-bellerive']), bloc=True)
@@ -349,7 +350,7 @@ def rendre(d):
       </div>
     </section>
 ''' % (d['faq_titre'], TEL_URI, TEL, faq_html)
-    corps += c.bloc_demande(p, service=s, h2=d['h2_demande'], source=s, surtitre=False)
+    corps += c.bloc_demande(p, service=s, h2=d['h2_demande'], source='page-' + s, surtitre=False)
     page(p, corps)
 
 

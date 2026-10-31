@@ -6,7 +6,7 @@ C'est noté : {{qui}} vous rappelle {{promesse}} au {{telephone}}{{#creneau}}, d
 
 {{#travaux}}Votre demande concerne : {{travaux}}{{#lieu}}, à {{lieu}}{{/lieu}}.
 
-{{/travaux}}Si ce numéro ne vous convient plus, répondez simplement à ce message ou appelez le {{tel_fixe}}, {{horaires}} (référence {{ref}}).
+{{/travaux}}Si ce numéro ne vous convient plus, répondez simplement à ce message ou appelez le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}} (référence {{ref}}).
 
 Meilleures salutations,
 

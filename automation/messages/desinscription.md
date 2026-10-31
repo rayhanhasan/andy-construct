@@ -26,7 +26,7 @@ Si vous avez une demande ou un chantier en cours avec nous, nous pourrons encore
 ```texte
 C'est fait
 
-Vous ne recevrez plus nos e-mails. Si c'est une erreur, ou pour toute question, appelez-nous au +41 22 771 20 15.
+Vous ne recevrez plus nos conseils ni nos informations. Si c'est une erreur, ou pour toute question, appelez-nous au +41 22 771 20 15.
 ```
 
 ## Lien expiré ou invalide
@@ -35,5 +35,5 @@ Vous ne recevrez plus nos e-mails. Si c'est une erreur, ou pour toute question, 
 ```texte
 Ce lien n'est plus valable
 
-Pour ne plus recevoir nos e-mails, répondez simplement « STOP » à l'un de nos messages, ou appelez-nous au +41 22 771 20 15. Nous nous en occupons le jour même.
+Pour ne plus recevoir nos conseils ni nos informations, répondez simplement « STOP » à l'un de nos e-mails, ou appelez-nous au +41 22 771 20 15. Nous nous en occupons le jour même.
 ```

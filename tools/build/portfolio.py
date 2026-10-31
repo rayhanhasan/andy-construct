@@ -180,12 +180,12 @@ def carte_projet(p, sizes, niveau='h3', cta=True, p_page=None, eager=False, ancr
 # ---------------------------------------------------------------- avant / après (architecture §8.5, copy deck §G.4)
 # (id, légende, services définitifs, services de repli (C26), alt avant, alt après, comparateur)
 PAIRES = [
-    ('aa3', 'Combles : isolation et rampant fini sous une fenêtre de toit', ['cloisons-isothermes'], ['cloisons-isothermes'],
-     'Avant : fenêtre de toit, isolant visible et plafond noirci', 'Après : rampant blanc fini autour d\'une fenêtre de toit', False),
     ('aa5', 'Couloir : puits de lumière circulaires dans un faux-plafond', ['placo'], ['placo'],
      'Avant : réservations circulaires dans la dalle d\'un couloir', 'Après : couloir au faux-plafond percé de puits de lumière ronds', True),
     ('aa6', 'Séjour : faux-plafond en périphérie et spots', ['placo', 'peinture'], ['placo'],
      'Avant : séjour avant travaux, devant une grande baie vitrée', 'Après : séjour avec faux-plafond en périphérie et spots', True),
+    ('aa3', 'Combles : isolation et rampant fini sous une fenêtre de toit', ['cloisons-isothermes'], ['cloisons-isothermes'],
+     'Avant : fenêtre de toit, isolant visible et plafond noirci', 'Après : rampant blanc fini autour d\'une fenêtre de toit', False),
     ('aa7', 'Paroi cintrée : de l\'ossature au couloir fini', ['placo'], ['placo'],
      'Avant : ossature métallique d\'une paroi cintrée', 'Après : couloir fini avec paroi cintrée et spots', False),
     ('aa1', 'Caisson en plaques de plâtre sous une verrière', ['placo'], ['placo'],

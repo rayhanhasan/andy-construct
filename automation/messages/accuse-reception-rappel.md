@@ -7,7 +7,7 @@
 | Délai | Immédiat |
 | Variables | `ref`, `salutation`, `qui`, `promesse`, `telephone`, `creneau` (« le matin », « l'après-midi »), `numeros_appel`, `travaux`, `lieu`, `tel_fixe`, `horaires`, `signature`, `url_confidentialite` |
 | Source technique | `site/api/modeles/accuse-rappel.txt` (identique, contrôlé par les tests) |
-| À valider | Horaires ; délai de rappel. |
+| À valider | Délai de rappel `[À CONFIRMER C01]` (repli : « dans les meilleurs délais ») ; horaires `[À CONFIRMER C03]` (repli : `entreprise.horaires` vide, la mention disparaît) ; associé nommé `[C09]` ; numéros `[C30]`. |
 
 Conventions communes à tous les modèles de ce dossier :
 
@@ -25,7 +25,7 @@ C'est noté : {{qui}} vous rappelle {{promesse}} au {{telephone}}{{#creneau}}, d
 
 {{#travaux}}Votre demande concerne : {{travaux}}{{#lieu}}, à {{lieu}}{{/lieu}}.
 
-{{/travaux}}Si ce numéro ne vous convient plus, répondez simplement à ce message ou appelez le {{tel_fixe}}, {{horaires}} (référence {{ref}}).
+{{/travaux}}Si ce numéro ne vous convient plus, répondez simplement à ce message ou appelez le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}} (référence {{ref}}).
 
 Meilleures salutations,
 

@@ -55,17 +55,17 @@ final class Televersement
                     }
                     $liste[] = [
                         'name' => (string) $f['name'][$i],
-                        'tmp_name' => (string) ($f['tmp_name'][$i] ?? ''),
-                        'error' => (int) ($f['error'][$i] ?? UPLOAD_ERR_NO_FILE),
-                        'size' => (int) ($f['size'][$i] ?? 0),
+                        'tmp_name' => is_string($f['tmp_name'][$i] ?? null) ? $f['tmp_name'][$i] : '',
+                        'error' => is_scalar($f['error'][$i] ?? null) ? (int) $f['error'][$i] : UPLOAD_ERR_NO_FILE,
+                        'size' => is_scalar($f['size'][$i] ?? null) ? (int) $f['size'][$i] : 0,
                     ];
                 }
             } else {
                 $liste[] = [
-                    'name' => (string) ($f['name'] ?? ''),
-                    'tmp_name' => (string) ($f['tmp_name'] ?? ''),
-                    'error' => (int) ($f['error'] ?? UPLOAD_ERR_NO_FILE),
-                    'size' => (int) ($f['size'] ?? 0),
+                    'name' => is_string($f['name'] ?? null) ? $f['name'] : '',
+                    'tmp_name' => is_string($f['tmp_name'] ?? null) ? $f['tmp_name'] : '',
+                    'error' => is_scalar($f['error'] ?? null) ? (int) $f['error'] : UPLOAD_ERR_NO_FILE,
+                    'size' => is_scalar($f['size'] ?? null) ? (int) $f['size'] : 0,
                 ];
             }
         }
@@ -196,12 +196,102 @@ final class Televersement
             && in_array(substr($debut, 8, 4), self::MARQUES_HEIF, true);
     }
 
-    /** Un PDF qui contient du JavaScript, des actions de lancement ou des fichiers intégrés est refusé. */
-    private static function pdfActif(string $contenu): bool
+    /** Volume décompressé inspecté au plus par PDF (au-delà : refus prudent). */
+    private const PDF_BUDGET_DECOMPRESSION = 48 * 1048576;
+
+    /**
+     * Un PDF qui contient du JavaScript, des actions de lancement, des fichiers intégrés,
+     * du contenu riche ou un formulaire XFA est refusé. Les objets peuvent être cachés
+     * dans des flux compressés (FlateDecode, flux d'objets /ObjStm) : ces flux sont
+     * décompressés (volume plafonné) et inspectés. Un PDF qu'on ne peut pas inspecter
+     * (filtres LZW / ASCII85 / ASCIIHex, flux d'objets chiffrés, bombe de décompression)
+     * est refusé par prudence : le visiteur est invité à l'envoyer par e-mail.
+     */
+    public static function pdfActif(string $contenu): bool
+    {
+        if (self::nomsPdfActifs($contenu)) {
+            return true;
+        }
+        $normalise = self::normaliserNomsPdf($contenu);
+        if (preg_match('~/(LZWDecode|ASCII85Decode|ASCIIHexDecode|LZW|A85|AHx)(?![^\s()<>\[\]{}/%])~', $normalise)
+            || (str_contains($normalise, '/Encrypt') && str_contains($normalise, '/ObjStm'))) {
+            return true;
+        }
+        $budget = self::PDF_BUDGET_DECOMPRESSION;
+        $pos = 0;
+        while (($debut = strpos($contenu, 'stream', $pos)) !== false) {
+            $pos = $debut + 6;
+            if ($debut >= 3 && substr($contenu, $debut - 3, 3) === 'end') {
+                continue;
+            }
+            $depart = $pos + (($contenu[$pos] ?? '') === "\r" ? 1 : 0);
+            $depart += ($contenu[$depart] ?? '') === "\n" ? 1 : 0;
+            $flux = self::decompresser($contenu, $depart, $budget);
+            for ($niveau = 0; $flux !== null && $niveau < 3; $niveau++) {
+                if ($flux === false) {
+                    return true; // trop volumineux une fois décompressé
+                }
+                if (self::nomsPdfActifs($flux)) {
+                    return true;
+                }
+                $flux = self::decompresser($flux, 0, $budget); // filtres Flate en cascade
+            }
+        }
+        return false;
+    }
+
+    private static function normaliserNomsPdf(string $contenu): string
     {
         // Les noms PDF peuvent être masqués par des échappements « #xx » (/J#61vaScript).
-        $normalise = preg_replace_callback('/#([0-9A-Fa-f]{2})/', static fn ($m) => chr((int) hexdec($m[1])), $contenu) ?? $contenu;
-        return (bool) preg_match('~/(JavaScript|JS|Launch|EmbeddedFile|RichMedia)[\s/<(\[]~', $normalise);
+        return preg_replace_callback('/#([0-9A-Fa-f]{2})/', static fn ($m) => chr((int) hexdec($m[1])), $contenu) ?? $contenu;
+    }
+
+    private static function nomsPdfActifs(string $contenu): bool
+    {
+        // Un nom PDF se termine sur un blanc ou un délimiteur, y compris « > », « ] » et « % »
+        // (commentaire) : « /S/JavaScript>> », « /JS%x\n(...) ».
+        return (bool) preg_match(
+            '~/(JavaScript|JS|Launch|EmbeddedFile|EmbeddedFiles|RichMedia|XFA)(?![^\s()<>\[\]{}/%])~',
+            self::normaliserNomsPdf($contenu)
+        );
+    }
+
+    /**
+     * Décompresse un flux zlib (FlateDecode) commençant à $depart, par morceaux, en
+     * s'arrêtant à la fin du flux zlib (et non au mot « endstream », que des données
+     * non compressées pourraient contenir pour tronquer l'inspection).
+     *
+     * @return string|false|null texte décompressé ; false si le budget est dépassé ;
+     *   null si ce n'est pas un flux zlib (image JPEG, etc.)
+     */
+    private static function decompresser(string $donnees, int $depart, int &$budget): string|false|null
+    {
+        $b0 = ord($donnees[$depart] ?? "\0");
+        $b1 = ord($donnees[$depart + 1] ?? "\0");
+        if (($b0 & 0x0F) !== 8 || (($b0 << 8) | $b1) % 31 !== 0) {
+            return null;
+        }
+        $contexte = @inflate_init(ZLIB_ENCODING_DEFLATE);
+        if ($contexte === false) {
+            return null;
+        }
+        $sortie = '';
+        $longueur = strlen($donnees);
+        for ($i = $depart; $i < $longueur; $i += 8192) {
+            $morceau = @inflate_add($contexte, substr($donnees, $i, 8192), ZLIB_SYNC_FLUSH);
+            if ($morceau === false) {
+                break; // données corrompues : on inspecte ce qui a été décompressé
+            }
+            $sortie .= $morceau;
+            if (strlen($sortie) > $budget) {
+                return false;
+            }
+            if (inflate_get_status($contexte) === ZLIB_STREAM_END) {
+                break;
+            }
+        }
+        $budget -= strlen($sortie);
+        return $sortie;
     }
 
     public static function nomAffichable(string $nom): string

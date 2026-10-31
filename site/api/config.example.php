@@ -35,8 +35,15 @@ return [
     'stockage' => __DIR__ . '/stockage',
 
     // true uniquement derrière un proxy de confiance (Cloudflare…) : l'IP est alors lue
-    // dans X-Forwarded-For / CF-Connecting-IP. Sinon REMOTE_ADDR.
+    // dans CF-Connecting-IP / X-Forwarded-For. Sinon REMOTE_ADDR.
     'faire_confiance_au_proxy' => false,
+    // Adresses ou plages CIDR des proxys (OBLIGATOIRE si la valeur ci-dessus vaut true) :
+    // les en-têtes ne sont lus que pour une connexion venant de ces proxys. Sans cette liste,
+    // un robot qui joint directement le serveur choisit son IP (X-Forwarded-For) et
+    // contourne la limite de débit. Cloudflare : https://www.cloudflare.com/ips/
+    'proxys_de_confiance' => [
+        // '173.245.48.0/20', '103.21.244.0/22', '2400:cb00::/32', …
+    ],
 
     // Secrets : 32 caractères au minimum chacun, tous différents.
     'secrets' => [
@@ -130,6 +137,11 @@ return [
         'limite_par_heure' => 5,        // demandes acceptées par IP et par heure
         'tentatives_par_heure' => 30,   // envois (y compris corrections) par IP et par heure
         'max_liens_message' => 3,
+        // Accusés de réception (e-mail envoyé à l'adresse saisie par le visiteur) : plafonds
+        // contre l'usage du formulaire comme relais d'envoi. Au-delà, la demande est traitée
+        // normalement, seul l'accusé ne part pas.
+        'accuses_par_adresse_24h' => 3,
+        'accuses_par_heure' => 20,
     ],
 
     'fichiers' => [

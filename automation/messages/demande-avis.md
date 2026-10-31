@@ -6,7 +6,9 @@
 | Déclencheur | Chantier passé à « Terminé » **et** `reserves_levees = oui` (WF06, puis horloge WF03d à 10 h en semaine) |
 | Règles Google | **Tous** les clients reçoivent la même demande ; aucune sélection selon la satisfaction présumée, aucune contrepartie, aucun avis rédigé par l'entreprise. Un litige (`litige = oui`) **décale** la demande, il ne la supprime pas. |
 | Plafond | Une demande et une seule relance (J+9). |
-| Pied | Messages de service liés au contrat ; la phrase d'opposition y figure quand même par prudence. |
+| Pied | Messages de service liés au contrat ; la phrase d'opposition y figure quand même par prudence (y compris pour les professionnels et dans le SMS). |
+| Opposition | Un « STOP » doit arrêter **toute** la série (J+9, J+14) : WF03d ne lit aujourd'hui ni `opposition_marketing` ni `ne_pas_relancer` ni `a_repondu` (à corriger avant activation). |
+| À valider | Le décalage pour `litige = oui` et l'attente de `reserves_levees = oui` ne doivent pas devenir un tri des clients mécontents (règles Google : pas de sollicitation sélective) : fixer un délai maximal après lequel la demande part quand même, ou ne pas la faire du tout pour personne dans ce cas. Supports de publication des photos (site, fiche Google, LinkedIn, dossier de références) : la liste du J+14 doit correspondre à l'usage réel. |
 
 Variables : `salutation`, `service`, `commune`, `lien_avis_google` (lien direct vers le formulaire d'avis de la fiche), `prenom_associe`, `signature`, `lien_photos_sans_nom`, `lien_photos_commune`, `lien_temoignage`, `lien_refus`, `url_desinscription`.
 
@@ -20,17 +22,17 @@ Objet : Merci, et votre avis sur notre travail
 
 Le chantier{{#commune}} de {{commune}}{{/commune}} est terminé : merci pour votre confiance.
 
-Que vous soyez satisfait(e) ou que quelque chose aurait pu être mieux fait, votre avis public nous est utile et aide d'autres personnes à choisir. Cela prend une minute :
+Que vous soyez satisfait(e) ou que vous ayez des réserves, votre avis public nous est utile et aide d'autres personnes à choisir. Cela prend une minute :
 {{lien_avis_google}}
 
-Si vous le souhaitez, mentionnez le type de travaux et la commune. Et si un point n'est pas en ordre, dites-le-nous d'abord : nous revenons.
+Si vous le souhaitez, mentionnez le type de travaux et la commune. Et si un point n'est pas en ordre, vous pouvez aussi nous le dire directement, en répondant à ce message.
 
 Meilleures salutations,
 
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 Le SMS du même jour est dans `sms-prospects.md` (`sms-demande-avis`).
@@ -54,7 +56,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## J+2 · professionnels (régie, architecte, commune) : autorisation de citer
@@ -76,6 +78,9 @@ Une réponse à ce message suffit, dans un sens comme dans l'autre.
 Meilleures salutations,
 
 {{signature}}
+
+--
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## J+14 · accord pour montrer le chantier (particuliers)
@@ -86,7 +91,7 @@ Objet : Pouvons-nous montrer votre chantier ?
 
 {{salutation}},
 
-Nous aimerions montrer quelques photos de votre chantier sur notre site, pour aider d'autres personnes à se faire une idée. Nous ne le ferons qu'avec votre accord. Choisissez ce qui vous convient :
+Nous aimerions montrer quelques photos de votre chantier sur notre site, sur notre fiche Google, sur notre page LinkedIn et dans notre dossier de références, pour aider d'autres personnes à se faire une idée. Nous ne le ferons qu'avec votre accord. Choisissez ce qui vous convient :
 
 - Photos sans aucun nom : {{lien_photos_sans_nom}}
 - Photos avec la commune seulement : {{lien_photos_commune}}

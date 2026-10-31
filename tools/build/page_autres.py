@@ -113,40 +113,57 @@ def mentions():
 
 
 def confidentialite():
-    """Politique de confidentialité : titre, meta, H1 et chapeau du copy deck §M. Le corps est un projet factuel
-    (sources : site/api, strategie-acquisition.md §9.1), à faire relire par le juriste (V02)."""
+    """Politique de confidentialité : titre, meta, H1 et chapeau du copy deck §M ; texte de docs/v2/automatisation.md §9
+    (à faire relire par le juriste : V02). Le paragraphe sur les statistiques suit la configuration Umami."""
     p = dict(fichier='confidentialite.html', title='Protection des données | Andy Construct',
              desc='Comment Andy Construct traite les données du formulaire et des statistiques du site : finalités, durées, prestataires et vos droits.')
     p['ld'] = [ld_page('confidentialite.html', p['title'], 'Protection des données')]
     umami = bool(ctx.CONFIG.get('umami_src') and ctx.CONFIG.get('umami_id'))
-    stats = ('<p>Nous mesurons la fréquentation du site avec Umami, un outil sans cookie, hébergé en Suisse. Il compte les pages vues et les clics sur les boutons (par exemple « Appeler »), sans enregistrer votre adresse IP complète ni ce que vous écrivez dans les formulaires. Si votre navigateur envoie le signal « Ne pas me suivre » (Do Not Track ou GPC), aucune mesure n\'est faite.</p>'
-             if umami else '<p>Le site ne mesure pas sa fréquentation et ne dépose aucun cookie.</p>')
+    session = ('Le site garde aussi, le temps que l\'onglet reste ouvert (« stockage de session » de votre navigateur), la provenance de votre visite, '
+               'pour la joindre à votre demande si vous en envoyez une, ainsi que le brouillon du formulaire ; rien n\'est transmis à un tiers.')
+    if umami:
+        stats = ('<p>Notre site n\'utilise <strong>aucun cookie</strong>. Nous mesurons l\'audience avec Umami, installé sur notre propre serveur en Suisse : '
+                 'il compte les pages vues et les clics sur le téléphone ou les boutons, sans vous identifier et sans conserver votre adresse IP. %s</p>' % session)
+    else:
+        stats = '<p>Notre site n\'utilise <strong>aucun cookie</strong> et ne mesure pas son audience. %s</p>' % session
+    heberg = marque('C34', 'l\'hébergeur du site, en Suisse,')   # nom de l'hébergeur à fournir (C34)
     corps = page_head('Protection des données', 'Protection des données',
                       'Ce que nous faisons des informations que vous nous transmettez, combien de temps nous les gardons, et comment exercer vos droits.')
-    texte = '''<h2>Qui est responsable de vos données ?</h2>
-        <p>Andy Construct, Chanton & Cie, Route des Acacias 48, 1227 Carouge (Genève), IDE CHE-113.706.162. Pour toute question : %(mail)s ou %(tel)s.</p>
-        <h2>Ce que nous recevons quand vous remplissez un formulaire</h2>
-        <p>Les informations que vous saisissez : les travaux, qui vous êtes (propriétaire, régie…), la commune, le délai et la surface, vos nom et coordonnées, votre message, les photos ou plans joints et la façon dont vous nous avez connus. Le formulaire transmet aussi la page d'où vous l'envoyez et, si vous êtes arrivé par un lien de campagne, le nom de cette campagne. Aucun de ces champs n'est obligatoire, sauf ceux qui sont indiqués.</p>
-        <h2>Elles servent à traiter votre demande, et à rien d'autre</h2>
-        <p>Nous les utilisons pour vous rappeler, convenir d'une visite, établir l'offre écrite et en assurer le suivi. Nous ne les vendons pas et ne les utilisons pas pour de la publicité.</p>
-        <p>Pour rappeler d'abord les demandes les plus urgentes, un calcul automatique classe les demandes selon le délai, la surface et le type de travaux. Toutes les demandes sont rappelées, et c'est toujours une personne qui décide.</p>
-        <h2>Qui y a accès ?</h2>
-        <p>Les associés d'Andy Construct, et les prestataires techniques qui hébergent le site, la messagerie et l'outil de suivi des demandes. Ils sont liés par contrat et traitent les données en Suisse ou dans l'Union européenne. Aucune donnée n'est transmise à un tiers sans que nous vous le disions.</p>
+    texte = '''<h2>Qui est responsable</h2>
+        <p>Andy Construct, Chanton & Cie, société en nom collectif, Route des Acacias 48, 1227 Carouge, IDE CHE-113.706.162. Pour toute question sur vos données : %(mail)s ou %(tel)s.</p>
+        <h2>Ce que nous recevons quand vous nous écrivez</h2>
+        <p>Quand vous demandez un devis ou un rappel, nous recevons les informations que vous saisissez : votre nom, votre numéro de téléphone ou votre adresse e-mail, la commune des travaux, le type de travaux, la surface et le délai si vous les indiquez, votre message et les photos ou plans que vous joignez. Nous recevons aussi, pour savoir comment notre site est trouvé, la page par laquelle vous êtes arrivé(e) et, le cas échéant, le nom de la campagne publicitaire (paramètres « utm »).</p>
+        <p>Ces informations servent <strong>uniquement</strong> à traiter votre demande : vous rappeler, convenir d'une visite, vous remettre une offre et, si vous nous confiez les travaux, organiser le chantier. Elles ne sont ni vendues ni utilisées pour de la publicité.</p>
+        <h2>Comment nous traitons votre demande</h2>
+        <p>Pour rappeler chacun dans un délai raisonnable, nous classons les demandes par ordre de priorité, selon le type de travaux, leur ampleur, le lieu et le délai indiqués. <strong>Toutes les demandes sont rappelées</strong> et c'est toujours une personne qui décide de la suite.</p>
+        <p>Vous recevez un e-mail de confirmation si vous avez donné votre adresse, ou un SMS si vous n'avez laissé qu'un numéro de portable. Si nous vous envoyons une offre, nous pouvons vous demander, une ou deux fois, si vous avez des questions. Une simple réponse arrête ces messages.</p>
+        <h2>Le guide imprimé et les conseils par e-mail</h2>
+        <p>Nos guides se téléchargent librement, sans inscription. Si vous demandez la version imprimée, nous utilisons votre nom et votre adresse uniquement pour vous l'envoyer. Si vous avez coché la case prévue, nous vous envoyons aussi deux e-mails de conseils sur le même sujet, puis plus rien. Chaque e-mail contient un lien pour vous désinscrire ; vous pouvez aussi répondre « STOP ».</p>
+        <h2>Après un chantier</h2>
+        <p>Nous vous demandons un avis une fois le chantier terminé (une seule relance au plus). Si nous vous avons informé(e) de ce droit au moment de la commande, nous pouvons vous écrire occasionnellement au sujet de prestations semblables, par exemple un contrôle des peintures deux ans après. Vous pouvez vous y opposer à tout moment, gratuitement, en répondant « STOP » ou par le lien en bas de chaque message.</p>
+        <h2>Qui d'autre voit vos données</h2>
+        <p>Seuls les associés d'Andy Construct et notre agence web (Harbor Digital, pour la maintenance) y ont accès. Nous faisons appel à des prestataires techniques, liés par un contrat de protection des données :</p>
+        <ul>
+          <li>%(heberg)s pour la réception du formulaire ;</li>
+          <li>Infomaniak (Suisse) pour l'outil d'automatisation et les statistiques ;</li>
+          <li>Pipedrive (Union européenne) pour le suivi des demandes ;</li>
+          <li>Brevo (France, UE) pour les e-mails de conseils, si vous les avez demandés ;</li>
+          <li>ASPSMS (Suisse) pour l'envoi des SMS.</li>
+        </ul>
+        <p>Vos données sont hébergées en Suisse ou dans l'Union européenne, dont le niveau de protection est reconnu par le Conseil fédéral.</p>
         <h2>Combien de temps nous les gardons</h2>
         <ul>
-          <li>Photos et plans envoyés par le formulaire : 30 jours sur le serveur du site, puis seulement dans le dossier de votre demande.</li>
-          <li>Demande sans suite : 24 mois après notre dernier échange, puis effacement.</li>
-          <li>Client : les pièces comptables et contractuelles 10 ans, comme la loi l'exige.</li>
-          <li>Journaux techniques du serveur : 30 jours.</li>
+          <li>Photos et plans envoyés par le formulaire : 30 jours sur notre serveur web, ensuite seulement dans le dossier de votre demande.</li>
+          <li>Demande sans suite : 24 mois après notre dernier contact, puis effacement.</li>
+          <li>Clients : les documents comptables et contractuels 10 ans (obligation légale), les autres données le temps de la garantie des travaux (5 ans au plus), puis revue.</li>
+          <li>Adresse IP (protection contre les abus du formulaire) : sous forme chiffrée, 24 heures au plus.</li>
         </ul>
-        <h2>Statistiques de visite</h2>
+        <h2>Statistiques du site, sans cookie</h2>
         %(stats)s
-        <p>Votre navigateur garde aussi, le temps de la visite, le brouillon du formulaire (pour ne rien perdre si la page se recharge) et la page par laquelle vous êtes arrivé. Ces informations s'effacent quand vous fermez l'onglet.</p>
+        <p>Si votre navigateur envoie le signal « Ne pas me pister » (Do Not Track) ou « Global Privacy Control », aucune mesure n'est faite et rien n'est enregistré dans votre navigateur.</p>
         <h2>Vos droits</h2>
-        <p>Vous pouvez demander à consulter, corriger ou effacer vos données, par e-mail à %(mail)s. Nous répondons dans les 30 jours. Vous pouvez aussi vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT).</p>
-        <h2>Sécurité</h2>
-        <p>Le site fonctionne en connexion chiffrée (HTTPS). Seules les personnes qui traitent votre demande y ont accès.</p>
-        <p class="maj">Dernière mise à jour : %(date)s</p>''' % dict(mail=mail_html(), tel=tel_link(), stats=stats, date=DATE)
+        <p>Vous pouvez à tout moment demander quelles données nous avons sur vous, les faire corriger ou effacer (sous réserve de nos obligations légales de conservation), et vous opposer à tout message de notre part. Écrivez-nous à %(mail)s ou par courrier à l'adresse ci-dessus : nous répondons dans les 30 jours. Si vous estimez que vos droits ne sont pas respectés, vous pouvez vous adresser au Préposé fédéral à la protection des données et à la transparence (PFPDT), <a href="https://www.edoeb.admin.ch" rel="noopener">www.edoeb.admin.ch</a>.</p>
+        <p class="maj">Dernière mise à jour : %(date)s</p>''' % dict(mail=mail_html(), tel=tel_link(), stats=stats, heberg=heberg, date=DATE)
     corps += '''    <section class="section">
       <div class="container prose">
         %s

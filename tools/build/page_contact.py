@@ -68,7 +68,7 @@ def build():
         </div>
       </div>
     </section>
-''' % (appeler, c.form_devis('contact-devis'), c.module_rappel('contact-rappel', niveau='h2'), reste)
+''' % (appeler, c.form_devis('contact'), c.module_rappel('rappel-colonne', niveau='h2'), reste)
 
     villes = T('C21', 'Carouge (siège), Genève, Nyon, Lausanne, Yverdon-les-Bains, Neuchâtel, Fribourg, Sion, Delémont, Bienne.',
                'Carouge (siège), Genève, Nyon, Lausanne, Yverdon-les-Bains, Neuchâtel, Fribourg, Sion, Delémont, Bienne.')

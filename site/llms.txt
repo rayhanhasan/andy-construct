@@ -1,41 +1,51 @@
 # Andy Construct
 
-> Andy Construct est une entreprise genevoise basée à Carouge, spécialisée dans le placo (doublages, faux-plafonds et cloisons en plaques de plâtre), la peinture intérieure, l'isolation acoustique et les cloisons isothermes (« Placo · Peinture · Isolation »). Elle intervient dans toute la Suisse romande pour des particuliers, des régies, des architectes, des entreprises et des collectivités publiques.
+> Andy Construct est une entreprise de plâtrerie, de peinture et d'isolation intérieure basée à Carouge (Genève), active depuis 2007. Elle pose des cloisons, des doublages et des faux-plafonds en plaques de plâtre (placo), réalise la peinture intérieure, l'isolation acoustique (isolation phonique et correction de l'écho) et les cloisons isolantes, aussi appelées cloisons isothermes (isolation entre pièces chauffées et caves, garages ou combles). Elle travaille pour des particuliers, des régies et gérances, des architectes, des communes, des institutions et des entreprises, dans toute la Suisse romande.
 
 Informations clés :
 
 - Nom commercial : Andy Construct
-- Raison sociale : Andy Construct, Chanton & Cie (société en nom collectif), IDE CHE-113.706.162
-- Inscrite au registre du commerce du canton de Genève depuis 2007
+- Raison sociale : Andy Construct, Chanton & Cie, société en nom collectif
+- IDE : CHE-113.706.162 (registre du commerce du canton de Genève)
+- Activité depuis le 1er juin 2007 (Perly-Certoux, puis Chêne-Bourg dès 2010, Carouge dès 2023)
 - Adresse : Route des Acacias 48, 1227 Carouge (Genève), Suisse
-- Téléphone : +41 22 771 20 15 ; mobile : +41 78 631 14 34
-- E-mail : andy.construct@bluewin.ch
-- Horaires : du lundi au vendredi, 7 h 00 – 18 h 00
-- Zone d'intervention : toute la Suisse romande, soit les cantons de Genève, Vaud, Neuchâtel, Fribourg et Jura, le Valais romand et le Jura bernois
-- Clientèle : particuliers, régies et gérances, architectes et bureaux d'ingénieurs, PME, collectivités publiques
+- Téléphone : +41 22 771 20 15 ; sur les chantiers : +41 78 631 14 34
+- E-mail : contact@andyconstruct.ch
+- Horaires : du lundi au vendredi, 7 h – 18 h
+- Zone : cantons de Genève, Vaud, Neuchâtel, Fribourg et Jura, Valais romand, Jura bernois
 - Langue : français
+- Ce que l'entreprise ne fait pas : façades, carrelage, chambres froides
 
 Prestations (4) :
 
-- Placo : doublages, faux-plafonds et cloisons en plaques de plâtre
-- Peinture intérieure
-- Isolation acoustique
-- Cloisons isothermes (cloisons isolantes thermiques)
+- Placo : cloisons, doublages, faux-plafonds, caissons en plaques de plâtre
+- Peinture intérieure : logements, fins de bail, cages d'escalier, bureaux
+- Isolation acoustique : doublages et faux-plafonds acoustiques, cloisons acoustiques, correction acoustique des salles
+- Cloisons isolantes (isothermes) : cloisons et doublages isolants, isolation de plafonds de caves et de garages
 
-Références (liste publiée par l'entreprise) : Ville de Genève ; salle communale de Collonge-Bellerive ; Mairie de Plan-les-Ouates (salle communale) ; Conservatoire de Musique de Genève ; Salle de l'Alhambra ; HEAD – Haute école d'art et de design Genève ; OMC ; Piaget ; De Grisogono ; UBS ; Bank Sarasin ; Celgene ; Laboratoire Covance CLS SA ; Energestion Ingénieurs & Architectes SIA ; Domaine des Perrières (Coppet VD) ; Dipan SA (Nyon VD) ; Hôtel à Chavannes-de-Bogis ; Harmonie Nautique de Genève.
+Méthode : visite sur place, offre écrite détaillée poste par poste en CHF, chantier protégé et nettoyé, réception des finitions avec le client.
+
+Maîtres d'ouvrage qui ont confié des travaux à l'entreprise (liste publiée par l'entreprise) : Ville de Genève ; Mairie de Plan-les-Ouates ; salle communale de Collonge-Bellerive ; OMC ; Conservatoire de musique de Genève ; HEAD – Genève ; Salle de l'Alhambra ; Harmonie Nautique de Genève ; Piaget ; UBS ; J. Safra Sarasin (anciennement Bank Sarasin) ; de Grisogono ; Celgene ; Labcorp (anciennement Covance), Meyrin ; Dipan, Nyon ; Energestion, Les Acacias ; Everness Hotel & Resort, Chavannes-de-Bogis ; Domaine des Perrières, Coppet.
 
 ## Pages principales
 
-- [Accueil](https://www.andyconstruct.ch/): présentation de l'entreprise, zone d'intervention et questions fréquentes
-- [Prestations](https://www.andyconstruct.ch/prestations.html): placo, peinture intérieure, isolation acoustique et cloisons isothermes
-- [Réalisations et références](https://www.andyconstruct.ch/realisations.html): photos de chantiers par type de travaux, liste des références, informations pour architectes, régies et collectivités
-- [Contact](https://www.andyconstruct.ch/contact.html): téléphones, horaires, adresse, formulaire de demande d'offre
+- [Accueil](https://www.andyconstruct.ch/): présentation, prestations, méthode, questions fréquentes
+- [Placo](https://www.andyconstruct.ch/placo.html): cloisons, doublages, faux-plafonds et caissons en plaques de plâtre ; prix et délais ; accord de la régie ou de la PPE
+- [Peinture](https://www.andyconstruct.ch/peinture.html): peinture intérieure des logements, fins de bail, cages d'escalier et bureaux
+- [Isolation acoustique](https://www.andyconstruct.ch/isolation-acoustique.html): bruit des voisins, différence entre isoler et corriger, doublage et faux-plafond acoustiques, correction de l'écho
+- [Cloisons isolantes (isothermes)](https://www.andyconstruct.ch/cloisons-isothermes.html): cloisons isothermes, isolation de caves, garages et combles, subventions
+- [Réalisations](https://www.andyconstruct.ch/realisations.html): projets photographiés, avant / après
+- [Professionnels](https://www.andyconstruct.ch/professionnels.html): régies, architectes, communes ; méthode en immeuble habité ; lots CFC ; documents ; liste complète des références
+- [L'entreprise](https://www.andyconstruct.ch/entreprise.html): histoire depuis 2007, méthode, engagements, identité vérifiable
+- [Contact](https://www.andyconstruct.ch/contact.html): téléphones, horaires, adresse, formulaire de demande de devis, zone d'intervention
 
-## Questions fréquentes
+## Documents
 
-- [Questions fréquentes](https://www.andyconstruct.ch/#faq): durée de pose, doublage en placo, bruit des voisins, cloisons isothermes, peinture, prix, zone d'intervention en Suisse romande, travaux pour régies et collectivités, subventions à l'isolation
+- [Dossier de références (PDF)](https://www.andyconstruct.ch/assets/docs/andy-construct-references.pdf)
+- [Guide : réduire le bruit chez soi (PDF)](https://www.andyconstruct.ch/assets/docs/guide-reduire-le-bruit.pdf)
+- [Liste de contrôle : travaux en immeuble habité (PDF)](https://www.andyconstruct.ch/assets/docs/checklist-chantier-site-occupe.pdf)
 
 ## Optional
 
-- [Mentions légales et protection des données](https://www.andyconstruct.ch/mentions-legales.html): raison sociale, siège, IDE, politique de confidentialité
-- [Page Facebook](https://www.facebook.com/andyconstruct.bajrami)
+- [Mentions légales](https://www.andyconstruct.ch/mentions-legales.html)
+- [Protection des données](https://www.andyconstruct.ch/confidentialite.html)

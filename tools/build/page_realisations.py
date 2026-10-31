@@ -115,6 +115,6 @@ def build():
         <div class="rappel-seul" data-suivi-zone="bloc_demande">%s</div>
       </div>
     </section>
-''' % (c.refs_ligne(), devis_btn(p, 'realisations_fin'), TEL_URI, TEL, c.module_rappel('realisations-rappel', seul=True, niveau='h3'))
+''' % (c.refs_ligne(), devis_btn(p, 'realisations_fin'), TEL_URI, TEL, c.module_rappel('realisations', seul=True, niveau='h3'))
     corps += visionneuse()
     page(p, corps)

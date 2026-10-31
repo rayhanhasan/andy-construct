@@ -41,15 +41,66 @@ def min_css(s):
     return s.replace(';}', '}').strip() + '\n'
 
 
-def min_js(s):
-    s = re.sub(r'/\*.*?\*/', '', s, flags=re.S)
-    lignes = []
-    for l in s.split('\n'):
-        l = l.strip()
-        if not l or l.startswith('//'):
+def min_js(src):
+    """Minification prudente : commentaires et espaces retirés hors chaînes et expressions régulières.
+    Un retour à la ligne est gardé là où l'insertion automatique de point-virgule pourrait en dépendre."""
+    ident = lambda ch: ch.isalnum() or ch in '_$\\'
+    out, i, n, esp, nl = [], 0, len(src), False, False
+    dernier = lambda: out[-1][-1] if out else ''
+    while i < n:
+        c = src[i]
+        if c in ' \t':
+            esp, i = True, i + 1
             continue
-        lignes.append(l)
-    return '\n'.join(lignes) + '\n'
+        if c in '\r\n':
+            nl, i = True, i + 1
+            continue
+        if src.startswith('//', i):
+            i = src.find('\n', i)
+            i = n if i < 0 else i
+            continue
+        if src.startswith('/*', i):
+            i, esp = src.index('*/', i) + 2, True
+            continue
+        p = dernier()
+        if esp or nl:
+            if ident(p) and ident(c):
+                out.append(' ')
+            elif p in '+-' and c in '+-':
+                out.append(' ')
+            elif nl and p and p not in ';,{([=:?&|+-*/<>!' and c not in ';,})].:?&|+-*/<>=':
+                out.append('\n')
+            esp = nl = False
+        if c in '\'"`':
+            j = i + 1
+            while src[j] != c:
+                j += 2 if src[j] == '\\' else 1
+            out.append(src[i:j + 1])
+            i = j + 1
+            continue
+        if c == '/' and (p in '(,=:[!&|?{};+-*%<>~^' or p == '' or ''.join(out).endswith('return')):
+            j, classe = i + 1, False
+            while True:
+                ch = src[j]
+                if ch == '\\':
+                    j += 2
+                    continue
+                if ch == '[':
+                    classe = True
+                elif ch == ']':
+                    classe = False
+                elif ch == '/' and not classe:
+                    break
+                j += 1
+            j += 1
+            while j < n and src[j].isalpha():
+                j += 1
+            out.append(src[i:j])
+            i = j
+            continue
+        out.append(c)
+        i += 1
+    return ''.join(out) + '\n'
 
 
 def empreinte(contenu):

@@ -29,7 +29,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## Tâche d'appel (professionnels)

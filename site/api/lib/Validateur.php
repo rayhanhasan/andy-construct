@@ -135,7 +135,7 @@ final class Validateur
         $d['profil'] = self::liste($post, 'profil', array_keys(Champs::PROFIL), $avert);
         $d['adresse'] = self::texte(self::chaine($post, 'adresse', 1000), false);
         $d['localite'] = self::texte(self::chaine($post, 'localite'), false);
-        $ancienneAdresse = self::texte(self::chaine($post, 'adresse_postale', 1000), true); // ancien champ sur 3 lignes
+        $ancienneAdresse = str_replace(['<', '>'], '', self::texte(self::chaine($post, 'adresse_postale', 1000), true)); // ancien champ sur 3 lignes
         if ($d['adresse'] === '' && $ancienneAdresse !== '') {
             $d['adresse'] = $ancienneAdresse;
         }
@@ -269,7 +269,8 @@ final class Validateur
 
     /**
      * Supprime caractères de contrôle et marqueurs bidirectionnels ; conserve
-     * les retours à la ligne si $multiligne.
+     * les retours à la ligne si $multiligne. Sur une ligne (nom, commune,
+     * adresse…), les chevrons < > sont aussi retirés.
      */
     public static function texte(string $v, bool $multiligne): string
     {
@@ -280,6 +281,9 @@ final class Validateur
             $v = preg_replace("/\n{3,}/", "\n\n", $v) ?? '';
         } else {
             $v = preg_replace('/\p{C}/u', ' ', $v) ?? '';
+            // Champs d'identité et d'adresse : aucun balisage (repris dans les e-mails, le CRM
+            // et les pages de n8n, parfois sans échappement en aval).
+            $v = str_replace(['<', '>'], ' ', $v);
             $v = preg_replace('/\s+/u', ' ', $v) ?? '';
         }
         return trim($v);

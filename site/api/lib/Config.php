@@ -86,6 +86,7 @@ final class Config
             'origines_autorisees' => ['https://www.andyconstruct.ch', 'https://andyconstruct.ch'],
             'stockage' => dirname(__DIR__) . '/stockage',
             'faire_confiance_au_proxy' => false,
+            'proxys_de_confiance' => [],
             'secrets' => ['hmac_webhook' => '', 'actions' => '', 'local' => ''],
             'smtp' => [
                 'actif' => true,
@@ -137,6 +138,8 @@ final class Config
                 'limite_par_heure' => 5,
                 'tentatives_par_heure' => 30,
                 'max_liens_message' => 3,
+                'accuses_par_adresse_24h' => 3,
+                'accuses_par_heure' => 20,
             ],
             'fichiers' => [
                 'max_nombre' => 3,

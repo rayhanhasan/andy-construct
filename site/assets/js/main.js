@@ -1,250 +1,40 @@
-/* Andy Construct : scripts du site (vanilla, sans dépendance). */
-(function () {
-  'use strict';
-  var d = document;
-  var root = d.documentElement;
-  root.classList.remove('no-js');
-  root.classList.add('js');
-
-  function each(sel, fn, ctx) { Array.prototype.forEach.call((ctx || d).querySelectorAll(sel), fn); }
-
-  /* 1. Bandeau « maquette » : fermable, mémorisé le temps de la session.
-        Pour le supprimer en production : retirer le bloc .mockup-notice des pages. */
-  var notice = d.querySelector('.mockup-notice');
-  if (notice) {
-    var KEY = 'ac-maquette-masquee';
-    var hide = false;
-    try { hide = sessionStorage.getItem(KEY) === '1'; } catch (e) {}
-    if (hide) {
-      notice.remove();
-    } else {
-      var close = notice.querySelector('.mockup-notice__close');
-      if (close) {
-        close.addEventListener('click', function () {
-          notice.remove();
-          try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
-          var main = d.getElementById('contenu');
-          if (main) { main.setAttribute('tabindex', '-1'); main.focus({ preventScroll: true }); }
-        });
-      }
-    }
-  }
-
-  /* 2. Menu principal (mobile et tablette) */
-  var toggle = d.querySelector('.nav-toggle');
-  var nav = d.getElementById('menu-principal');
-  if (toggle && nav) {
-    var label = toggle.querySelector('.nav-toggle__label');
-    var setOpen = function (open) {
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      nav.classList.toggle('is-open', open);
-      root.classList.toggle('menu-open', open);
-      if (label) label.textContent = open ? 'Fermer' : 'Menu';
-    };
-    toggle.addEventListener('click', function () {
-      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
-    });
-    d.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
-        setOpen(false);
-        toggle.focus();
-      }
-    });
-    nav.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); });
-    d.addEventListener('click', function (e) {
-      if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) setOpen(false);
-    });
-    var mq = window.matchMedia('(min-width: 1240px)');
-    var onMq = function () { if (mq.matches) setOpen(false); };
-    if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq);
-  }
-
-  /* 3. Formulaire de demande de devis (maquette : aucun envoi réel)
-        BRANCHEMENT EN PRODUCTION : remplacer le bloc « Confirmation » ci-dessous par
-          fetch(form.action, { method: 'POST', body: new FormData(form) })
-        vers un script d'envoi hébergé en Suisse (ex. PHP mail() chez l'hébergeur),
-        puis afficher la confirmation seulement si la réponse est positive (res.ok). */
-  var params = new URLSearchParams(window.location.search);
-  each('form[data-devis]', function (form) {
-    form.noValidate = true; // validation HTML5 conservée, messages affichés dans la page
-    var type = params.get('travaux');
-    var select = form.querySelector('select[name="travaux"]');
-    if (type && select && select.querySelector('option[value="' + type + '"]')) select.value = type;
-
-    var UN_DES = 'Indiquez un téléphone ou un e-mail pour que nous puissions vous répondre.';
-    var errorOf = function (field) {
-      var ids = (field.getAttribute('aria-describedby') || '').split(' ');
-      for (var i = 0; i < ids.length; i++) {
-        var el = ids[i] && d.getElementById(ids[i]);
-        if (el && el.classList.contains('error')) return el;
-      }
-      return null;
-    };
-    var showError = function (field) {
-      var err = errorOf(field);
-      if (!err) return true;
-      var pair = field.getAttribute('data-un-des'); // au moins un des deux champs (téléphone ou e-mail)
-      var other = pair && form.elements[pair];
-      if (other) field.setCustomValidity(!field.value.trim() && !other.value.trim() ? UN_DES : '');
-      var v = field.validity;
-      var msg = '';
-      if (!v.valid) {
-        if (v.valueMissing) msg = field.getAttribute('data-requis') || 'Ce champ est obligatoire.';
-        else if (v.typeMismatch) msg = 'Vérifiez l\u2019adresse e-mail (exemple : nom@domaine.ch).';
-        else if (v.patternMismatch) msg = field.getAttribute('data-format') || 'Le format saisi n\u2019est pas valide.';
-        else msg = field.validationMessage;
-      }
-      err.textContent = msg;
-      err.hidden = !msg;
-      var box = field.closest('.field');
-      if (box && field.type !== 'checkbox') box.classList.toggle('has-error', !!msg);
-      field.setAttribute('aria-invalid', msg ? 'true' : 'false');
-      return !msg;
-    };
-
-    // Champ fichier personnalisé : affiche le nom du fichier choisi (zone aria-live)
-    each('.file-input', function (inp) {
-      var state = d.getElementById(inp.id + '-etat');
-      inp.addEventListener('change', function () {
-        var f = inp.files && inp.files[0];
-        if (state) state.textContent = f ? f.name : 'Aucun fichier sélectionné';
-      });
-    }, form);
-
-    each('input, select, textarea', function (field) {
-      var recheck = function () {
-        if (field.getAttribute('aria-invalid') === 'true') showError(field);
-        var tel = form.querySelector('[data-un-des="' + field.name + '"]');
-        if (tel && tel.getAttribute('aria-invalid') === 'true') showError(tel);
-      };
-      field.addEventListener('blur', function () { if (field.value && field.type !== 'checkbox') showError(field); });
-      field.addEventListener('input', recheck);
-      field.addEventListener('change', recheck);
-    }, form);
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var first = null;
-      each('input, select, textarea', function (field) {
-        if (!showError(field) && !first) first = field;
-      }, form);
-      if (first) { first.focus(); return; }
-
-      /* Confirmation (maquette). Pot de miel rempli = robot : même message, rien ne serait envoyé. */
-      var ok = form.parentNode.querySelector('.form-success');
-      var name = form.querySelector('[name="nom"]');
-      var who = ok && ok.querySelector('[data-nom]');
-      if (who && name) who.textContent = name.value.trim().split(/\s+/)[0] || '';
-      form.hidden = true;
-      if (ok) { ok.hidden = false; ok.focus(); }
-    });
-  });
-
-  /* 4. Galerie : filtres par catégorie */
-  var gallery = d.querySelector('[data-gallery]');
-  var status = d.querySelector('.gallery-status');
-  var filterBtns = d.querySelectorAll('[data-filter]');
-  var applyFilter = function (cat, btn) {
-    var n = 0;
-    each('[data-filter]', function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
-    each('[data-cat]', function (item) {
-      var show = cat === 'toutes' || item.getAttribute('data-cat') === cat;
-      item.hidden = !show;
-      if (show) n++;
-    }, gallery);
-    if (status) status.textContent = n + (n > 1 ? ' photos affichées' : ' photo affichée') + (cat === 'toutes' ? '' : ' – ' + btn.getAttribute('data-label'));
-  };
-  if (gallery && filterBtns.length) {
-    each('[data-filter]', function (b) {
-      b.addEventListener('click', function () { applyFilter(b.getAttribute('data-filter'), b); });
-    });
-    var wanted = params.get('categorie');
-    var pre = wanted && d.querySelector('[data-filter="' + wanted + '"]');
-    if (pre) applyFilter(wanted, pre);
-  }
-
-  /* 5. Visionneuse accessible (<dialog>) : flèches, Échap, focus piégé, légende */
-  var dlg = d.getElementById('visionneuse');
-  if (gallery && dlg && typeof dlg.showModal === 'function') {
-    var img = dlg.querySelector('img');
-    var source = dlg.querySelector('source');
-    var title = dlg.querySelector('.lightbox__caption b');
-    var sub = dlg.querySelector('.lightbox__caption span');
-    var count = dlg.querySelector('.lightbox__count');
-    var list = [];
-    var cur = 0;
-    var opener = null;
-
-    var visible = function () {
-      return Array.prototype.filter.call(gallery.querySelectorAll('.gallery__btn'), function (b) { return !b.closest('[hidden]'); });
-    };
-    var show = function (i) {
-      if (!list.length) return;
-      cur = (i + list.length) % list.length;
-      var b = list[cur];
-      var thumb = b.querySelector('img');
-      img.removeAttribute('src');
-      if (source) source.srcset = b.getAttribute('data-webp') || '';
-      img.width = +b.getAttribute('data-w') || 1600;
-      img.height = +b.getAttribute('data-h') || 1200;
-      img.src = b.getAttribute('data-jpg') || (thumb && thumb.currentSrc) || '';
-      img.alt = thumb ? thumb.alt : '';
-      title.textContent = b.getAttribute('data-title') || '';
-      sub.textContent = b.getAttribute('data-label') || '';
-      count.textContent = 'Photo ' + (cur + 1) + ' sur ' + list.length;
-    };
-
-    gallery.addEventListener('click', function (e) {
-      var b = e.target.closest('.gallery__btn');
-      if (!b) return;
-      opener = b;
-      list = visible();
-      show(list.indexOf(b));
-      dlg.showModal();
-      root.style.overflow = 'hidden';
-      dlg.querySelector('[data-lb="close"]').focus();
-    });
-    dlg.addEventListener('click', function (e) {
-      var act = e.target.closest('[data-lb]');
-      if (act) {
-        var a = act.getAttribute('data-lb');
-        if (a === 'close') dlg.close();
-        else show(cur + (a === 'next' ? 1 : -1));
-      } else if (e.target === dlg) {
-        dlg.close();
-      }
-    });
-    dlg.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowRight') { e.preventDefault(); show(cur + 1); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); show(cur - 1); }
-      else if (e.key === 'Tab') {
-        var f = dlg.querySelectorAll('button');
-        var firstB = f[0];
-        var lastB = f[f.length - 1];
-        if (e.shiftKey && d.activeElement === firstB) { e.preventDefault(); lastB.focus(); }
-        else if (!e.shiftKey && d.activeElement === lastB) { e.preventDefault(); firstB.focus(); }
-      }
-    });
-    dlg.addEventListener('close', function () {
-      root.style.overflow = '';
-      if (opener) opener.focus();
-    });
-  }
-
-  /* 6. Prestations : repère de la section en cours dans le sommaire */
-  var toc = d.querySelectorAll('.toc a[href^="#"]');
-  if (toc.length && 'IntersectionObserver' in window) {
-    var links = {};
-    each('.toc a[href^="#"]', function (a) { links[a.getAttribute('href').slice(1)] = a; });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting && links[en.target.id]) {
-          each('.toc a.is-active', function (a) { a.classList.remove('is-active'); a.removeAttribute('aria-current'); });
-          links[en.target.id].classList.add('is-active');
-          links[en.target.id].setAttribute('aria-current', 'true');
-        }
-      });
-    }, { rootMargin: '-30% 0px -60% 0px' });
-    Object.keys(links).forEach(function (id) { var s = d.getElementById(id); if (s) io.observe(s); });
-  }
-})();
+(function(w,d){'use strict';var root=d.documentElement;var $=function(s,c){return(c||d).querySelector(s);};var $$=function(s,c){return Array.prototype.slice.call((c||d).querySelectorAll(s));};var on=function(el,ev,fn){if(el)el.addEventListener(ev,fn);};var suivi=function(nom,p){try{if(w.acSuivi)w.acSuivi(nom,p||{});}catch(e){}};var lire=function(k){try{return JSON.parse(sessionStorage.getItem(k));}catch(e){return null;}};var ecrire=function(k,v){try{if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,JSON.stringify(v));}catch(e){}};var params=new URLSearchParams(w.location.search);var TEL='+41 22 771 20 15';on($('.vbar__close'),'click',function(){root.classList.add('vbar-off');try{sessionStorage.setItem('ac-bandeau','1');}catch(e){}
+var m=$('#contenu');if(m){m.setAttribute('tabindex','-1');m.focus({preventScroll:true});}});var toggle=$('.nav-toggle'),nav=$('#menu-principal'),drop=$('.nav-drop');var large=w.matchMedia('(min-width: 1240px)');if(toggle&&nav){var lab=$('.nav-toggle__label',toggle);var ouvrir=function(o){toggle.setAttribute('aria-expanded',o?'true':'false');nav.classList.toggle('is-open',o);root.classList.toggle('menu-open',o);lab.textContent=o?'Fermer':'Menu';if(drop&&!large.matches)drop.open=o;};on(toggle,'click',function(){ouvrir(toggle.getAttribute('aria-expanded')!=='true');});on(nav,'click',function(e){if(e.target.closest('a'))ouvrir(false);});var onMq=function(){if(large.matches)ouvrir(false);};if(large.addEventListener)large.addEventListener('change',onMq);on(d,'keydown',function(e){if(e.key!=='Escape')return;if(toggle.getAttribute('aria-expanded')==='true'){ouvrir(false);toggle.focus();}
+else if(drop&&drop.open&&large.matches){drop.open=false;$('summary',drop).focus();}});on(d,'click',function(e){if(nav.classList.contains('is-open')&&!nav.contains(e.target)&&!toggle.contains(e.target))ouvrir(false);if(drop&&drop.open&&large.matches&&!drop.contains(e.target))drop.open=false;});}
+var jetonDemande=false;on(d,'focusin',function(e){var f=e.target.closest&&e.target.closest('form[data-form]');if(!f||jetonDemande||!w.fetch)return;jetonDemande=true;fetch(f.getAttribute('action')+'?jeton',{headers:{Accept:'application/json'},credentials:'same-origin'}).then(function(r){return r.json();}).then(function(r){if(r&&r.jeton)$$('input[name="form_t0"]').forEach(function(i){i.value=r.jeton;});}).catch(function(){});});var MSG={travaux:'Choisissez au moins un type de travaux, ou « Autre chose, ou je ne sais pas encore ».',type_client:'Indiquez qui vous êtes : cela nous permet de vous orienter vers la bonne personne.',commune:'Indiquez la commune des travaux ou son NPA.',npa:'Le NPA compte 4 chiffres, par exemple 1227.',nom:'Indiquez votre nom et votre prénom.',contact:'Indiquez un numéro de téléphone ou une adresse e-mail pour que nous puissions vous répondre.',tel:'Ce numéro semble incomplet. Indiquez-le par exemple ainsi : 079 123 45 67.',telRappel:'Indiquez le numéro auquel nous pouvons vous rappeler.',email:'Cette adresse e-mail semble incomplète. Vérifiez-la, par exemple : nom@exemple.ch.',message:'Votre message est trop long (3\'000 caractères au maximum). Vous pouvez nous envoyer la suite par e-mail.',nomPoste:'Indiquez votre nom pour l\'envoi par la poste.',adresse:'Indiquez l\'adresse à laquelle envoyer le guide (rue et numéro).',npaPoste:'Indiquez le NPA, par exemple 1227.',localite:'Indiquez la localité, par exemple Carouge.',reseau:'Votre demande n\'a pas pu partir. Rien n\'est perdu : réessayez dans un instant, ou appelez-nous au '+TEL+'.'};var val=function(f,n){var el=f.elements[n];if(!el)return'';if(el.length!==undefined&&!el.tagName){var c=$$('[name="'+n+'"]:checked',f)[0];return c?c.value:'';}return(el.value||'').trim();};var telOk=function(v){var s=v.replace(/[^\d+]/g,'');if(/^(\+|00)/.test(s)){var n=s.replace(/^(\+|00)/,'').replace(/\D/g,'');return n.length>=9&&n.length<=15;}
+s=s.replace(/\D/g,'');return s.length===10&&s.charAt(0)==='0';};var mailOk=function(v){return/^[^\s@"<>,;]+@[^\s@"<>,;]+\.[a-z]{2,}$/i.test(v);};var boite=function(f,champ){return $('[data-champ="'+champ+'"]',f);};function montrerErreur(f,champ,msg){var b=boite(f,champ);if(!b)return false;var err=$('.error',b);b.classList.toggle('has-error',!!msg);$$('input:not([type="hidden"]), select, textarea',b).forEach(function(i){if(msg)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid');});if(err){err.textContent=msg||'';err.hidden=!msg;}
+if(msg)suivi('formulaire_erreur',{formulaire:f.getAttribute('data-form'),champ:champ});return true;}
+function verifier(f,champ){var type=f.getAttribute('data-form'),v=val(f,champ),m='';switch(champ){case'travaux':m=$$('[name="travaux[]"]:checked',f).length?'':MSG.travaux;break;case'type_client':m=v?'':MSG.type_client;break;case'commune':var npa=f.elements.npa;if(!v)m=MSG.commune;else if(/^\d+$/.test(v.replace(/\s/g,''))&&!/^[1-9]\d{3}$/.test(v.replace(/\s/g,'')))m=MSG.npa;if(npa){var x=v.match(/^\s*([1-9]\d{3})\b/);npa.value=x?x[1]:'';}
+break;case'nom':m=v?'':(type==='envoi_postal_guide'?MSG.nomPoste:MSG.nom);break;case'telephone':if(type==='rappel')m=!v?MSG.telRappel:(telOk(v)?'':MSG.tel);else if(v)m=telOk(v)?'':MSG.tel;else if(!val(f,'email'))m=MSG.contact;else if(val(f,'preference_contact')==='appel')m=MSG.telRappel;break;case'email':m=v&&!mailOk(v)?MSG.email:'';break;case'message':m=v.length>3000?MSG.message:'';break;case'adresse':m=v?'':MSG.adresse;break;case'npa':m=/^[1-9]\d{3}$/.test(v)?'':(v?MSG.npa:MSG.npaPoste);break;case'localite':m=v?'':MSG.localite;break;case'fichiers':m=f._fichierErreur||'';break;default:return true;}
+montrerErreur(f,champ,m);return!m;}
+function controler(f,zone,champs,recap){var fautes=champs.filter(function(c){return boite(zone,c)&&!verifier(f,c);});if(recap){recap.hidden=fautes.length<2;if(fautes.length>=2){recap.innerHTML='<p>'+fautes.length+' points à compléter :</p><ul>'+fautes.map(function(c){var b=boite(f,c),lbl=$('legend, label, .label',b);var cible=$('input:not([type="hidden"]), select, textarea',b);return'<li><a href="#'+(cible?cible.id:'')+'">'+(lbl?lbl.textContent.replace(/\s*\((obligatoire|facultatif)[^)]*\)/,''):c)+'</a></li>';}).join('')+'</ul>';}}
+if(fautes.length){if(fautes.length>=2&&recap){recap.focus();}
+else{var b=boite(f,fautes[0]),el=b&&$('input:not([type="hidden"]):not([tabindex="-1"]), select, textarea, button',b);if(el)el.focus();}}
+return!fautes.length;}
+on(d,'click',function(e){var a=e.target.closest('.dform__erreurs a');if(!a)return;e.preventDefault();var el=d.getElementById(a.getAttribute('href').slice(1));if(el)el.focus();});function alerte(f,msg){var a=$('.dform__alerte',f);if(!a)return;$('[data-alerte-texte]',a).textContent=msg||'';a.hidden=!msg;}
+function envoyer(f,apres){var btn=$('[data-envoi]',f),txt=btn.textContent;btn.disabled=true;btn.textContent='Envoi en cours…';alerte(f,'');var fin=function(){btn.disabled=false;btn.textContent=txt;};fetch(f.getAttribute('action'),{method:'POST',body:new FormData(f),headers:{Accept:'application/json'},credentials:'same-origin'}).then(function(r){return r.json().catch(function(){return{ok:false,code:'technique'};});}).then(function(r){if(r.ok){apres(r);return;}
+fin();var errs=r.erreurs||{},cles=Object.keys(errs),premier=null;cles.forEach(function(k){var champ=k==='npa'&&boite(f,'commune')?'commune':k;if(montrerErreur(f,champ,errs[k])&&!premier)premier=champ;});if(r.code==='trop_volumineux'&&boite(f,'fichiers')){montrerErreur(f,'fichiers',r.message);premier=premier||'fichiers';}
+if(premier&&f._allerA){f._allerA(premier);return;}
+if(premier){var el=$('input:not([type="hidden"]), textarea',boite(f,premier));if(el)el.focus();return;}
+alerte(f,r.message||MSG.reseau);}).catch(function(){fin();alerte(f,MSG.reseau);});}
+$$('[data-reessayer]').forEach(function(b){on(b,'click',function(){var f=b.closest('form');if(f.requestSubmit)f.requestSubmit();else $('[data-envoi]',f).click();});});var NOMS={};$$('#d-form [name="travaux[]"]').forEach(function(c){NOMS[c.value]=$('.choice__text b',c.closest('label')).textContent;});var df=$('#d-form');if(df)(function(f){f.noValidate=true;var etapes=$$('.dform__step',f),cur=0;var CHAMPS=[['travaux'],['type_client','commune'],['nom','telephone','email','message','fichiers']];var recapErr=$('.dform__erreurs',f),annonce=$('[data-annonce]',f),recap=$('.dform__recap',f);var BROUILLON='ac_brouillon_devis';var travaux=function(){return $$('[name="travaux[]"]:checked',f).map(function(c){return c.value;});};var service=function(){var t=travaux().filter(function(x){return x!=='ne-sait-pas';});return t.length>1?'plusieurs':(t[0]||'ne-sait-pas');};function conditions(){var cren=$('#d-creneau',f),reco=boite(f,'recommande_par');cren.hidden=val(f,'preference_contact')!=='appel';reco.hidden=val(f,'connu_par')!=='recommandation';}
+function montrer(i,focus){cur=i;etapes.forEach(function(s,k){s.classList.toggle('is-active',k===i);});$('.dform__etape',f).textContent='Étape '+(i+1)+' sur 3';$('.dform__bar span',f).style.width=((i+1)/3*100)+'%';var t=travaux().map(function(x){return NOMS[x];});recap.hidden=!(i>0&&t.length);$('[data-recap]',f).textContent=t.join(', ');recapErr.hidden=true;if(focus){annonce.textContent='Étape '+(i+1)+' sur 3 : '+etapes[i].getAttribute('data-titre');var lg=$('.dform__legend',etapes[i]);f.scrollIntoView({block:'start',behavior:w.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});lg.focus({preventScroll:true});}}
+f._allerA=function(champ){for(var k=0;k<CHAMPS.length;k++)if(CHAMPS[k].indexOf(champ)>-1){montrer(k,false);break;}
+var el=$('input:not([type="hidden"]), select, textarea',boite(f,champ));if(el)el.focus();};$$('[data-suivant]',f).forEach(function(b){on(b,'click',function(){if(!controler(f,etapes[cur],CHAMPS[cur],recapErr))return;suivi('formulaire_etape',{etape:String(cur+2),service:service(),type_client:val(f,'type_client')});montrer(cur+1,true);});});$$('[data-retour]',f).forEach(function(b){on(b,'click',function(){montrer(cur-1,true);});});on($('[data-modifier]',f),'click',function(){montrer(0,true);});function sauver(){var o={};$$('input, select, textarea',f).forEach(function(i){if(!i.name||i.type==='hidden'||i.type==='file'||i.name==='site_web')return;if(i.type==='checkbox'||i.type==='radio'){if(i.checked)(o[i.name]=o[i.name]||[]).push(i.value);}
+else if(i.value)o[i.name]=i.value;});ecrire(BROUILLON,o);}
+var b0=lire(BROUILLON);if(b0)$$('input, select, textarea',f).forEach(function(i){var v=b0[i.name];if(v===undefined||i.type==='hidden'||i.type==='file')return;if(i.type==='checkbox'||i.type==='radio')i.checked=v.indexOf(i.value)>-1;else i.value=v;});var pre=f.getAttribute('data-service')||params.get('travaux');var carte=pre&&$('[name="travaux[]"][value="'+pre+'"]',f);if(carte)carte.checked=true;on(f,'input',sauver);on(f,'change',function(e){sauver();conditions();var b=e.target.closest('[data-champ]');if(b&&b.classList.contains('has-error'))verifier(f,b.getAttribute('data-champ'));});on(f,'focusout',function(e){var b=e.target.closest('[data-champ]');if(!b||e.target.type==='radio'||e.target.type==='checkbox')return;var c=b.getAttribute('data-champ');if(e.target.value||b.classList.contains('has-error'))verifier(f,c);if(c==='email')suggestion(e.target);if(c==='email'&&boite(f,'telephone').classList.contains('has-error'))verifier(f,'telephone');});conditions();montrer(carte?1:0,false);var fi=$('#d-fichiers',f),liste=[],etat=$('#d-fichiers-etat',f),ul=$('.file-list',f);var mo=function(o){return(o/1048576).toFixed(1).replace('.',',')+' Mo';};function majFichiers(){if(w.DataTransfer){try{var dt=new DataTransfer();liste.forEach(function(x){dt.items.add(x);});fi.files=dt.files;}catch(e){}}
+var tot=liste.reduce(function(s,x){return s+x.size;},0);etat.textContent=liste.length?(liste.length+(liste.length>1?' fichiers choisis (':' fichier choisi (')+mo(tot)+')'):'Aucun fichier choisi';ul.innerHTML='';liste.forEach(function(x,k){var li=d.createElement('li'),s=d.createElement('span'),b=d.createElement('button');s.textContent=x.name+' ('+mo(x.size)+')';b.type='button';b.className='linklike';b.textContent='Retirer';b.setAttribute('aria-label','Retirer '+x.name);on(b,'click',function(){liste.splice(k,1);f._fichierErreur='';majFichiers();verifier(f,'fichiers');$('[data-fichiers]',f).focus();});li.appendChild(s);li.appendChild(b);ul.appendChild(li);});}
+on($('[data-fichiers]',f),'click',function(){fi.click();});on(fi,'change',function(){var err='';Array.prototype.forEach.call(fi.files,function(x){if(liste.some(function(y){return y.name===x.name&&y.size===x.size;}))return;if(!/\.(jpe?g|png|heic|heif|pdf)$/i.test(x.name)&&!/^(image\/(jpeg|png|heic|heif)|application\/pdf)$/.test(x.type))err='Le fichier « '+x.name+' » n\'est pas accepté : formats JPG, PNG, HEIC ou PDF uniquement.';else if(x.size>8*1048576)err='Le fichier « '+x.name+' » dépasse 8 Mo. Retirez-le, ou envoyez-le par e-mail après notre appel.';else if(liste.length>=3)err='3 fichiers au plus. Vous pourrez nous envoyer les autres par e-mail.';else liste.push(x);});f._fichierErreur=err;majFichiers();verifier(f,'fichiers');});on(f,'submit',function(e){e.preventDefault();f._fichierErreur='';for(var k=0;k<3;k++){if(!controler(f,etapes[k],CHAMPS[k],recapErr)){if(k!==cur){montrer(k,false);controler(f,etapes[k],CHAMPS[k],recapErr);}
+return;}}
+envoyer(f,function(r){var pref=$('[name="preference_contact"]:checked',f);if(r.ref)suivi('formulaire_envoye',{formulaire:'devis',service:service(),type_client:val(f,'type_client')});ecrire('ac_merci',{f:'devis',ref:r.ref,message:r.message,travaux:travaux().map(function(x){return NOMS[x];}),service:service(),commune:val(f,'commune'),pref:pref?$('span',pref.closest('label')).textContent:'',email:!!val(f,'email')});ecrire(BROUILLON,null);w.location.href='merci.html';});});})(df);var DOM=['bluewin.ch','gmail.com','hotmail.com','sunrise.ch','outlook.com'];function dist(a,b){var m=[],i,j;for(i=0;i<=a.length;i++)m[i]=[i];for(j=0;j<=b.length;j++)m[0][j]=j;for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length];}
+function suggestion(inp){var b=inp.closest('[data-champ]'),old=$('.suggestion',b);if(old)old.remove();var p=inp.value.trim().toLowerCase().split('@');if(p.length!==2||!p[1]||DOM.indexOf(p[1])>-1)return;var mieux=DOM.filter(function(x){return dist(p[1],x)<=2;})[0];if(!mieux)return;var s=d.createElement('p'),btn=d.createElement('button');s.className='suggestion';s.textContent='Vouliez-vous dire '+p[0]+'@'+mieux+' ? ';btn.type='button';btn.textContent='Oui, corriger';on(btn,'click',function(){inp.value=p[0]+'@'+mieux;s.remove();inp.focus();inp.dispatchEvent(new Event('input',{bubbles:true}));});s.appendChild(btn);inp.insertAdjacentElement('afterend',s);}
+var rf=$('#r-form');if(rf){rf.noValidate=true;on(rf,'focusout',function(e){if(e.target.name==='telephone'&&(e.target.value||boite(rf,'telephone').classList.contains('has-error')))verifier(rf,'telephone');});on(rf,'submit',function(e){e.preventDefault();if(!controler(rf,rf,['telephone'],null))return;envoyer(rf,function(r){if(r.ref)suivi('formulaire_envoye',{formulaire:'rappel',service:val(rf,'travaux[]')||''});ecrire('ac_merci',{f:'rappel',ref:r.ref,message:r.message,creneau:val(rf,'creneau')});w.location.href='merci.html';});});}
+on(d,'click',function(e){var a=e.target.closest('[data-vers-rappel]');if(!a||!rf)return;e.preventDefault();var t=rf.elements.telephone,src=df&&df.elements.telephone;if(src&&src.value&&!t.value)t.value=src.value;$('#rappel').scrollIntoView({block:'start'});t.focus({preventScroll:true});});var gf=$('#g-form');if(gf){gf.noValidate=true;var gm=gf.elements.email,gc=boite(gf,'conseils_email');var majConseils=function(){gc.hidden=!gm.value.trim();if(gc.hidden)gf.elements.conseils_email.checked=false;};on(gm,'input',majConseils);majConseils();on(gf,'focusout',function(e){var b=e.target.closest('[data-champ]');if(b&&(e.target.value||b.classList.contains('has-error')))verifier(gf,b.getAttribute('data-champ'));});on(gf,'submit',function(e){e.preventDefault();if(!controler(gf,gf,['nom','adresse','npa','localite','email'],null))return;envoyer(gf,function(){suivi('guide_poste_demande',{doc:val(gf,'guide')});gf.hidden=true;var ok=$('.gform__ok');ok.hidden=false;ok.focus();});});}
+var zone=$('[data-galerie-zone]'),compteur=$('[data-compteur]');var filtrer=function(s){var n=0;$$('[data-filtre]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-filtre')===s?'true':'false');});$$('.projet[data-services], .aa[data-services]').forEach(function(it){var ok=s==='tous'||(' '+it.getAttribute('data-services')+' ').indexOf(' '+s+' ')>-1;it.hidden=!ok;if(ok)n++;});var aa=$('#avant-apres');if(aa)aa.hidden=!$$('.aa[data-services]:not([hidden])',aa).length;if(compteur)compteur.textContent=n+(n>1?' projets affichés':' projet affiché');};if(zone){$$('[data-filtre]').forEach(function(b){on(b,'click',function(){var s=b.getAttribute('data-filtre');filtrer(s);try{var u=new URL(w.location.href);if(s==='tous')u.searchParams.delete('filtre');else u.searchParams.set('filtre',s);u.searchParams.delete('categorie');history.replaceState(null,'',u);}catch(e){}});});var voulu=params.get('filtre')||params.get('categorie');if(voulu&&$('[data-filtre="'+voulu+'"]'))filtrer(voulu);}
+var dlg=$('#visionneuse');if(dlg&&typeof dlg.showModal==='function'){var img=$('img',dlg),cpt=$('.lightbox__count',dlg),leg=$('.lightbox__caption',dlg),photos=[],k=0,ouvreur=null;var voir=function(i){k=(i+photos.length)%photos.length;var p=photos[k];img.removeAttribute('src');img.width=+p.getAttribute('data-w');img.height=+p.getAttribute('data-h');img.src=p.getAttribute('data-src');img.alt=p.getAttribute('data-alt');leg.textContent=p.getAttribute('data-legende');cpt.textContent='Photo '+(k+1)+' sur '+photos.length;};on(d,'click',function(e){var b=e.target.closest('[data-galerie]');if(!b)return;ouvreur=b;photos=$$('.projet__photos li',b.closest('.projet'));$$('[data-lb="prev"], [data-lb="next"]',dlg).forEach(function(x){x.hidden=photos.length<2;});voir(0);dlg.showModal();root.style.overflow='hidden';$('[data-lb="close"]',dlg).focus();});on(dlg,'click',function(e){var a=e.target.closest('[data-lb]');if(a){var t=a.getAttribute('data-lb');if(t==='close')dlg.close();else voir(k+(t==='next'?1:-1));}
+else if(e.target===dlg)dlg.close();});on(dlg,'keydown',function(e){if(photos.length<2)return;if(e.key==='ArrowRight'){e.preventDefault();voir(k+1);}
+if(e.key==='ArrowLeft'){e.preventDefault();voir(k-1);}});on(dlg,'close',function(){root.style.overflow='';if(ouvreur)ouvreur.focus();});}
+$$('.aa[data-comparateur]').forEach(function(fig,n){var pair=$('.aa__pair',fig),titre=$('.aa__titre',fig).textContent;fig.classList.add('is-comparateur');var ligne=d.createElement('span');ligne.className='aa__ligne';ligne.setAttribute('aria-hidden','true');pair.appendChild(ligne);var ctrl=d.createElement('div');ctrl.className='aa__ctrl';var id='aa-r-'+n;ctrl.innerHTML='<button type="button" aria-pressed="false">Avant</button><label class="visually-hidden" for="'+id+'"></label>'+'<input type="range" id="'+id+'" min="0" max="100" step="5" value="50"><button type="button" aria-pressed="false">Après</button>';$('label',ctrl).textContent='Part de la photo « avant » affichée : '+titre;pair.insertAdjacentElement('afterend',ctrl);var r=$('input',ctrl),bA=ctrl.children[0],bP=ctrl.children[3];var poser=function(v){r.value=v;pair.style.setProperty('--pos',v+'%');r.setAttribute('aria-valuetext',v==100?'Avant seulement':v==0?'Après seulement':'Avant '+v+' %, après '+(100-v)+' %');bA.setAttribute('aria-pressed',v==100?'true':'false');bP.setAttribute('aria-pressed',v==0?'true':'false');};on(r,'input',function(){poser(+r.value);});on(bA,'click',function(){poser(100);});on(bP,'click',function(){poser(0);});poser(50);});var mz=$('.merci');if(mz){var m=lire('ac_merci');ecrire('ac_merci',null);if(m){var bloc=$('[data-variante="'+(m.f==='rappel'?'rappel':'devis')+'"]',mz);if(m.f==='rappel'){$('[data-variante="devis"]',mz).hidden=true;bloc.hidden=false;}
+if(m.ref){$('[data-ref]',bloc).textContent=m.ref;$('.merci__ref',bloc).hidden=false;}
+var cr=$('[data-creneau]',bloc);if(cr)cr.textContent=m.creneau==='matin'?' le matin':m.creneau==='apres-midi'?' l\'après-midi':'';if(m.f==='devis'&&m.travaux&&m.travaux.length){$('[data-travaux]',bloc).textContent=m.travaux.join(', ').toLowerCase();if(m.commune)$('[data-commune]',bloc).textContent=m.commune;else $('[data-commune-bloc]',bloc).hidden=true;if(m.pref)$('[data-pref]',bloc).textContent=m.pref.toLowerCase();else $('[data-pref-bloc]',bloc).hidden=true;$('.merci__recap',bloc).hidden=false;}
+if(m.email)$('[data-si-email]',bloc).hidden=false;var filtres=(mz.getAttribute('data-filtres')||'').split(' '),noms={};(mz.getAttribute('data-noms')||'').split('|').forEach(function(x){var p=x.split('=');noms[p[0]]=p[1];});var lien=$('[data-lien-service]',bloc);if(lien&&filtres.indexOf(m.service)>-1){lien.href='realisations.html?filtre='+m.service;lien.textContent='En attendant, voir nos réalisations en '+noms[m.service];}}}})(window,document);

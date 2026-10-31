@@ -9,12 +9,12 @@ Il partira dans les prochains jours ouvrables.{{#guide_url}} En attendant, vous 
 
 {{#conseils_email}}Comme vous l'avez demandé, vous recevrez aussi deux e-mails de conseils sur ce sujet, puis plus rien.
 
-{{/conseils_email}}Une question sur votre situation ? Répondez à ce message ou appelez le {{tel_fixe}}, {{horaires}}.
+{{/conseils_email}}Une question sur votre situation ? Répondez à ce message ou appelez le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}}.
 
 Meilleures salutations,
 
 {{signature}}
 
 --
-{{#conseils_email}}Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP à ce message{{#url_desinscription}}, ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
-{{/conseils_email}}Votre adresse sert uniquement à cet envoi. Confidentialité : {{url_confidentialite}}
+{{#conseils_email}}Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP » à ce message{{#url_desinscription}}, ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+{{/conseils_email}}Votre adresse postale sert uniquement à cet envoi. Confidentialité : {{url_confidentialite}}

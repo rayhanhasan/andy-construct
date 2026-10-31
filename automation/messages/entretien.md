@@ -6,7 +6,7 @@
 | Déclencheur | Horloge quotidienne WF04i : peinture → `date_reception_chantier` + 23 mois ; autres services → + 12 mois ; régies → chaque année début octobre |
 | Base légale | Exception « clients » de l'art. 3 al. 1 let. o LCD : prestations propres analogues, **et** client informé de son droit d'opposition lors de la collecte (`info_exception_client` rempli). Sinon : rien. |
 | Plafond | Une fois par chantier (un an, deux ans) ; un message marketing tous les 30 jours au plus. |
-| À valider | Conditions du « passage de contrôle » (gratuit ? retouches comprises ?) : le texte ne promet rien tant que le client ne l'a pas décidé. Délai de garantie SIA 118 : seulement si le contrat y est soumis. |
+| À valider | Passage de contrôle et retouches `[À CONFIRMER C32]` : ne pas activer « Peinture, 23 mois » tant que C32 n'est pas confirmé. Conditions du passage (gratuit ? retouches comprises ?) : le texte ne promet rien, mais un passage facturé devra être annoncé comme tel avant le rendez-vous. Prix par pièce pour les régies `[À CONFIRMER C17]` : ne pas activer « Régies » sans confirmation. Délai de garantie SIA 118 : seulement si le contrat y est soumis (`C33`). Phrase d'information « exception clients » présente dans l'offre ou la confirmation de commande avant de remplir `info_exception_client`. |
 
 Variables : `salutation`, `pieces_ou_service` (« les peintures du salon »), `commune`, `lien_passage`, `annee_suivante`, `lien_en_parler`, `signature`, `url_desinscription`.
 
@@ -31,7 +31,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## Autres services, 12 mois après la réception
@@ -51,7 +51,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## Régies, chaque année début octobre
@@ -71,5 +71,5 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir de message de notre part ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir de message de notre part ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```

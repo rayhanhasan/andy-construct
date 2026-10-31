@@ -15,7 +15,7 @@ Ce que vous nous avez indiqué :
 
 {{/hors_cible}}{{#realisation_url}}Un exemple de chantier comparable : {{realisation_url}}
 
-{{/realisation_url}}Vous préférez nous appeler ? Le {{tel_fixe}}, {{horaires}} (référence {{ref}}).
+{{/realisation_url}}Vous préférez nous appeler ? Le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}} (référence {{ref}}).
 
 À très bientôt : {{qui}} vous {{verbe_contact}} {{promesse}}.
 

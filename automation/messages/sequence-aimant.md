@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Canal | E-mail (Brevo, transactionnel), en semaine à 9 h 30 |
+| Canal | E-mail par l'API « transactionnelle » de Brevo, en semaine à 9 h 30. Juridiquement, ce n'est **pas** un message transactionnel : accord préalable et désinscription obligatoires. |
 | Condition | **Uniquement** si la personne a donné son e-mail **et** coché « Recevoir aussi deux conseils par e-mail » (`conseils_email=oui`, case non cochée par défaut ; décision D3). Les guides se téléchargent librement : aucune adresse n'est exigée pour les lire. |
 | Déclencheur | Formulaire « guide imprimé par la poste » (`formulaire=envoi_postal_guide`) ; WF07 |
 | E1 | Immédiat, envoyé par le PHP : `accuse-reception-guide.md` (annonce les deux conseils et porte la désinscription) |
@@ -34,7 +34,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 <!-- modele: aimant-guide-bruit-e3 -->
@@ -43,9 +43,9 @@ Objet : Un avis sur votre situation ?
 
 {{salutation}},
 
-Chaque logement est différent : le bon remède dépend du type de bruit (voix, pas, musique) et de la construction. C'est pour cela que nous passons toujours voir avant de proposer quoi que ce soit.
+Chaque logement est différent : le bon remède dépend du type de bruit (voix, pas, musique) et de la construction. C'est pour cela que nous préférons voir les lieux avant de faire une offre.
 
-Si vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite et détaillée. Il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.
+Si vous le souhaitez, nous venons voir la pièce concernée et vous remettons ensuite une offre écrite. Il suffit de répondre à ce message ou d'appeler le +41 22 771 20 15.
 
 C'est notre dernier message sur ce sujet.
 
@@ -54,7 +54,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## Liste de contrôle « Travaux en immeuble habité » (`checklist-chantier-site-occupe`, régies)
@@ -76,7 +76,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 <!-- modele: aimant-checklist-regie-e3 -->
@@ -96,7 +96,7 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## Guide « Acoustique en rénovation » (architectes, guide futur)
@@ -116,7 +116,7 @@ En isolation acoustique, tout se joue dans les détails : une liaison rigide mal
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 <!-- modele: aimant-guide-architectes-e3 -->
@@ -134,10 +134,13 @@ Meilleures salutations,
 {{signature}}
 
 --
-Vous ne souhaitez plus recevoir nos e-mails ? Répondez STOP{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
+Vous ne souhaitez plus recevoir nos e-mails ? Répondez « STOP »{{#url_desinscription}} ou cliquez ici : {{url_desinscription}}{{/url_desinscription}}.
 ```
 
 ## À valider
 
-- « Nous passons toujours voir avant de proposer » et l'offre écrite après visite : conformes à la méthode du client.
-- Le modèle d'avis aux locataires doit exister avant d'être proposé (E2 régie).
+- E3 « bruit » : formulé selon les replis du copy deck tant que `C06` (visite avant chaque offre, offre détaillée) n'est pas confirmé. Une fois confirmé, on peut revenir à « nous passons toujours voir avant de proposer quoi que ce soit » et « une offre écrite et détaillée ».
+- E2 régie : le modèle d'avis aux locataires doit exister avant d'être proposé `[À CONFIRMER C20]`.
+- E3 régie : forfait type et prix par pièce `[À CONFIRMER C17]` ; ne pas activer la série « régie » sans confirmation.
+- Guide « architectes » : lots CFC cités `[À CONFIRMER C14]` (repli : « 271 Plâtrerie »).
+- L'appel de courtoisie aux profils professionnels (ligne « Profils professionnels » ci-dessus) n'est annoncé ni sur le formulaire ni dans l'accusé (« Votre adresse postale sert uniquement à cet envoi », « Pas de publicité ») : à désactiver, ou à annoncer avant toute mise en service d'un formulaire « par la poste » qui propose des profils professionnels.

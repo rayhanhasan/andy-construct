@@ -69,6 +69,12 @@ final class AntiSpam
         if (preg_match('~https?://|www\.~i', $champsCourts)) {
             return 'lien_dans_nom';
         }
+        // Champs repris tels quels dans l'accusé de réception (guide : adresse d'envoi) ou
+        // transmis au CRM : un lien n'y a pas sa place non plus.
+        $autresChamps = ($donnees['adresse'] ?? '') . ' ' . ($donnees['localite'] ?? '') . ' ' . ($donnees['recommande_par'] ?? '');
+        if (preg_match('~https?://|www\.~i', $autresChamps)) {
+            return 'lien_dans_adresse';
+        }
         if (preg_match('~\[url[=\]]|\[link|<a\s+href~i', $message)) {
             return 'balises_forum';
         }

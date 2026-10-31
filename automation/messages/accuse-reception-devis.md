@@ -8,7 +8,7 @@
 | Expéditeur | « Prénom Nom · Andy Construct » <site@andyconstruct.ch> ; « Répondre » écrit à l'associé attribué |
 | Variables | `ref`, `salutation`, `qui`, `qui_majuscule`, `verbe_contact` (appelle / répond par e-mail / répond), `promesse` (« aujourd'hui avant 16 h »), `numeros_appel`, `hors_cible`, `travaux`, `lieu`, `delai`, `nb_fichiers`, `message_extrait` (200 caractères, liens masqués), `realisation_url`, `tel_fixe`, `horaires`, `signature`, `url_confidentialite` |
 | Source technique | `site/api/modeles/accuse-devis.txt`. Le bloc ci-dessous doit rester **identique** (contrôlé par `site/api/tests/run.php`) : modifiez les deux en même temps. |
-| À valider | Horaires (« du lundi au vendredi, de 7 h à 18 h ») ; délais de rappel réellement tenables (§2.4 de la stratégie) ; noms des associés et rôles « bureau » / « terrain ». |
+| À valider | Délai de rappel `[À CONFIRMER C01]` : repli `promesse_delai => false` (« dans les meilleurs délais »). Horaires `[À CONFIRMER C03]` : repli `entreprise.horaires => ''` (la mention disparaît). Associé nommé `[C09]` ; numéros de rappel et mobile `[C30]` ; rôles « bureau » / « terrain ». Signature : `entreprise.nom` doit porter la raison de commerce complète « Andy Construct, Chanton & Cie » (art. 954a CO). |
 
 Conventions communes à tous les modèles de ce dossier :
 
@@ -35,7 +35,7 @@ Ce que vous nous avez indiqué :
 
 {{/hors_cible}}{{#realisation_url}}Un exemple de chantier comparable : {{realisation_url}}
 
-{{/realisation_url}}Vous préférez nous appeler ? Le {{tel_fixe}}, {{horaires}} (référence {{ref}}).
+{{/realisation_url}}Vous préférez nous appeler ? Le {{tel_fixe}}{{#horaires}}, {{horaires}}{{/horaires}} (référence {{ref}}).
 
 À très bientôt : {{qui}} vous {{verbe_contact}} {{promesse}}.
 

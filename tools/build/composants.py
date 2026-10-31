@@ -53,7 +53,7 @@ def ref_item(rid, blanc=False, nom=None):
         w, h = _dims(f)
         return ('<li class="ref ref--logo %s"><img src="assets/img/references/%s" width="%d" height="%d" alt="%s" loading="lazy"></li>'
                 % (echelle_cls(l['echelle']), f, w, h, e(nom)))
-    return '<li class="ref ref--nom">%s</li>' % insec(e(nom))
+    return '<li class="ref ref--nom"><span>%s</span></li>' % insec(e(nom))
 
 
 BANDEAU = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'omc', 'ubs', 'piaget', 'plan-les-ouates', 'collonge-bellerive']
@@ -94,7 +94,7 @@ def refs_ligne(cls=''):
 
 def refs_pied():
     return ('<p class="footer-refs__title">Ils nous ont confié des travaux</p>'
-            '<ul class="refs refs--pied">%s<li class="ref ref--nom">et des particuliers de toute la région</li></ul>' % _liste_bandeau(blanc=True))
+            '<ul class="refs refs--pied">%s<li class="ref ref--nom ref--part"><span>et des particuliers de toute la région</span></li></ul>' % _liste_bandeau(blanc=True))
 
 
 def refs_service(ids):
@@ -286,8 +286,9 @@ def champ(fid, name, label, statut, typ='text', aide='', attrs='', cls=''):
             % ((' ' + cls) if cls else '', name, fid, label, statut, aide_html, inp, erreur(fid)))
 
 
-def rappel_lien():
-    return '<p class="dform__rappel"><a href="#rappel" data-vers-rappel>Vous préférez qu\'on vous rappelle ?</a></p>'
+def rappel_lien(etape):
+    return ('<p class="dform__rappel"><a href="#rappel" data-vers-rappel data-suivi="rappel_ouvert" data-suivi-etape="%d">'
+            'Vous préférez qu\'on vous rappelle ?</a></p>' % etape)
 
 
 def form_devis(source, service=None):
@@ -308,7 +309,7 @@ def form_devis(source, service=None):
             </div>
             <div class="dform__actions js-only"><button type="button" class="btn" data-suivant>Continuer : votre projet</button></div>
             %s
-          </fieldset>''' % (cartes, erreur('d-travaux'), rappel_lien())
+          </fieldset>''' % (cartes, erreur('d-travaux'), rappel_lien(1))
 
     etape2 = '''<fieldset class="dform__step" data-step="2" data-titre="votre projet">
             <legend class="dform__legend" tabindex="-1"><span class="dform__num">Étape 2 sur 3</span> Votre projet</legend>
@@ -326,7 +327,7 @@ def form_devis(source, service=None):
               attrs=' autocomplete="address-level2" required maxlength="80"'),
         radios('d-delai', 'delai', DELAI, 'Quand souhaitez-vous faire les travaux ?', FAC),
         radios('d-surface', 'surface', SURFACE, 'Quelle surface, à peu près ?', FAC, aide='Une estimation suffit.'),
-        rappel_lien())
+        rappel_lien(2))
 
     creneau_aide = T('C03', 'Nous appelons du lundi au vendredi, de 7 h à 18 h.', '')
     connu = ''.join('<option value="%s">%s</option>' % c for c in CONNU)
@@ -342,8 +343,8 @@ def form_devis(source, service=None):
             %(msg)s
             <div class="field file-field" data-champ="fichiers">
               <span class="label" id="d-fichiers-label">Photos ou plans%(fac)s</span>
-              <p class="hint" id="d-fichiers-aide">JPG, PNG ou PDF, 3 fichiers et 10 Mo au total. Trop lourd ? Envoyez-les par e-mail après notre appel.</p>
-              <input class="file-input" id="d-fichiers" name="fichiers[]" type="file" multiple accept="image/jpeg,image/png,application/pdf" aria-labelledby="d-fichiers-label" aria-describedby="d-fichiers-aide d-fichiers-etat d-fichiers-err">
+              <p class="hint" id="d-fichiers-aide">JPG, PNG, HEIC ou PDF, 3 fichiers de 8 Mo au plus. Trop lourd ? Envoyez-les par e-mail après notre appel.</p>
+              <input class="file-input" id="d-fichiers" name="fichiers[]" type="file" multiple accept="image/jpeg,image/png,image/heic,image/heif,.heic,application/pdf" aria-labelledby="d-fichiers-label" aria-describedby="d-fichiers-aide d-fichiers-etat d-fichiers-err">
               <div class="file-row js-only"><button type="button" class="btn btn--ghost file-btn" aria-describedby="d-fichiers-aide d-fichiers-etat" data-fichiers>Choisir des fichiers</button><span class="file-state" id="d-fichiers-etat" aria-live="polite">Aucun fichier choisi</span></div>
               <ul class="file-list js-only"></ul>
               %(err_f)s
@@ -368,7 +369,7 @@ def form_devis(source, service=None):
         fac=FAC, err_f=erreur('d-fichiers'), err_c=erreur('d-connu'), connu=connu,
         reco=champ('d-reco', 'recommande_par', 'Qui vous a recommandé Andy Construct ?', FAC, aide='Pour pouvoir remercier cette personne.',
                    attrs=' maxlength="100"', cls='js-cond'),
-        rap=rappel_lien())
+        rap=rappel_lien(3))
 
     reassurance = ''.join('<li>%s</li>' % x for x in [
         T('C01', 'Nous vous rappelons le jour même ou le jour ouvrable suivant.', 'Nous vous rappelons pendant nos heures de bureau.'),
@@ -389,15 +390,15 @@ def form_devis(source, service=None):
                                               etape1, etape2, etape3, reassurance)
 
 
-def module_rappel(source, seul=False, niveau='h3'):
+def module_rappel(source, seul=False, niveau='h3', service=None):
     sous = (T('C01', 'Nous vous rappelons le jour même ou le jour ouvrable suivant. Votre numéro ne sert qu\'à ce rappel.',
               'Nous vous rappelons pendant nos heures de bureau. Votre numéro ne sert qu\'à ce rappel.')
             if seul else 'Votre numéro ne sert qu\'à ce rappel.')
     return '''<div class="rappel" id="rappel">
           <%(n)s id="rappel-titre">Vous préférez qu'on vous rappelle ?</%(n)s>
           <p>Laissez simplement votre numéro.</p>
-          <form class="rform" id="r-form" action="api/demande.php" method="post" data-form="rappel" data-suivi-formulaire="rappel" aria-labelledby="rappel-titre">
-            %(caches)s
+          <form class="rform" id="r-form" action="api/demande.php" method="post" enctype="multipart/form-data" data-form="rappel" data-suivi-formulaire="rappel" aria-labelledby="rappel-titre">
+            %(caches)s%(travaux)s
             %(tel)s
             %(nom)s
             %(cren)s
@@ -406,6 +407,7 @@ def module_rappel(source, seul=False, niveau='h3'):
             <p class="rform__note">%(sous)s</p>
           </form>
         </div>''' % dict(n=niveau, caches=cachés('rappel', source), sous=sous,
+                         travaux=('<input type="hidden" name="travaux[]" value="%s">' % service) if service else '',
                          tel=champ('r-tel', 'telephone', 'Votre numéro de téléphone', OBL, typ='tel', aide='Exemple : 079 123 45 67',
                                    attrs=' inputmode="tel" autocomplete="tel" required maxlength="30"'),
                          nom=champ('r-nom', 'nom', 'Votre nom', FAC, attrs=' autocomplete="name" maxlength="100"'),
@@ -422,6 +424,7 @@ def par_telephone():
 
 
 def bloc_demande(p, service=None, h2='Demander un devis', intro=None, refs=True, source='accueil', surtitre=True):
+    """source : valeur du champ caché (contrat d'interface §3) : accueil, page-placo, professionnels…"""
     if intro is None:
         intro = ('Encore 2 étapes, moins d\'une minute. Nous vous rappelons pour convenir d\'une visite.' if service
                  else '3 étapes, environ une minute. Nous vous rappelons pour convenir d\'une visite.')
@@ -444,7 +447,7 @@ def bloc_demande(p, service=None, h2='Demander un devis', intro=None, refs=True,
         </div>
       </div>
     </section>
-''' % (st, h2, intro, form_devis('%s-devis' % source, service), module_rappel('%s-rappel' % source), par_telephone(),
+''' % (st, h2, intro, form_devis(source, service), module_rappel('rappel-colonne', service=service), par_telephone(),
        refs_ligne('refs-line--aside') if refs else '')
 
 
@@ -490,3 +493,31 @@ def avis_ligne():
         return ''
     return ('<p class="avis">Avis Google : %s sur 5, %d avis (relevé le %s). <a href="%s" rel="noopener">Lire les avis sur Google</a></p>'
             % (str(a['note']).replace('.', ','), a['nombre'], e(a.get('date_releve', '')), e(a.get('url', ''))))
+
+
+def form_guide_poste(guide):
+    """Guide imprimé par la poste (contrat d'interface §6, copy deck §Q.4) : le PDF reste en libre téléchargement."""
+    return '''<details class="poste">
+          <summary>Le recevoir imprimé, par la poste</summary>
+          <form class="gform" id="g-form" action="api/demande.php" method="post" enctype="multipart/form-data" data-form="envoi_postal_guide" data-suivi-formulaire="envoi_postal_guide" aria-labelledby="g-titre">
+            %(caches)s<input type="hidden" name="guide" value="%(guide)s">
+            <h3 id="g-titre">Recevoir le guide imprimé</h3>
+            %(nom)s
+            %(adresse)s
+            <div class="gform__ligne">%(npa)s%(localite)s</div>
+            %(profil)s
+            %(mail)s
+            <div class="field js-cond" data-champ="conseils_email" hidden><label class="choice" for="g-conseils"><input type="checkbox" id="g-conseils" name="conseils_email" value="oui"><span>Recevoir aussi deux conseils par e-mail sur ce sujet (puis plus rien ; désinscription en un clic)</span></label></div>
+            <div class="dform__alerte" role="alert" hidden><p data-alerte-texte></p><button type="button" class="btn btn--ghost" data-reessayer>Réessayer</button></div>
+            <button type="submit" class="btn" data-envoi>Recevoir le guide par la poste</button>
+            <p class="rform__note">Envoi sous quelques jours ouvrables. Pas de publicité. Votre adresse sert uniquement à cet envoi. <a href="confidentialite.html">Protection des données</a></p>
+          </form>
+          <p class="gform__ok" role="status" tabindex="-1" hidden>Merci. Le guide part par la poste dans les prochains jours.</p>
+        </details>''' % dict(
+        caches=cachés('envoi_postal_guide', 'page-isolation-acoustique'), guide=guide,
+        nom=champ('g-nom', 'nom', 'Votre nom', OBL, attrs=' autocomplete="name" required maxlength="100"'),
+        adresse=champ('g-adresse', 'adresse', 'Rue et numéro', OBL, attrs=' autocomplete="street-address" required maxlength="150"'),
+        npa=champ('g-npa', 'npa', 'NPA', OBL, attrs=' inputmode="numeric" autocomplete="postal-code" required maxlength="4" pattern="[1-9][0-9]{3}"', cls='gform__npa'),
+        localite=champ('g-localite', 'localite', 'Localité', OBL, attrs=' autocomplete="address-level2" required maxlength="80"'),
+        profil=radios('g-profil', 'profil', [('proprietaire', 'Propriétaire'), ('locataire', 'Locataire'), ('autre', 'Autre')], 'Vous êtes', FAC, cls='group--inline'),
+        mail=champ('g-mail', 'email', 'Votre e-mail', ' <span class="opt">(facultatif), pour une confirmation</span>', typ='email', attrs=' autocomplete="email" maxlength="254"'))

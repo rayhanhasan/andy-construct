@@ -83,16 +83,21 @@ def svc_url(s):
 
 # ---------------------------------------------------------------- documents téléchargeables (décision D7)
 DOCS = {
-    'references': ('assets/docs/andy-construct-references.pdf', 'PDF'),
-    'guide-bruit': ('assets/docs/guide-reduire-le-bruit.pdf', 'PDF'),
-    'checklist': ('assets/docs/checklist-chantier-site-occupe.pdf', 'PDF'),
-    'avis-locataires': ('assets/docs/modele-avis-aux-locataires.docx', 'Word'),
+    'references': ('assets/docs/andy-construct-references.pdf', 'PDF', 'andy-construct-references'),
+    'guide-bruit': ('assets/docs/guide-reduire-le-bruit.pdf', 'PDF', 'guide-reduire-le-bruit'),
+    'checklist': ('assets/docs/checklist-chantier-site-occupe.pdf', 'PDF', 'checklist-chantier-site-occupe'),
+    'avis-locataires': ('assets/docs/modele-avis-aux-locataires.docx', 'Word', 'modele-avis-aux-locataires'),
 }
+
+
+def suivi_doc(cle):
+    """Attributs de mesure d'un téléchargement (contrat d'interface §12.3)."""
+    return 'data-suivi="telechargement" data-suivi-doc="%s"' % DOCS[cle][2]
 
 
 def doc(cle):
     """(url, « PDF, 850 Ko ») si le fichier existe dans site/, sinon None : le lien n'est pas publié."""
-    chemin, fmt = DOCS[cle]
+    chemin, fmt, _ = DOCS[cle]
     src = os.path.join(ctx.SITE, chemin)
     if not os.path.exists(src):
         return None
@@ -155,8 +160,8 @@ def head(p):
             '  <script src="%s" defer></script>\n' % ASSETS['suivi'],
             '  <script src="%s" defer></script>\n' % ASSETS['js']]
     src, wid = ctx.CONFIG.get('umami_src', ''), ctx.CONFIG.get('umami_id', '')
-    if src and wid:
-        out.append('  <script src="%s" data-website-id="%s" data-before-send="acUmamiAvantEnvoi" data-do-not-track="true" defer></script>\n'
+    if src and wid and ctx.prod():
+        out.append('  <script src="%s" data-website-id="%s" data-domains="www.andyconstruct.ch" data-do-not-track="true" data-before-send="acUmamiAvantEnvoi" defer></script>\n'
                    % (e(src), e(wid)))
     for obj in p.get('ld', []):
         out.append(jsonld(obj))
@@ -242,7 +247,7 @@ def header(p):
 def footer(p):
     import composants
     ref = doc('references')
-    pdf = ('<li><a href="%s" data-suivi="plaquette_telechargee">Dossier de références (%s)</a></li>' % ref) if ref else ''
+    pdf = ('<li><a href="%s" %s>Dossier de références (%s)</a></li>' % (ref[0], suivi_doc('references'), ref[1])) if ref else ''
     callbar = '''
   <div class="callbar%s" role="region" aria-label="Contact rapide" data-suivi-zone="barre_mobile">
     <a class="btn btn--ghost" href="%s" data-suivi-numero="fixe">%s Appeler</a>
@@ -339,6 +344,7 @@ def page(p, corps):
     doc = (head(p) + '<body>\n  <a class="skip-link" href="#contenu">Aller au contenu</a>\n' + bandeau() + hd
            + '  <main id="contenu">\n' + corps + '  </main>\n' + ft + '</body>\n</html>\n')
     doc = doc.replace('<!--LEGENDE-->', legende_html(ctx.UTILISES))
+    doc = re.sub(r'(<a [^>]*class="[^"]*link-arrow[^"]*"[^>]*>)([^<]*?)(\S+)(</a>)', r'\1\2<span class="la">\3</span>\4', doc)
     doc = ctx.typo(doc)
     controler(p['fichier'], doc)
     with open(os.path.join(ctx.OUT, p['fichier']), 'w', encoding='utf-8') as f:
@@ -349,8 +355,9 @@ def page(p, corps):
 
 def controler(nom, doc):
     """Aucun marqueur du copy deck ni variable non remplacée ; en production, aucune marque de vérification."""
-    for motif in ('[À CONFIRMER', '[À VÉRIFIER', '{{', '}}', '%(', 'None<', '>None'):
-        if motif in doc:
+    sans_scripts = re.sub(r'<script\b.*?</script>', '', doc, flags=re.S)
+    for motif in ('[À CONFIRMER', '[À VÉRIFIER', '{{', '}}', '%(', 'None<', '>None', '="None"'):
+        if motif in sans_scripts:
             raise SystemExit('ERREUR %s : « %s » reste dans la page' % (nom, motif))
     if ctx.prod() and ('class="vc"' in doc or 'class="vbar' in doc or 'noindex' in doc and nom not in ('merci.html', '404.html', 'prestations.html')):
         raise SystemExit('ERREUR %s : marque de validation ou noindex en production' % nom)

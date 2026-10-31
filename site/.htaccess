@@ -1,0 +1,93 @@
+# Andy Construct : configuration Apache / LiteSpeed (généré par tools/build, mode preview)
+# Le dossier api/ garde son propre .htaccess (accès, en-têtes) : ses règles de réécriture remplacent celles-ci.
+
+Options -Indexes
+AddDefaultCharset utf-8
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_mime.c>
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+  AddType application/manifest+json .webmanifest
+  AddType text/plain .txt
+  AddCharset utf-8 .html .css .js .txt .xml .json .webmanifest
+</IfModule>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1) Anciennes adresses (site Joomla et maquette) : 301 en une seule étape
+RewriteRule ^index\.php/?$ / [R=301,L]
+RewriteRule ^(index\.php/)?presentation/?$ /entreprise.html [R=301,L,NE]
+RewriteRule ^(index\.php/)?produits/plafonds/plafonds-en-(placoplatre|tissu-tendu-a-froid|fibre-de-bois|fibre-minerale|bac-metallique)/?$ /placo.html#faux-plafonds [R=301,L,NE]
+RewriteRule ^(index\.php/)?produits/plafonds/plafonds-phoniques-et-acoustiques/?$ /isolation-acoustique.html [R=301,L,NE]
+RewriteRule ^(index\.php/)?produits/cadres-acoustiques/?$ /isolation-acoustique.html#correction [R=301,L,NE]
+RewriteRule ^(index\.php/)?produits/cloisons/cloisons-(legeres-en-placoplatre|mobiles-en-aluminium)/?$ /placo.html#cloisons [R=301,L,NE]
+RewriteRule ^(index\.php/)?produits/cloisons/isolation-thermique-ou-phonique/?$ /cloisons-isothermes.html [R=301,L,NE]
+RewriteRule ^(index\.php/)?realisations/photos-travaux-2014-2016/?$ /realisations.html [R=301,L,NE]
+RewriteRule ^(index\.php/)?realisations/photos-travaux-avant-apres/?$ /realisations.html#avant-apres [R=301,L,NE]
+RewriteRule ^(index\.php/)?realisations/references/?$ /professionnels.html#references [R=301,L,NE]
+RewriteRule ^(index\.php/)?contact/?$ /contact.html [R=301,L,NE]
+RewriteRule ^prestations\.html$ / [R=301,L]
+
+# 2) Adresse unique https://www.andyconstruct.ch : active seulement en production
+# RewriteCond %{HTTPS} off [OR]
+# RewriteCond %{HTTP_HOST} !^www\.andyconstruct\.ch$ [NC]
+# RewriteRule ^(.*)$ https://www.andyconstruct.ch/$1 [R=301,L]
+</IfModule>
+
+# Compression : Brotli si le module existe, sinon Deflate
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript application/json application/xml application/ld+json application/manifest+json image/svg+xml
+</IfModule>
+<IfModule !mod_brotli.c>
+  <IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/xml application/ld+json application/manifest+json image/svg+xml
+  </IfModule>
+</IfModule>
+
+# Cache : CSS et JS sont versionnés (?v=empreinte) ; polices stables ; images 30 jours ; HTML toujours revalidé
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType image/x-icon "access plus 30 days"
+  ExpiresByType application/pdf "access plus 7 days"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(html|xml|txt)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # En-têtes de sécurité
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # CSP stricte : aucun script ni style en ligne, sauf le script d'amorçage (empreinte ci-dessous).
+  # Umami : renseigner umami_src et umami_id dans tools/build/donnees/config.json, puis regénérer.
+  <If "%{REQUEST_URI} !~ m#^/api/#">
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-uY5DKHXt8aET8l0g/cQPKOQurM9mEXoyfFyKTwem2GA='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+  </If>
+  # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# Fichiers sensibles ou inutiles en ligne
+<FilesMatch "(^\.|\.(md|py|json\.bak|log|sh)$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>

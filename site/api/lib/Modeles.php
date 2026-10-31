@@ -117,7 +117,7 @@ final class Modeles
         $m->sujet = self::rendre($modele['sujet'], $vars);
         $m->texte = $texte;
         $m->html = self::texteVersHtml($texte);
-        $m->a = [[$d['email'], trim($d['prenom'] . ' ' . $d['nom'])]];
+        $m->a = [[$d['email'], self::neutraliserLiens(trim($d['prenom'] . ' ' . $d['nom']))]];
         $associe = $demande['associe'];
         $m->repondreA = $associe['email'] !== ''
             ? [$associe['email'], $associe['nom']]
@@ -147,7 +147,7 @@ final class Modeles
         if ($d['npa'] !== '' && !str_contains($lieu, $d['npa'])) {
             $lieu = trim($d['npa'] . ' ' . $lieu);
         }
-        $extrait = preg_replace('~https?://\S+|www\.\S+~i', '[lien]', $d['message']) ?? '';
+        $extrait = self::neutraliserLiens($d['message']);
         $extrait = trim(preg_replace('/\s+/u', ' ', $extrait) ?? '');
         if (mb_strlen($extrait) > 200) {
             $extrait = rtrim(mb_substr($extrait, 0, 197)) . '…';
@@ -158,7 +158,7 @@ final class Modeles
 
         return [
             'ref' => $demande['ref'],
-            'salutation' => self::salutation($d['civilite'], $d['nom'], $d['prenom']),
+            'salutation' => self::neutraliserLiens(self::salutation($d['civilite'], $d['nom'], $d['prenom'])),
             'qui' => $qui,
             'qui_majuscule' => mb_strtoupper(mb_substr($qui, 0, 1)) . mb_substr($qui, 1),
             'verbe_contact' => $verbe,
@@ -166,7 +166,7 @@ final class Modeles
             'promesse' => $promesse,
             'hors_cible' => $horsCible,
             'travaux' => $travaux,
-            'lieu' => $lieu,
+            'lieu' => self::neutraliserLiens($lieu),
             'delai' => $d['delai'] !== '' ? Champs::DELAI[$d['delai']] : '',
             'nb_fichiers' => count($demande['fichiers']) ?: '',
             'message_extrait' => $extrait,
@@ -179,10 +179,29 @@ final class Modeles
             'signature' => $this->signature($associe['nom']),
             'guide_titre' => (string) ($guide['titre'] ?? ''),
             'guide_url' => (string) ($guide['url'] ?? ''),
-            'adresse_envoi' => $d['adresse_postale'],
+            'adresse_envoi' => self::neutraliserLiens($d['adresse_postale']),
             'conseils_email' => $d['conseils_email'] && $d['email'] !== '',
             'url_desinscription' => (string) ($demande['url_desinscription'] ?? ''),
         ];
+    }
+
+    /**
+     * Masque les liens dans un texte saisi par le visiteur et repris dans un e-mail
+     * envoyé à l'adresse qu'il a indiquée (accusé de réception) : adresses complètes,
+     * « www. », et noms de domaine nus que les messageries rendent cliquables
+     * (« exemple.com », « bit.ly/xyz »). Évite que le formulaire serve à envoyer des
+     * liens d'hameçonnage signés par le domaine de l'entreprise.
+     */
+    public static function neutraliserLiens(string $texte): string
+    {
+        $texte = preg_replace('~\b(?:https?|ftp)://\S+|\bwww\.\S+~iu', '[lien]', $texte) ?? '';
+        // Domaine nu suivi d'un chemin (« site.ch/promo »), ou terminé par une extension
+        // générique très utilisée par les spammeurs. Les abréviations courantes (« Rte.de »,
+        // « St.Gallen ») ne sont pas touchées.
+        $domaine = '(?<![\p{L}\p{N}@._-])(?:[\p{L}\p{N}][\p{L}\p{N}-]{0,62}\.)+';
+        $texte = preg_replace('~' . $domaine . '\p{L}{2,24}/\S*~iu', '[lien]', $texte) ?? '';
+        $generiques = 'com|net|org|info|biz|io|co|me|ly|tk|ru|cn|su|xyz|top|club|online|site|website|shop|store|app|link|click|live|win|vip|icu|buzz|cc|pw|ws|gq|ml|cf|ga|ai|to|gl|gd|is|tv';
+        return preg_replace('~' . $domaine . '(?:' . $generiques . ')\b(?![\p{L}\p{N}@-])~iu', '[lien]', $texte) ?? '';
     }
 
     public static function salutation(string $civilite, string $nom, string $prenom): string

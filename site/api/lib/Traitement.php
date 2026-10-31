@@ -115,7 +115,11 @@ final class Traitement
         $saisieInterne = $cleInterne !== '' && is_string($post['cle_interne'] ?? null)
             && hash_equals($cleInterne, (string) $post['cle_interne']);
 
-        $ip = LimiteDebit::ipClient($server, (bool) $this->config->get('faire_confiance_au_proxy'));
+        $ip = LimiteDebit::ipClient(
+            $server,
+            (bool) $this->config->get('faire_confiance_au_proxy'),
+            array_values(array_filter((array) $this->config->get('proxys_de_confiance', []), 'is_string'))
+        );
         $limiteur = new LimiteDebit($this->stockage, $this->config->secret('local') . '|ip');
         $empreinteIp = substr($limiteur->empreinte($ip), 0, 12);
         // Deux seaux : toutes les tentatives (large, pour ne pas bloquer une personne
@@ -138,7 +142,7 @@ final class Traitement
         );
         [$d, $erreurs, $avertissements] = $validateur->valider($post);
         $formulaire = $d['formulaire'];
-        if (!$saisieInterne && $d['canal'] === 'telephone') {
+        if (!$saisieInterne && ($d['canal'] ?? '') === 'telephone') {
             $d['canal'] = 'site';
             $avertissements[] = 'canal_telephone_refuse';
         }
@@ -345,10 +349,16 @@ final class Traitement
         $bilan['interne'] = $r['ok'];
         $bilan['interne_mis_de_cote'] = !$r['ok'];
 
-        // 2. Accusé de réception (seulement si une adresse e-mail est fournie).
+        // 2. Accusé de réception (seulement si une adresse e-mail est fournie). Le formulaire
+        //    écrit à une adresse saisie par le visiteur : plafonds par adresse et global pour
+        //    qu'il ne serve pas de relais d'envoi vers des tiers.
         $confirmer = !$demande['saisie_interne'] || (($post['envoyer_confirmation'] ?? '') === 'oui');
         if ($d['email'] !== '' && $confirmer) {
             $accuse = $this->modeles->accuse($demande);
+            if ($accuse !== null && !$demande['saisie_interne'] && !$this->accuseAutorise($d['email'], $demande['recu_le']->getTimestamp(), $demande['ref'])) {
+                $accuse = null;
+                $bilan['accuse'] = 'limite';
+            }
             if ($accuse !== null) {
                 $r = $this->courriel->envoyer($accuse);
                 $bilan['accuse'] = $r['ok'] ? 'envoye' : 'mis_de_cote';
@@ -359,6 +369,27 @@ final class Traitement
         $charge = $this->charge($demande, $bilan['accuse']);
         $bilan['webhook'] = $this->webhook->transmettre($formulaire === 'envoi_postal_guide' ? 'guide' : 'demande', $charge, $demande['ref']);
         return $bilan;
+    }
+
+    /**
+     * Plafonds des accusés de réception : par adresse destinataire (24 h glissantes)
+     * et pour tout le site (par heure). Au-delà, la demande est traitée normalement
+     * (e-mail interne, n8n) mais aucun accusé ne part.
+     */
+    private function accuseAutorise(string $email, int $maintenant, string $ref): bool
+    {
+        $limiteur = new LimiteDebit($this->stockage, $this->config->secret('local') . '|accuse');
+        $parAdresse = $limiteur->tenter('email|' . strtolower($email), 'accuse-adresse', max(1, (int) $this->config->get('anti_spam.accuses_par_adresse_24h', 3)), $maintenant, 86400);
+        if (!$parAdresse['autorise']) {
+            $this->journal->alerte('accuse_limite', ['ref' => $ref, 'seau' => 'adresse']);
+            return false;
+        }
+        $global = $limiteur->tenter('site', 'accuse-global', max(1, (int) $this->config->get('anti_spam.accuses_par_heure', 20)), $maintenant);
+        if (!$global['autorise']) {
+            $this->journal->alerte('accuse_limite', ['ref' => $ref, 'seau' => 'global']);
+            return false;
+        }
+        return true;
     }
 
     /** @return array<string, string> libellé => URL */
@@ -540,7 +571,9 @@ final class Traitement
         $referent = (string) ($server['HTTP_REFERER'] ?? '');
         $hoteSite = (string) parse_url((string) $this->config->get('url_site'), PHP_URL_HOST);
         $hoteRef = (string) parse_url($referent, PHP_URL_HOST);
-        if ($referent !== '' && $hoteRef !== '' && ($hoteRef === $hoteSite || $hoteRef === ($server['HTTP_HOST'] ?? ''))) {
+        $schemaRef = strtolower((string) parse_url($referent, PHP_URL_SCHEME));
+        if ($referent !== '' && $hoteRef !== '' && in_array($schemaRef, ['http', 'https'], true)
+            && ($hoteRef === $hoteSite || $hoteRef === ($server['HTTP_HOST'] ?? ''))) {
             $retour = $referent;
         }
         $tel = (string) $this->config->get('entreprise.tel_fixe', '+41 22 771 20 15');

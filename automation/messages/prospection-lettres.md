@@ -21,7 +21,7 @@ Objet : Plâtrerie, peinture et isolation acoustique pour vos immeubles
 
 Andy Construct est une entreprise de Carouge, inscrite au registre du commerce depuis 2007. Nous posons des cloisons et des faux-plafonds en plaques de plâtre, nous peignons à l'intérieur, et nous isolons contre le bruit et contre le froid, dans toute la Suisse romande.
 
-Pour vos remises en état de fin de bail, vos cages d'escalier et vos travaux en immeuble habité, nous protégeons les lieux, informons les locataires et rendons un chantier propre. Nous travaillons notamment pour {{reference_1}} et {{reference_2}} ; vous trouverez d'autres références dans le dossier joint.
+Pour vos remises en état de fin de bail, vos cages d'escalier et vos travaux en immeuble habité, nous protégeons les lieux, informons les locataires et rendons un chantier propre. Nous avons notamment réalisé des travaux pour {{reference_1}} et {{reference_2}} ; vous trouverez d'autres références dans le dossier joint.
 
 Je me permettrai de vous appeler la semaine prochaine, pour savoir si nous pouvons figurer parmi les entreprises que vous consultez. Si vous préférez ne pas être appelé(e), un simple message suffit.
 
@@ -30,6 +30,8 @@ Avec mes meilleures salutations,
 {{associe}}
 Associé · Andy Construct
 {{mobile_associe}} · +41 22 771 20 15
+
+Vos coordonnées professionnelles proviennent de {{source_coordonnees}}. Elles servent uniquement à vous présenter notre entreprise. Comment nous les traitons : www.andyconstruct.ch/confidentialite.html
 ```
 
 ## Touche 1 · Bureau d'architectes
