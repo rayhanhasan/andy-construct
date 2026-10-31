@@ -1,56 +1,52 @@
-# Andy Construct — maquette du nouveau site
+# Andy Construct — site d'acquisition (v2)
 
-Maquette de refonte du site d'**Andy Construct** (plafonds, cloisons, isolation, peinture, Genève et Vaud), préparée par Harbor Digital pour présentation au client.
+Site d'acquisition d'**Andy Construct** (placo, peinture, isolation acoustique, cloisons isothermes ; toute la Suisse romande ; siège à Carouge), avec la stratégie d'acquisition et l'automatisation complètes. Préparé par Harbor Digital. La maquette v1 correspond au commit `ec5f98d`.
+
+Pour reprendre le projet : lire **`HANDOFF.md`**.
 
 ## Contenu du dépôt
 
 | Dossier | Rôle |
 |---|---|
-| `site/` | Le site statique, prêt à déposer sur un hébergement (HTML, CSS, JS natifs, aucune dépendance, aucun appel externe) |
-| `docs/brief-design.md` | Charte graphique dérivée du logo et règles d'ergonomie (public senior, BTP) |
-| `docs/analyse-marche.md` | Analyse de marché, concurrence, leviers SEO local et GEO, plan 30/90/180 jours |
-| `docs/brief-seo.md` | Brief SEO/GEO opérationnel (titles, FAQ, JSON-LD, `llms.txt`, redirections) |
-| `docs/justification.md` | Pourquoi ce site est un bon site : argumentaire pour le client |
-| `docs/contenus-a-valider.md` | Tous les contenus provisoires à faire confirmer par le client |
-| `docs/selection-photos.md` | Photos retenues ou écartées, et conseils pour les prochaines prises de vue |
-| `docs/source/` | Sources : contenu de l'ancien site, logo original, ancien logo 2016 (archivé), démo de référence |
-| `deploy/deploy_ftp.py` | Envoi FTP limité au dossier `res/` de harbor-digital.fr |
+| `tools/build/` | **Générateur** du site (Python, sans dépendance). Source de vérité du HTML, CSS (`static/`) et JS |
+| `tools/build/donnees/` | `confirmations.json` (points C01-C44 validés ou non), `config.json` (Umami), `temoignages.json`, `avis.json` |
+| `site/` | Site généré en mode **preview** (validation) : 13 pages + `api/` (traitement PHP des formulaires) |
+| `site/api/` | Endpoint PHP : demandes de devis, rappels, envois postaux ; scoring A/B/C ; anti-spam ; e-mails ; webhook signé vers n8n. Tests : `php site/api/tests/run.php` |
+| `automation/n8n/` | 16 workflows n8n importables + `verifier.py` ; `docker-compose.yml` pour l'auto-hébergement |
+| `automation/messages/` | Tous les messages (accusés, relances, avis, SMS, courriers et script de prospection) |
+| `livrables/` | Plaquette de validation, suivi Excel des demandes et KPI, sources des PDF |
+| `site/assets/docs/` | PDF téléchargeables : dossier de références, guide bruit, check-list régies |
+| `docs/v2/` | Programme, audit, enquête client, concurrence, personas, stratégie, logos, architecture CRO, copy deck, contrat d'interface, automatisation, décisions, QA |
+| `docs/` (racine) | Documents de la maquette v1 (charte `brief-design.md`, analyse de marché v1, brief SEO v1) |
+| `deploy/deploy_ftp.py` | Envoi FTP verrouillé sur `res/` de harbor-digital.fr |
 
-## Générer le site (v2)
-
-```bash
-python3 tools/build/build.py                                   # preview (défaut) → site/
-python3 tools/build/build.py --mode verification --out /tmp/av # passages à confirmer soulignés, code Cxx en exposant
-python3 tools/build/build.py --mode production --out dist/     # textes de repli, logos « autorise » seulement, indexable
-```
-
-Les confirmations du client se cochent dans `tools/build/donnees/confirmations.json` (une entrée par code `Cxx`) ; la mesure Umami s'active dans `tools/build/donnees/config.json` (production seulement) ; témoignages et avis Google restent masqués tant que `donnees/temoignages.json` et `donnees/avis.json` sont vides. CSS et JS sources : `tools/build/static/` (minifiés et versionnés à la génération). Préparation des images (une fois) : `tools/build/images.py` (Pillow).
-
-## Voir la maquette en local
+## Générer le site
 
 ```bash
-cd site && python3 -m http.server 8080
-# puis ouvrir http://localhost:8080
+python3 tools/build/build.py                                    # preview (défaut) → site/
+python3 tools/build/build.py --mode verification --out /tmp/av  # points à confirmer soulignés (code Cxx)
+python3 tools/build/build.py --mode production --out dist/      # textes de repli, logos « autorise » seulement, indexable
 ```
 
-## Déployer sur harbor-digital.fr/res
+## Tester
 
-Le script n'écrit **que** dans le dossier distant `res/` (tout autre chemin est refusé) et n'efface aucun fichier. Les identifiants se passent par variables d'environnement et ne sont jamais écrits dans le dépôt.
+```bash
+php site/api/tests/run.php                  # 266 vérifications
+bash site/api/tests/endpoint.sh             # 57 vérifications HTTP
+python3 automation/n8n/verifier.py          # 16 workflows
+cd site && php -S localhost:8080            # site + formulaire (créer un config.php de test, mode test)
+```
+
+## Déployer la version de validation sur harbor-digital.fr/res
 
 ```bash
 export FTP_HOST=46.202.172.2 FTP_USER='…' FTP_PASS='…'
-python3 deploy/deploy_ftp.py --dry-run   # affiche ce qui serait envoyé
-python3 deploy/deploy_ftp.py             # dépose le site dans res/andy-construct/
+python3 deploy/deploy_ftp.py --subdir andy-construct-v2 --dry-run
+python3 deploy/deploy_ftp.py --subdir andy-construct-v2
 ```
 
-La maquette est alors visible sur `https://harbor-digital.fr/res/andy-construct/`.
-Si le dossier `res` n'est pas trouvé automatiquement, indiquez son chemin : `export FTP_REMOTE_RES=/chemin/vers/res`.
+Le script n'écrit que dans `res/`, n'efface rien et n'envoie ni les tests ni le stockage de l'API. Les identifiants ne sont jamais écrits dans le dépôt.
 
-## Avant la mise en production (sur andyconstruct.ch)
+## Mise en production
 
-1. Faire valider chaque ligne de `docs/contenus-a-valider.md` et supprimer les commentaires `<!-- PROVISOIRE … -->`.
-2. Retirer le bandeau « Maquette de présentation » (`.mockup-notice`) de chaque page.
-3. Retirer `<meta name="robots" content="noindex, nofollow">` de chaque page.
-4. Brancher le formulaire de contact : script PHP de l'hébergeur ou service de formulaires conforme à la nLPD.
-5. Mettre en place les redirections 301 des anciennes adresses Joomla (voir `docs/brief-seo.md`, §8.3).
-6. Créer ou revendiquer la fiche Google Business Profile et aligner local.ch et search.ch sur les mêmes nom, adresse et téléphone.
+Voir la check-list de `HANDOFF.md` §9 et `docs/v2/automatisation.md` (installation n8n, SMTP, CRM, Umami, recette).

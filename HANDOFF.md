@@ -1,7 +1,7 @@
-# HANDOFF — Projet maquette Andy Construct
+# HANDOFF — Andy Construct, site d'acquisition (v2)
 
-Document de passation pour reprendre le projet en local (Claude Code CLI ou à la main).
-Dernière mise à jour : 6 octobre 2026. État : **maquette livrée, en attente de validation client**.
+Document de passation pour reprendre le projet en local (Claude Code ou à la main).
+Mise à jour : 31 octobre 2026. État : **v2 développée, testée et contrôlée ; en attente de validation client et de mise en place des outils (SMTP, n8n, CRM)**.
 
 ---
 
@@ -9,218 +9,149 @@ Dernière mise à jour : 6 octobre 2026. État : **maquette livrée, en attente 
 
 ```bash
 git clone https://github.com/rayhanhasan/andy-construct.git
-cd andy-construct
-git checkout claude/eager-heisenberg-sz3nve
+cd andy-construct && git checkout claude/eager-heisenberg-sz3nve
 
-# Voir le site
-cd site && python3 -m http.server 8080      # http://localhost:8080
-
-# Régénérer le site après modification des sources (depuis la racine)
-python3 tools/build/build.py
+python3 tools/build/build.py                     # régénère site/ (mode preview)
+cd site && php -S localhost:8080                 # site + formulaire (PHP 8.x)
+php site/api/tests/run.php                       # tests de l'API (266)
+python3 automation/n8n/verifier.py               # contrôle des 16 workflows
 ```
 
-Prérequis : Python 3.10+ (aucune dépendance pour générer le site). Pour les scripts photos/carte : `pip install pillow`. Pour les captures : Node 18+ et `npx playwright` (Chromium).
+Pour reprendre avec Claude Code :
 
-Pour reprendre avec Claude Code en local, ouvrir le dépôt et donner ce message :
+> Lis HANDOFF.md, README.md, docs/v2/programme-v2.md et docs/v2/decisions-chef-de-projet.md. Tu es chef de projet du site d'acquisition Andy Construct (v2). Reprends à la section « Prochaines étapes ».
 
-> Lis HANDOFF.md, README.md et docs/brief-design.md. Tu es chef de projet sur la maquette Andy Construct. Reprends à la section « Prochaines étapes ».
+Prérequis : Python 3.10+ (générateur sans dépendance ; Pillow seulement pour `tools/build/images.py` et les scripts de `livrables/sources/`), PHP 8.1+ pour l'API, Node 18+ et Playwright pour les captures, Docker pour n8n auto-hébergé.
 
 ---
 
-## 2. Dépôt et branches
+## 2. Dépôt
 
 | Élément | Valeur |
 |---|---|
-| Dépôt GitHub | `rayhanhasan/andy-construct` |
-| Branche de travail | `claude/eager-heisenberg-sz3nve` (tout est poussé ici) |
-| Branche par défaut | aucune autre branche ; pas de pull request ouverte |
-| Commit de référence | `471f3b6` « Recentre le site sur 4 services et la Suisse romande… » (+ ce HANDOFF) |
-
-Aucun identifiant n'est stocké dans le dépôt (vérifié). `.gitignore` exclut `.env`, `node_modules`, `__pycache__`.
+| Dépôt | `rayhanhasan/andy-construct` — **⚠️ PUBLIC et indexé : à passer en privé** (Settings → Danger Zone → Change visibility) |
+| Branche | `claude/eager-heisenberg-sz3nve` (tout est poussé) ; pas de pull request |
+| Maquette v1 | commit `ec5f98d` (le tag `maquette-v1` n'a pas pu être poussé par le proxy) |
+| Secrets | aucun dans le dépôt ; `site/api/config.php`, `site/api/stockage/`, `automation/.env`, `automation/donnees/` sont ignorés par git |
 
 ---
 
-## 3. Le client et le contexte
+## 3. Le client (faits vérifiés)
 
-**Agence** : Harbor Digital (harbor-digital.fr). **Client** : Andy Construct.
-
-Identité vérifiée au registre du commerce (Zefix / [Moneyhouse](https://www.moneyhouse.ch/en/company/andy-construct-chanton-cie-3813590051)) :
-
-| Champ | Valeur |
-|---|---|
-| Raison sociale | Andy Construct, Chanton & Cie — **société en nom collectif** (pas Sàrl) |
-| Nom commercial | Andy Construct |
-| Siège | Route des Acacias 48, 1227 Carouge (GE) depuis le 02.05.2023 |
-| Ancienne adresse | Avenue de Bel-Air 57, 1225 Chêne-Bourg (affichée sur l'ancien site, plus utilisée) |
-| Inscription RC | 27.06.2007 (l'ancien site disait 2010) |
-| IDE | CHE-113.706.162 |
-| Associés | Adnan Bajrami, Caroline Chanton Bajrami (nommés seulement dans les mentions légales) |
-| Téléphones | +41 22 771 20 15 (fixe, mis en avant) · +41 78 631 14 34 (mobile) |
-| E-mail | andy.construct@bluewin.ch (recommandé : contact@andyconstruct.ch) |
-| Facebook | facebook.com/andyconstruct.bajrami |
-| Ancien site | https://www.andyconstruct.ch (Joomla, © 2010-2022) |
-
-**Services (validés par le client, 4 seulement)** : Placo · Peinture · Isolation acoustique · Cloisons isothermes.
-**Zone (validée par le client)** : toute la Suisse romande (GE, VD, NE, FR, Valais romand, JU + Jura bernois).
-**Audience** : 45-70 ans, BTP (régies, architectes, communes, propriétaires), déteste l'extravagant.
-
-**Références publiques** (reprises de l'ancien site, en texte, sans logos) : Ville de Genève, Salle communale de Collonge-Bellerive, Piaget, Conservatoire de Musique de Genève, Salle de l'Alhambra, Mairie de Plan-les-Ouates, Laboratoire Covance CLS SA, De Grisogono, Energestion Ingénieurs & Architectes SIA, Domaine des Perrières (Coppet), Dipan SA (Nyon), HEAD Genève, OMC, Celgene, Bank Sarasin (auj. J. Safra Sarasin), UBS, Hôtel de Chavannes-de-Bogis, Harmonie Nautique de Genève.
+- **Andy Construct, Chanton & Cie**, société en nom collectif, Route des Acacias 48, 1227 Carouge GE (siège depuis 05.2023 ; adresse de domiciliation partagée par ~92 entreprises → fiche Google en « zone desservie »). IDE CHE-113.706.162. Activité depuis le **01.06.2007** (Perly-Certoux → Chêne-Bourg 2010 → Carouge 2023). Associés : Adnan Bajrami, Caroline Chanton Bajrami.
+- Tél. +41 22 771 20 15 · mobile +41 78 631 14 34 · andy.construct@bluewin.ch (recommandé : contact@andyconstruct.ch).
+- **Services (validés par le client)** : Placo · Peinture · Isolation acoustique · Cloisons isothermes (affichées « Cloisons isolantes », D1).
+- **Zone (validée)** : toute la Suisse romande. **Audience** : 45-70 ans, BTP, allergique à l'exagéré.
+- 18 références publiques (Ville de Genève, Conservatoire, HEAD, OMC, UBS, Piaget, salles communales…). Membre du GGE selon l'annuaire (à confirmer). Aucun avis client public nulle part. Facebook = profil personnel fermé (pas de page entreprise).
+- Détail : `docs/v2/dossier-client.md`.
 
 ---
 
-## 4. Demande initiale (résumé fidèle)
+## 4. Demande du client pour la v2 (résumé)
 
-1. Refaire « au propre » le site démo `harbor-digital.fr/res/index2.html` (template Webflow « Roofinger » de Webestica) en retirant l'inutile et en adaptant la DA à la société.
-2. DA conforme au logo, **sobre** (public âgé, BTP), mettre en avant expertise, professionnalisme, entreprise **suisse, locale, engagée, expérimentée**.
-3. Portfolio avec les photos pertinentes de l'ancien site (95 fournies, 30 retenues).
-4. Analyse de marché : points d'impact les plus forts et potentiel (SEO local, GEO…).
-5. Justifier en quoi le site est bon (structure, portfolio, preuve sociale…).
-6. Rôle de Claude : chef de projet, sous-traitance à des agents, contrôle de conformité charte.
-7. Chiffres inconnus : valeurs provisoires signalées.
-8. **Règle serveur** : n'écrire que dans `harbor-digital.fr/res`, aucun accès aux autres fichiers.
-9. Skills demandés : `/frontend-design`, `/seo` → **non installés** sur le compte ; leurs principes ont été appliqués via les briefs.
-
-Demandes ultérieures : nouveau logo rouge (remplace l'ancien bleu) ; services réduits à 4 ; zone = Suisse romande ; carte avec le logo marquant les zones.
+Version définitive, **site d'acquisition** : tous les agents et skills utiles, audits, analyse concurrentielle, copywriting corrigé et adapté à l'audience, CRO avec travail psychologique, ergonomie (moins de texte, meilleur portfolio, même style sobre), **logos des références répétés** (sous l'en-tête, pied de page…), **stratégie d'acquisition et automatisation complètes**.
 
 ---
 
-## 5. Architecture du dépôt
+## 5. Ce qui a été fait (équipe d'agents, chef de projet = Claude)
+
+| Phase | Agent | Livrable |
+|---|---|---|
+| 1 | Audit UX/CRO/a11y/perf/SEO | `docs/v2/audit-maquette.md` (maquette 6,3/10, 43 constats) |
+| 1 | Enquête client | `docs/v2/dossier-client.md` |
+| 1 | Concurrence Suisse romande | `docs/v2/concurrence-romandie.md` (46 sites, 17 fiches, prix publics) |
+| 1 | Personas & psychologie | `docs/v2/personas-psychologie.md` (5 personas, leviers éthiques, 8 tests A/B, 63 sources) |
+| 1 | Logos | `site/assets/img/references/` + `logos.json` + `docs/v2/logos-references.md` (lettres types d'autorisation) |
+| 1 | Stratégie d'acquisition | `docs/v2/strategie-acquisition.md` (objectifs, scoring, 13 canaux, budget S/M/L, plan d'automatisation, conformité) |
+| 2 | Architecte CRO + copywriter | `docs/v2/architecture-cro.md`, `docs/v2/copy-deck.md` (tous les textes, C01-C44 avec repli) |
+| 2 | Automatisation | `site/api/`, `automation/`, `docs/v2/contrat-interface.md`, `docs/v2/automatisation.md` |
+| 3 | Développement | Générateur `tools/build/` v2, 13 pages, 3 modes |
+| 3 | Supports | 3 PDF dans `site/assets/docs/`, `livrables/` (plaquette de validation, Excel de suivi) |
+| 4 | Sécurité | `docs/v2/qa/securite.md` (24 constats : 0 critique, 1 élevé et 5 moyens corrigés) |
+| 4 | Juridique & relecture | `docs/v2/qa/relecture-juridique-copy.md` (8 points pour l'avocat, check-list) |
+
+Arbitrages du chef de projet : `docs/v2/decisions-chef-de-projet.md` (D1-D8).
+Skills utilisés : `pdf`, `xlsx`, `artifact-design`. Aucun skill SEO/CRO/copywriting n'existe sur le compte : les méthodes (Nielsen, LIFT, Cialdini, WCAG, Baymard) sont intégrées dans les consignes des agents.
+
+---
+
+## 6. Architecture technique
 
 ```
-andy-construct/
-├── HANDOFF.md                 ← ce fichier
-├── README.md                  ← aperçu, déploiement, check-list production
-├── site/                      ← SITE LIVRABLE (statique, généré — ne pas éditer à la main)
-│   ├── index.html  prestations.html  realisations.html  contact.html
-│   ├── mentions-legales.html  404.html
-│   ├── robots.txt  sitemap.xml  llms.txt  site.webmanifest  favicon.ico
-│   └── assets/
-│       ├── css/styles.css     (~40 Ko, variables CSS en tête)
-│       ├── js/main.js         (~11 Ko, vanilla : menu, galerie/filtres, lightbox <dialog>, formulaire, champ fichier)
-│       ├── fonts/             (Montserrat 600/700, Source Sans 3 400/600/400i, woff2 + licences OFL)
-│       └── img/
-│           ├── brand/         (logo-andy-construct[.png|.webp] = fond clair ; -blanc = fond sombre ; favicons « A »)
-│           ├── portfolio/     (30 photos × -1600.webp/-800.webp/-800.jpg, hero en -2400.webp, manifest.json)
-│           └── og-andy-construct.jpg
-├── tools/build/               ← GÉNÉRATEUR (source de vérité du HTML)
-│   ├── build.py               point d'entrée : python3 tools/build/build.py
-│   ├── common.py              gabarit (head, en-tête, pied, NAP, JSON-LD communs)
-│   ├── content.py             contenus partagés (coordonnées, services, références)
-│   ├── faq.json               questions fréquentes (texte visible + FAQPage)
-│   ├── icons.py               pictogrammes SVG
-│   ├── page_index.py  page_prestations.py  page_realisations.py  page_autres.py
-│   ├── carte.py               carte SVG Suisse romande (marqueurs « A », cartouche logo)
-│   ├── carte_donnees.py       extraction des limites cantonales → data/
-│   └── data/suisse-occidentale.json + LICENSE-swiss-maps.txt (swisstopo/OFS via npm swiss-maps, BSD)
-├── deploy/deploy_ftp.py       ← envoi FTP verrouillé sur res/ (identifiants par variables d'env.)
-└── docs/
-    ├── brief-design.md        charte (couleurs, typo, motif, accessibilité, ton) — non négociable
-    ├── brief-seo.md           titles, meta, FAQ, JSON-LD, llms.txt, redirections 301, recette SEO
-    ├── analyse-marche.md      marché, 8 concurrents, diagnostic ancien site, matrice 12 leviers, GEO, plan 30/90/180 j
-    ├── justification.md       argumentaire client (3 visiteurs types, 9 piliers, tableau de suivi)
-    ├── contenus-a-valider.md  TOUTES les questions au client (bloquant avant production)
-    ├── selection-photos.md    photos retenues/écartées + conseils prises de vue
-    └── source/                ancien site (HTML), démo Roofinger, logo original (.webp), ancien logo bleu archivé
+Visiteur ─► site statique (tools/build → site/ ou dist/)
+              │  formulaire 3 étapes / rappel / guide postal (fetch, repli sans JS)
+              ▼
+         site/api/demande.php ─► validation, anti-spam, limite de débit, fichiers contrôlés
+              │                   score 0-100 + priorité A/B/C (data/scoring.json, zones.json)
+              ├─► e-mail interne (toujours) + accusé au prospect (PHPMailer SMTP)
+              └─► webhook HMAC-SHA256 ─► n8n (VPS suisse, docker-compose) ─► Pipedrive (ou Brevo)
+                                         ├─ SMS/e-mail aux associés, actions en un clic (WF01, WF02)
+                                         ├─ relances, avis, offres perdues, entretien (WF03x, WF04x)
+                                         ├─ veille simap, rapport mensuel, prospection B2B (WF08-10)
+                                         └─ désinscription, purge, supervision (WF12, WF04p, WF13)
+Statistiques : Umami sans cookie (suivi.js + data-suivi), activé en production via donnees/config.json
 ```
 
-**Principes techniques** : HTML/CSS/JS natifs, aucune dépendance runtime, aucun appel externe (pas de Google Fonts ni Maps embarqué → nLPD), chemins relatifs (site servi depuis un sous-dossier), `noindex, nofollow` sur toutes les pages tant que c'est une maquette, canonical vers `https://www.andyconstruct.ch/…`, contenus provisoires entourés de `<!-- PROVISOIRE : … -->`, bandeau `.mockup-notice` en haut de chaque page.
+**Modes du générateur** (D6) : `preview` (textes définitifs, bandeau de validation, noindex) · `verification` (points Cxx soulignés) · `production` (repli pour tout point non confirmé, logos `autorise` seulement, photos hors offre exclues, indexable, Umami). Les confirmations se cochent dans `tools/build/donnees/confirmations.json`.
 
-**Pourquoi un code réécrit** : le template Roofinger est sous licence commerciale ; seule sa **structure** a été reprise. Question ouverte au client (voir §9).
+**Pages (13)** : index, placo, peinture, isolation-acoustique, cloisons-isothermes, realisations, professionnels, entreprise, contact, merci, mentions-legales, confidentialite, 404 (+ `prestations.html` redirigée). `.htaccess` : 301 Joomla et maquette, compression, cache, CSP stricte.
+
+**Qualité mesurée** : axe 0 violation (13 pages, 1440 et 390) · Lighthouse mobile production : accueil 99/100/100/100 (LCP 1,8 s), placo 100/100/100/100 · CSS 47 Ko, JS 24 Ko · API 266/266, HTTP 57/57, workflows 39/39.
 
 ---
 
-## 6. Charte graphique (résumé — détail dans docs/brief-design.md)
+## 7. Livrables à remettre
 
-| Rôle | Valeur |
+| Fichier | Usage |
 |---|---|
-| Rouge Andy (boutons, marqueurs) | `#E8000F` |
-| Rouge profond (survol, liens sur clair) | `#C4000D` |
-| Anthracite (titres, pied, voile héro) | `#1D1F22` |
-| Graphite (texte secondaire) | `#44494F` |
-| Acier (texte sur sombre) | `#B9BDC2` |
-| Brume (fond alterné) / Trait | `#F4F4F5` / `#E2E3E5` |
-
-Règles : le rouge ponctue, jamais de grande surface rouge ; aucune autre teinte ; titres Montserrat 700, surtitres Montserrat 600 capitales espacées 0.18em, texte Source Sans 3 18 px ; motif unique = trait oblique rouge (biseau du « A ») ; croix suisse uniquement dans le logo ; zones cliquables ≥ 48 px ; aucun texte < 16 px ; pas d'animation, carrousel, pop-up.
+| `andy-construct-v2-validation.zip` (envoyé dans la conversation) | Version de validation à déposer dans `res/andy-construct-v2/` |
+| `andy-construct-v2-production.zip` (envoyé dans la conversation) | Version production telle qu'elle serait publiée aujourd'hui (rien de confirmé) |
+| `livrables/andy-construct-references-preview.pdf` | Plaquette avec logos, pour la séance de validation (ne pas diffuser) |
+| `livrables/suivi-demandes-et-kpi.xlsx` | Suivi des demandes tant que le CRM n'est pas en place |
+| Dossier de présentation (maquette v1) | https://claude.ai/artifact/44SM63Pk6NFCuvZV77ZdFq — **décrit encore la v1**, à mettre à jour si besoin |
 
 ---
 
-## 7. Livrables et liens
+## 8. Décisions en attente du client (bloquant production)
 
-| Livrable | Où |
-|---|---|
-| Site maquette | `site/` (dépôt) — .zip envoyé dans la conversation (`andy-construct-maquette.zip`, ~5 Mo) |
-| Dossier de présentation client | https://claude.ai/artifact/44SM63Pk6NFCuvZV77ZdFq (privé : le partager via son menu « Partager ») |
-| Analyse de marché / SEO / justification | `docs/` |
-
-**Mise en ligne de la maquette** : **pas encore faite**. Le FTP (port 21 vers 46.202.172.2) était bloqué depuis l'environnement cloud. En local :
-
-```bash
-export FTP_HOST=46.202.172.2 FTP_USER='u578747026.harbor-digital.fr' FTP_PASS='<nouveau mot de passe>'
-python3 deploy/deploy_ftp.py --dry-run
-python3 deploy/deploy_ftp.py        # → res/andy-construct/  (n'écrase pas index2.html, n'efface rien)
-```
-Ou : décompresser le .zip dans `res/andy-construct/` via le gestionnaire de fichiers Hostinger.
-⚠️ Le mot de passe FTP a circulé dans la conversation : **le changer** (prévu par le client).
+1. **44 points C01-C44** : liste consolidée dans `docs/v2/copy-deck.md` §R (délai de rappel, horaires, gratuité visite/devis, petits chantiers, prix, garanties, associé qui rappelle, GGE, assurance, attestations, lieux des chantiers, légendes photos, e-mail sur domaine…). Les cocher dans `confirmations.json`.
+2. **Logos** : 12 logos `a_autoriser` → envoyer les lettres de `docs/v2/logos-references.md` ; passer en `autorise` dans `logos.json` à réception. OMC : accord même pour le nom. Confirmer Everness = hôtel de Chavannes-de-Bogis, Dipan SA, de Grisogono.
+3. **Photos** : 19 photos sur 30 (plafonds tendus/métalliques, hors offre) exclues en production ; **aucune photo de peinture** → shooting à commander (architecture-cro §8.8). Originaux en plus haute définition si possible.
+4. **Nom du 4e service** (D1), **particuliers hors Genève** (C21, D8), adhésion éventuelle à Gypserie Peinture Genève (GPG).
+5. **Témoignages** : 2-3 vrais avec accord écrit (lettre type fournie) ; la section reste masquée sinon.
+6. **Budget** : scénario S/M/L (CHF ~5'900 / 18'300 / 42'300 par an) et outils (Pipedrive ou Brevo).
+7. **Hébergement d'andyconstruct.ch** : PHP 8.1+ requis pour `site/api/`.
 
 ---
 
-## 8. Méthode de travail utilisée (agents)
-
-Chef de projet (Claude principal) + agents spécialisés, tous via l'outil Agent :
-1. **Analyste marché / SEO / GEO** → `analyse-marche.md`, `brief-seo.md` (recherche web, sources citées, aucun chiffre inventé).
-2. **Photos** → tri 95 → 30, export WebP/JPG sans EXIF/GPS, `manifest.json`, `selection-photos.md`.
-3. **Frontend** → générateur `tools/build/`, 6 pages, intégration photos/SEO, carte ; vérif Playwright (360→1440 px, console, liens, débordement).
-4. **Rédacteur** → `justification.md`.
-Contrôle qualité par le chef de projet sur captures à chaque itération (héro trop sombre, tailles de texte, champ fichier en anglais, textes internes, etc. — tous corrigés).
-
-Skills Claude utilisés : `artifact-design` (dossier de présentation). Skills demandés mais absents : `/frontend-design`, `/seo` (à installer si souhaité, puis repasser le site dessus).
-
----
-
-## 9. Décisions en attente du client (bloquant production)
-
-Liste complète dans `docs/contenus-a-valider.md`. Les principales :
-
-1. **Identité** : afficher Carouge / société en nom collectif / 2007 (choix actuel, conforme au registre) ?
-2. **Template Roofinger** : l'agence a-t-elle la licence, et faut-il en garder l'apparence ou la structure suffit-elle ? (structure seule actuellement)
-3. **Logo** : valider la variante « CONSTRUCT » anthracite (fonds clairs) et le favicon « A » rouge.
-4. **Photos hors services** : plusieurs photos (dont **le héro**) montrent des plafonds lumineux/tendus, plus proposés → garder comme réalisations ou retirer (et choisir un nouveau héro).
-5. **Aucune photo de peinture** → en fournir 3-4 (et ajouter le filtre « Peinture » à la galerie).
-6. Chiffres provisoires : « 300+ chantiers », horaires lu-ve 7 h-18 h, « devis gratuit », méthode/engagements.
-7. Témoignages : les 3 affichés sont **fictifs** (profils génériques) → 2-3 vrais avec accord écrit, sinon retirer la section.
-8. Accord pour citer les marques privées des références, et année de chaque chantier.
-9. E-mail sur le domaine, numéro principal, accord des personnes visibles sur les photos.
-
----
-
-## 10. Prochaines étapes
+## 9. Prochaines étapes
 
 **Immédiat**
-- [ ] Changer le mot de passe FTP, puis déployer la maquette dans `res/andy-construct/` et vérifier en ligne (desktop + mobile).
-- [ ] Partager le dossier de présentation avec le client ; recueillir les réponses de `contenus-a-valider.md`.
+- [ ] Passer le dépôt GitHub en privé. Changer le mot de passe FTP (il a circulé dans la conversation).
+- [ ] Déployer la version de validation (`python3 deploy/deploy_ftp.py --subdir andy-construct-v2`, ou le zip via le gestionnaire de fichiers). Le FTP était bloqué depuis l'environnement cloud.
+- [ ] Séance de validation avec le client (mode `verification` + plaquette preview) ; cocher `confirmations.json`.
 
-**Après validation client** (modifier `tools/build/`, puis `python3 tools/build/build.py`)
-- [ ] Appliquer les réponses, retirer les commentaires `PROVISOIRE`, remplacer/retirer témoignages, photos hors services, héro si besoin.
-- [ ] Ajouter photos peinture + filtre galerie ; fiches projets datées (références).
-- [ ] Mettre à jour le dossier de présentation si le client veut une nouvelle version.
+**Mise en place des outils** (`docs/v2/automatisation.md`)
+- [ ] `site/api/config.php` sur le serveur (SMTP, destinataires, webhook, secret HMAC, `proxys_de_confiance`, `entreprise.horaires`).
+- [ ] n8n (VPS Infomaniak + docker-compose, ou n8n cloud UE) ; importer les 16 workflows ; credentials Pipedrive/Brevo/SMS ; relever les clés de champs Pipedrive (`AC_PD_CHAMPS`, dont `opposition_marketing`).
+- [ ] **Recette des 20 cas** (§6.2 de la doc) : les workflows n'ont jamais tourné dans une vraie instance.
+- [ ] Vérifier sur le compte réel que WF04e et WF04i trouvent bien l'opposition (champ peut-être absent de la liste des affaires).
+- [ ] Confirmer les paramètres de l'API simap (WF08). Affiner la table NPA → zone (`site/api/data/zones.json`).
+- [ ] Umami (cloud UE ou auto-hébergé) → `tools/build/donnees/config.json`.
+- [ ] Non livrés : WF05 (récap du lundi), WF11 (avis Google par API), WF15 (fiche projet).
 
-**Mise en production (andyconstruct.ch)** — voir README §« Avant la mise en production »
-- [ ] Retirer `.mockup-notice` et `noindex` ; brancher le formulaire (PHP hébergeur ou service nLPD) ; redirections 301 des anciennes URL Joomla (`brief-seo.md` §8.3) ; HTTPS + www unique.
-- [ ] Search Console + Bing Webmaster Tools ; statistiques sans cookies.
+**Juridique** : faire relire par un avocat les 8 points de `docs/v2/qa/relecture-juridique-copy.md` (demande d'avis, exception « clients » LCD, transferts hors UE, droit des défauts 2026, politique de confidentialité).
 
-**Marketing (analyse-marche.md §7)**
-- [ ] 0-30 j : NAP identique partout (fiche Google, local.ch, search.ch, GGE, Kompass mal classé « charpenterie »).
-- [ ] Campagne d'avis Google (objectif proposé : 15 à 90 j, 30 à 180 j).
-- [ ] 30-90 j : 10 fiches projets, dossier de références PDF, veille simap.ch / FAO (CFC 271, 283, 285).
-- [ ] J+90 : bilan (appels, formulaires, positions depuis Genève, test de 10 questions dans ChatGPT/Perplexity/Google/Copilot).
-- [ ] Phase 2 éventuelle : pages service × ville (Lausanne, Neuchâtel, Fribourg, Sion…) avec contenu réel.
+**Production** : `python3 tools/build/build.py --mode production --out dist/` → déployer sur andyconstruct.ch ; HSTS à décommenter dans `.htaccess` ; Search Console + Bing Webmaster Tools ; vérifier les 301.
+
+**Acquisition (stratégie §8.1)** : fiche Google (zone desservie) et NAP identique partout (local.ch, search.ch, GGE, Kompass mal classé) ; campagne d'avis ; page Facebook entreprise ; Google Ads (CPC à mesurer semaine 1) ; prospection régies/architectes par courrier + appel (pas d'e-mail à froid, art. 3 LCD) ; veille simap ; bilan à 90 jours ; pages villes/cantons en phase 2 seulement avec de vrais chantiers.
 
 ---
 
-## 11. Points d'attention techniques
+## 10. Points d'attention
 
-- Ne jamais éditer `site/*.html` à la main : ce sera écrasé à la prochaine génération.
-- La 404 utilise des chemins relatifs ; si l'hébergeur la sert depuis un sous-dossier profond, ajouter une balise `<base>`.
-- Les textes alternatifs du manifest photos sont un peu longs (brief SEO : 5-15 mots) — à raccourcir si besoin.
-- Le JSON-LD contient une URL search.ch avec l'ancienne adresse (bel-air-57) : à corriger quand l'annuaire sera mis à jour.
-- Captures de contrôle : `npx playwright` (ou Node avec `playwright` global) sur `python3 -m http.server`, viewports 360/390/768/1024/1280/1440.
+- Ne jamais éditer `site/*.html` à la main : modifier `tools/build/` puis régénérer.
+- La plaquette de validation (`livrables/…-preview.pdf`) ne doit jamais aller dans `site/`.
+- Les accusés de réception existent en double (`automation/messages/*.md` et `site/api/modeles/*.txt`) : un test vérifie qu'ils sont identiques.
+- Les workflows n8n embarquent une copie des textes : toute correction de message doit être reportée dans les JSON (voir relecture juridique).
+- Incident du 31.10 : les agents ont atteint la limite d'usage de 5 h du compte et ont été relancés ; aucun travail perdu.

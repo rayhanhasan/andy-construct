@@ -11,6 +11,7 @@ Usage :
     python3 deploy/deploy_ftp.py --dry-run      # liste ce qui serait envoye
     python3 deploy/deploy_ftp.py                # envoie dans res/andy-construct/
     python3 deploy/deploy_ftp.py --subdir ""    # envoie directement dans res/ (remplace les fichiers de meme nom)
+    python3 deploy/deploy_ftp.py --source dist/ --subdir andy-construct-prod   # envoie une autre generation (ex. production)
 """
 import argparse
 import ftplib
@@ -76,8 +77,10 @@ def ensure_dir(ftp, path, res_root, dry_run):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--subdir", default="andy-construct", help="sous-dossier de res/ (defaut : andy-construct)")
+    parser.add_argument("--source", default=str(SITE_DIR), help="dossier local à envoyer (défaut : site/, version de validation)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    source = Path(args.source).resolve()
 
     if ".." in Path(args.subdir).parts or args.subdir.startswith("/"):
         sys.exit("Sous-dossier invalide.")
@@ -89,9 +92,13 @@ def main():
         sys.exit(f"Refuse : {target} est hors de {res_root}")
     print(f"Dossier res : {res_root}\nCible       : {target}\n")
 
-    files = sorted(p for p in SITE_DIR.rglob("*") if p.is_file() and p.name != ".DS_Store")
+    ignores = ("api/tests/", "api/stockage/")
+    files = sorted(
+        p for p in source.rglob("*")
+        if p.is_file() and p.name != ".DS_Store" and not p.relative_to(source).as_posix().startswith(ignores)
+    )
     for local in files:
-        rel = local.relative_to(SITE_DIR).as_posix()
+        rel = local.relative_to(source).as_posix()
         remote = posixpath.join(target, rel)
         ensure_dir(ftp, posixpath.dirname(remote), res_root, args.dry_run)
         print(f"  put {rel}")
