@@ -629,6 +629,7 @@ def carte_romandie(d: Doc, x, y_haut, largeur):
     """Carte de la Suisse romande à partir des données du site (tools/build/carte.py, lecture seule)."""
     try:
         sys.path.insert(0, str(RACINE / 'tools' / 'build'))
+        sys.dont_write_bytecode = True        # lecture seule : pas de __pycache__ dans tools/
         import carte  # noqa: E402
         obj = carte.charger(eps=1.2)
     except Exception as exc:  # carte facultative
