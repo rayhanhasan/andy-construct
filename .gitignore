@@ -3,3 +3,10 @@
 *.env
 __pycache__/
 node_modules/
+
+# Endpoint PHP des formulaires : configuration réelle (secrets) et stockage privé
+site/api/config.php
+site/api/stockage/
+# Données locales de l'automatisation (n8n, Umami)
+automation/.env
+automation/donnees/

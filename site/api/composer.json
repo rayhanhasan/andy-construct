@@ -1,0 +1,17 @@
+{
+    "name": "andy-construct/site-api",
+    "description": "Endpoint de demandes du site Andy Construct (formulaires, anti-spam, e-mails, webhook n8n).",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1.0"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
