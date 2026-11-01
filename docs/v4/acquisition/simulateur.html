@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur du mix d'acquisition</title>
+<meta name="description" content="Andy Construct : simulateur des canaux d'acquisition (budget, demandes, chantiers signés, retour sur investissement). Estimations à valider.">
+<style>
+:root {
+  color-scheme: light;
+  --encre: #1D1F22;
+  --encre-2: #4F545B;
+  --encre-3: #656B73;
+  --fond: #FFFFFF;
+  --brume: #F3F4F5;
+  --brume-2: #E8EAEC;
+  --filet: #D3D7DB;
+  --rouge: #E8000F;
+  --rouge-texte: #C2000D;
+  --alerte-fond: #FDF1F1;
+  --info-fond: #F1F4F8;
+  --grille: #E8EAEC;
+  --axe: #BFC4CA;
+  --barre: #4F545B;
+  --s1: #0089A3;
+  --s2: #B47A00;
+  --s3: #4A63A8;
+  --s4: #5E8C4A;
+  --titres: "Archivo", "Archivo Narrow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --texte: "Source Sans 3", "Source Sans Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --encre: #ECEDEE;
+    --encre-2: #C5C9CE;
+    --encre-3: #A0A6AD;
+    --fond: #1D1F22;
+    --brume: #25282C;
+    --brume-2: #2F3337;
+    --filet: #41464C;
+    --rouge: #FF3341;
+    --rouge-texte: #FF6670;
+    --alerte-fond: #3A2224;
+    --info-fond: #232B36;
+    --grille: #2F3337;
+    --axe: #4A5057;
+    --barre: #AEB4BB;
+    --s1: #1F9AB2;
+    --s2: #B98314;
+    --s3: #7A8FD9;
+    --s4: #6A9C54;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --encre: #ECEDEE; --encre-2: #C5C9CE; --encre-3: #A0A6AD; --fond: #1D1F22; --brume: #25282C; --brume-2: #2F3337;
+  --filet: #41464C; --rouge: #FF3341; --rouge-texte: #FF6670; --alerte-fond: #3A2224; --info-fond: #232B36;
+  --grille: #2F3337; --axe: #4A5057; --barre: #AEB4BB; --s1: #1F9AB2; --s2: #B98314; --s3: #7A8FD9; --s4: #6A9C54;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fond); color: var(--encre); font-family: var(--texte); font-size: 16px; line-height: 1.5; }
+h1, h2, h3 { font-family: var(--titres); line-height: 1.15; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem); }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1rem; }
+p { margin: 0 0 0.6em; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* En-tête : le trait de niveau */
+.entete { padding: 28px 16px 0; max-width: 1360px; margin: 0 auto; }
+.entete .client { font-size: 0.95rem; color: var(--encre-2); margin-bottom: 6px; }
+.entete .chapo { color: var(--encre-2); max-width: 62ch; margin-top: 8px; }
+.niveau { position: relative; height: 2px; background: var(--rouge); margin: 22px -16px 0; }
+.niveau::before, .niveau::after { content: ""; position: absolute; top: -4px; width: 2px; height: 10px; background: var(--rouge); }
+.niveau::before { left: 16px; }
+.niveau::after { right: 16px; }
+.bandeau { max-width: 1360px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; border-bottom: 1px solid var(--filet); }
+.bandeau strong { font-family: var(--titres); }
+.bandeau span { color: var(--encre-2); }
+
+/* Grille principale */
+.grille { max-width: 1360px; margin: 0 auto; padding: 20px 16px 96px; display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1040px) {
+  .grille { grid-template-columns: 400px minmax(0, 1fr); align-items: start; }
+  .reglages { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding-right: 8px; padding-bottom: 24px; }
+}
+section > h2 { margin-bottom: 12px; }
+
+/* Combinaisons */
+.presets { border: 0; padding: 0; margin: 0 0 22px; }
+.presets legend { font-family: var(--titres); font-weight: 700; font-size: 1.2rem; margin-bottom: 10px; padding: 0; }
+.presets .choix { display: grid; gap: 6px; }
+.presets label { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--filet); border-radius: 4px; cursor: pointer; background: var(--fond); }
+.presets label:hover { background: var(--brume); }
+.presets input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.presets .lettre { width: 30px; height: 30px; display: grid; place-items: center; font-family: var(--titres); font-weight: 700; border: 1px solid var(--filet); border-radius: 50%; }
+.presets .reco { display: block; font-size: 0.85rem; color: var(--encre-2); }
+.presets input:checked + label { border-color: var(--encre); box-shadow: inset 3px 0 0 var(--rouge); }
+.presets input:checked + label .lettre { background: var(--encre); color: var(--fond); border-color: var(--encre); }
+.presets input:focus-visible + label { outline: 2px solid var(--rouge); outline-offset: 2px; }
+
+/* Réglages */
+fieldset.groupe { border: 0; border-top: 1px solid var(--filet); padding: 14px 0 6px; margin: 0; }
+fieldset.groupe legend { font-family: var(--titres); font-weight: 700; padding: 0 0 4px; font-size: 1rem; }
+.groupe .aide { font-size: 0.88rem; color: var(--encre-2); margin: 0 0 8px; }
+.canal { padding: 8px 0; border-bottom: 1px solid var(--brume-2); }
+.canal:last-child { border-bottom: 0; }
+.canal label { display: block; font-weight: 600; font-size: 0.95rem; }
+.canal .ligne { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: center; margin-top: 4px; }
+.canal .ligne.select { grid-template-columns: minmax(0, 1fr); }
+.canal .effet { font-size: 0.85rem; color: var(--encre-3); margin-top: 2px; }
+input[type="range"] { width: 100%; accent-color: var(--encre); min-height: 28px; }
+input[type="number"], select { font: inherit; font-size: 0.95rem; color: var(--encre); background: var(--fond); border: 1px solid var(--axe); border-radius: 4px; padding: 5px 6px; width: 100%; min-height: 36px; }
+input[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+.unite { font-size: 0.82rem; color: var(--encre-3); }
+.hyp { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 6px 12px; align-items: center; }
+.hyp label { font-size: 0.93rem; }
+.hyp .sep { grid-column: 1 / -1; font-weight: 700; font-family: var(--titres); margin-top: 8px; }
+details.avance { border-top: 1px solid var(--filet); padding-top: 10px; margin-top: 12px; }
+details.avance > summary { cursor: pointer; font-family: var(--titres); font-weight: 700; padding: 6px 0; }
+.defile { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--brume-2); text-align: left; vertical-align: top; }
+th { font-weight: 600; color: var(--encre-2); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th.n { white-space: normal; min-width: 72px; }
+table input[type="number"] { width: 84px; min-height: 32px; padding: 3px 5px; }
+.bouton { font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 4px; border: 1px solid var(--encre); background: var(--fond); color: var(--encre); cursor: pointer; min-height: 40px; }
+.bouton:hover { background: var(--brume); }
+
+/* Résultats */
+.alertes { display: grid; gap: 8px; margin-bottom: 16px; }
+.alerte { padding: 10px 12px; border-left: 3px solid var(--rouge); background: var(--alerte-fond); }
+.alerte.info { border-left-color: var(--encre-3); background: var(--info-fond); }
+.alerte strong { font-family: var(--titres); }
+.tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0; border-top: 1px solid var(--filet); border-left: 1px solid var(--filet); margin-bottom: 28px; }
+.tuile { padding: 12px 14px; border-right: 1px solid var(--filet); border-bottom: 1px solid var(--filet); min-height: 118px; }
+.tuile .lib { font-size: 0.88rem; color: var(--encre-2); }
+.tuile .val { font-family: var(--titres); font-size: 1.5rem; white-space: nowrap; font-weight: 700; line-height: 1.2; margin: 4px 0 2px; }
+.tuile .four { font-size: 0.82rem; color: var(--encre-3); }
+.tuile .sous { font-size: 0.82rem; color: var(--encre-2); margin-top: 2px; }
+.tuile.mise { box-shadow: inset 0 3px 0 var(--rouge); }
+
+figure.graph { margin: 0 0 32px; position: relative; }
+figure.graph figcaption { margin-bottom: 8px; }
+figure.graph figcaption p { font-size: 0.9rem; color: var(--encre-2); margin: 4px 0 0; }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; margin: 8px 0; padding: 0; font-size: 0.88rem; color: var(--encre-2); }
+.legende li { display: inline-flex; align-items: center; gap: 6px; }
+.legende .pastille { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.legende .ligne-cle { width: 18px; height: 2px; display: inline-block; }
+.legende .moustache { width: 2px; height: 12px; display: inline-block; background: var(--encre-3); }
+.svgzone { width: 100%; min-height: 220px; }
+.svgzone svg { display: block; width: 100%; height: auto; overflow: visible; }
+.svgzone text { font-family: var(--texte); fill: var(--encre-3); font-size: 11px; }
+.svgzone text.fort { fill: var(--encre); font-weight: 600; }
+.svgzone .hit { fill: transparent; cursor: default; }
+.svgzone .hit:focus-visible { outline: none; stroke: var(--rouge); stroke-width: 2px; }
+.bulle { position: absolute; pointer-events: none; background: var(--fond); color: var(--encre); border: 1px solid var(--filet); border-radius: 4px; padding: 8px 10px; font-size: 0.85rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 170px; z-index: 5; display: none; }
+.bulle .t { font-weight: 700; margin-bottom: 4px; font-family: var(--titres); }
+.bulle .r { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; align-items: center; }
+.bulle .r b { font-variant-numeric: tabular-nums; }
+.bulle .k { width: 12px; height: 2px; display: inline-block; }
+details.donnees { margin-top: 8px; }
+details.donnees summary { cursor: pointer; font-size: 0.9rem; color: var(--encre-2); }
+
+.rangs { list-style: none; margin: 0; padding: 0; }
+.rangs li { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr); gap: 10px; align-items: center; padding: 3px 0; font-size: 0.9rem; }
+.rangs .nom { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.rangs .nom span:last-child { overflow-wrap: anywhere; }
+.rangs .pastille { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.rangs .piste { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rangs .barre { height: 14px; background: var(--barre); border-radius: 0 4px 4px 0; min-width: 2px; }
+.rangs .v { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--encre); }
+.entete-graph { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.entete-graph select { width: auto; }
+
+.comparer { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.comparer select { width: auto; }
+.ecart-plus { color: var(--encre); }
+.regles { display: grid; gap: 10px; }
+.regle { border-left: 2px solid var(--encre); padding: 4px 0 4px 12px; }
+.regle .calc { font-variant-numeric: tabular-nums; color: var(--encre-2); font-size: 0.92rem; }
+.bloc { margin-bottom: 36px; }
+.pied { max-width: 1360px; margin: 0 auto; padding: 0 16px 120px; color: var(--encre-2); font-size: 0.9rem; }
+.pied h2 { color: var(--encre); margin-bottom: 8px; }
+.pied ol { padding-left: 1.2em; }
+
+/* Résumé collant sur téléphone */
+.resume { position: fixed; left: 0; right: 0; bottom: 0; background: var(--encre); color: var(--fond); display: flex; justify-content: space-around; gap: 8px; padding: 10px 12px; font-size: 0.85rem; z-index: 10; border-top: 2px solid var(--rouge); }
+.resume div { text-align: center; }
+.resume b { display: block; font-family: var(--titres); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+@media (min-width: 1040px) { .resume { display: none; } .grille { padding-bottom: 40px; } .pied { padding-bottom: 40px; } }
+@media (max-width: 520px) { .tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuile { padding: 10px; } .tuile .val { font-size: 1.2rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+@media (forced-colors: active) { .rangs .barre, .legende .pastille { forced-color-adjust: none; } }
+</style>
+</head>
+<body>
+<header>
+<div class="entete">
+  <p class="client">Andy Construct, Carouge. Outil de travail de l'agence Harbor Digital.</p>
+  <h1>Simulateur du mix d'acquisition</h1>
+  <p class="chapo">Choisissez une combinaison de canaux, ajustez-la, puis lisez ce qu'elle produit sur 12 mois : demandes, chantiers signés, chiffre d'affaires, coût et temps des associés.</p>
+  <div class="niveau" aria-hidden="true"></div>
+</div>
+<div class="bandeau" role="note">
+  <strong>Estimations à valider avec les chiffres réels d'Andy Construct.</strong>
+  <span>Les valeurs par défaut viennent du plan <code>docs/v4/acquisition/plan-mix-acquisition.md</code>. Aucune ne remplace l'historique 2025 du client (demandes, offres, signatures, paniers, marge).</span>
+</div>
+</header>
+
+<main class="grille">
+  <section class="reglages" aria-labelledby="t-reglages">
+    <h2 id="t-reglages" class="sr">Réglages</h2>
+    <fieldset class="presets" id="presets">
+      <legend>Combinaison</legend>
+      <div class="choix" id="presets-choix"></div>
+    </fieldset>
+
+    <fieldset class="groupe">
+      <legend>Hypothèses économiques</legend>
+      <p class="aide">Paniers moyens hors TVA, par type de client. À remplacer par les chiffres 2025 du client.</p>
+      <div class="hyp" id="hyp"></div>
+    </fieldset>
+
+    <div id="canaux"></div>
+
+    <details class="avance" id="avance">
+      <summary>Hypothèses avancées (coûts, taux, délais par canal)</summary>
+      <p class="aide">Valeurs centrales. Les fourchettes basse et haute suivent dans la même proportion.</p>
+      <div class="hyp" id="hyp-avance"></div>
+      <div class="defile" tabindex="0" role="region" aria-label="Tableau des hypothèses avancées par canal" style="margin-top:12px"><table id="table-avance"></table></div>
+      <p style="margin-top:12px"><button type="button" class="bouton" id="reinit">Revenir aux valeurs du plan</button></p>
+    </details>
+  </section>
+
+  <section class="resultats" aria-labelledby="t-resultats">
+    <h2 id="t-resultats">Résultats sur 12 mois <span id="t-combi" style="font-weight:400"></span></h2>
+    <div class="alertes" id="alertes" aria-live="polite"></div>
+    <div class="tuiles" id="tuiles"></div>
+
+    <figure class="graph" id="g-demandes">
+      <figcaption>
+        <h3>Demandes enregistrées par mois, selon le rôle du canal</h3>
+        <p>Hors appels d'offres publics. Valeurs centrales ; les canaux de fond (fiche Google, SEO, B2B) montent lentement, les annonces démarrent tout de suite.</p>
+      </figcaption>
+      <ul class="legende" id="leg-demandes"></ul>
+      <div class="svgzone" id="svg-demandes" data-titre="Demandes enregistrées par mois, de M1 à M12. Chaque colonne est focalisable ; données complètes dans le tableau."></div>
+      <div class="bulle" role="status"></div>
+      <details class="donnees"><summary>Voir les données en tableau</summary><div class="defile" tabindex="0" role="region" aria-label="Données du graphique des demandes"><table id="tab-demandes"></table></div></details>
+    </figure>
+
+    <figure class="graph" id="g-signes">
+      <figcaption>
+        <h3>Chantiers signés par mois et capacité</h3>
+        <p>Hors marchés publics. La ligne rouge est la capacité saisie ; au-dessus, les chantiers ne peuvent pas être absorbés dans le mois. Les moustaches montrent la fourchette basse à haute.</p>
+      </figcaption>
+      <ul class="legende" id="leg-signes"></ul>
+      <div class="svgzone" id="svg-signes" data-titre="Chantiers signés par mois et capacité, de M1 à M12. Chaque colonne est focalisable ; données complètes dans le tableau."></div>
+      <div class="bulle" role="status"></div>
+      <details class="donnees"><summary>Voir les données en tableau</summary><div class="defile" tabindex="0" role="region" aria-label="Données du graphique des chantiers signés"><table id="tab-signes"></table></div></details>
+    </figure>
+
+    <figure class="graph" id="g-parts">
+      <figcaption class="entete-graph">
+        <div>
+          <h3>Part de chaque canal</h3>
+          <p>Classement des canaux actifs, valeurs centrales.</p>
+        </div>
+        <label>Mesure
+          <select id="metrique">
+            <option value="demandesM12">Demandes par mois à M12</option>
+            <option value="signes">Chantiers signés sur 12 mois</option>
+            <option value="ca">Chiffre d'affaires signé sur 12 mois</option>
+            <option value="depense">Dépense sur 12 mois</option>
+          </select>
+        </label>
+      </figcaption>
+      <ol class="rangs" id="rangs"></ol>
+    </figure>
+
+    <div class="bloc">
+      <h3 style="margin-bottom:8px">Détail par canal</h3>
+      <div class="defile" tabindex="0" role="region" aria-label="Tableau du détail par canal"><table id="tab-canaux"></table></div>
+    </div>
+
+    <div class="bloc" id="bloc-comparer">
+      <h3 style="margin-bottom:8px">Comparer deux combinaisons</h3>
+      <div class="comparer">
+        <label for="comparer">Comparer la combinaison affichée avec</label>
+        <select id="comparer"></select>
+      </div>
+      <div class="defile" tabindex="0" role="region" aria-label="Tableau de comparaison des deux combinaisons"><table id="tab-comparer"></table></div>
+    </div>
+
+    <div class="bloc">
+      <h3 style="margin-bottom:8px">Règles de décision avec vos hypothèses</h3>
+      <div class="regles" id="regles"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="pied">
+  <h2>Comment le calcul est fait</h2>
+  <ol>
+    <li>Annonces : demandes par mois = plafond × (1 − e<sup>−budget / (plafond × CPL de départ)</sup>), avec CPL de départ = CPC ÷ taux clic → demande. Doubler le budget ne double pas les demandes : le marché romand est petit.</li>
+    <li>Autres canaux : demandes en régime selon le niveau d'effort, multipliées par une montée en charge (début et mois de plein effet propres à chaque canal).</li>
+    <li>Chantiers signés au mois m = demandes du mois m − délai × taux demande → offre × taux offre → signée × facteur de qualité du canal. Appels d'offres : dossiers déposés × taux d'adjudication, délai de 3 mois.</li>
+    <li>Chiffre d'affaires = chantiers signés × panier moyen du canal (pondéré par sa clientèle). Au-delà de la capacité, le chiffre d'affaires du mois est plafonné.</li>
+    <li>Dépense = médias + abonnements + supports + outils de base + heures d'agence. Le temps des associés est compté à part, en heures, et valorisé seulement dans le « coût complet ».</li>
+    <li>CPL = dépense ÷ demandes ; CAC = dépense ÷ chantiers signés ; ROAS = CA signé ÷ dépense ; ROI = (marge brute − dépense) ÷ dépense. Mêmes définitions que le tableau de bord.</li>
+    <li>Fourchette basse et haute : toutes les hypothèses de canal défavorables, ou toutes favorables, en même temps. La réalité se situera vraisemblablement entre les deux.</li>
+  </ol>
+</footer>
+
+<div class="resume" aria-hidden="true">
+  <div>Demandes M12<b id="r-dem">–</b></div>
+  <div>Signés M12<b id="r-sig">–</b></div>
+  <div>Dépense/mois<b id="r-dep">–</b></div>
+  <div>ROI<b id="r-roi">–</b></div>
+</div>
+
+<script id="modele">
+/* Modèle du mix d'acquisition Andy Construct.
+   Un seul moteur, utilisé par le simulateur (inline) et par le script qui produit
+   les tableaux du plan. Toutes les valeurs par défaut sont des estimations à valider
+   (sources et justification : docs/v4/acquisition/plan-mix-acquisition.md, §2 et annexe A).
+   Indice de scénario k : 0 = fourchette basse, 1 = centrale, 2 = haute. */
+var MODELE = (function () {
+  "use strict";
+
+  var TYPES = [
+    { id: "part", nom: "Particulier propriétaire", panier: 6000 },
+    { id: "pme", nom: "PME, commerce, bureaux", panier: 15000 },
+    { id: "regie", nom: "Régie, gérance (par ordre)", panier: 9000 },
+    { id: "archi", nom: "Architecte, entreprise générale (lot privé)", panier: 35000 },
+    { id: "commune", nom: "Commune, institution (gré à gré)", panier: 30000 },
+    { id: "public", nom: "Marché public publié (simap)", panier: 150000 }
+  ];
+
+  var ROLES = [
+    { id: "capter", nom: "Capter une demande existante" },
+    { id: "confiance", nom: "Confiance et preuve" },
+    { id: "b2b", nom: "Relation B2B" },
+    { id: "creer", nom: "Créer la demande" }
+  ];
+
+  // Profils de clientèle (parts par type de client), par canal.
+  var PROFILS = {
+    recherche: { part: 0.70, pme: 0.15, regie: 0.08, archi: 0.04, commune: 0.03 },
+    particuliers: { part: 0.95, pme: 0.05 },
+    annuaire: { part: 0.75, pme: 0.20, regie: 0.05 },
+    fiche: { part: 0.70, pme: 0.15, regie: 0.10, archi: 0.03, commune: 0.02 },
+    contenu: { part: 0.60, pme: 0.15, regie: 0.10, archi: 0.10, commune: 0.05 },
+    ia: { part: 0.30, pme: 0.20, regie: 0.15, archi: 0.25, commune: 0.10 },
+    bouche: { part: 0.75, pme: 0.10, regie: 0.10, archi: 0.05 },
+    voisinage: { part: 0.80, pme: 0.10, regie: 0.10 },
+    clients: { part: 0.70, pme: 0.10, regie: 0.15, archi: 0.05 },
+    b2b: { pme: 0.10, regie: 0.50, archi: 0.30, commune: 0.10 },
+    partenaires: { part: 0.40, pme: 0.10, regie: 0.10, archi: 0.35, commune: 0.05 },
+    linkedin: { pme: 0.20, regie: 0.30, archi: 0.40, commune: 0.10 },
+    public: { public: 1 }
+  };
+
+  /* Canaux. Les tableaux [basse, centrale, haute] donnent le paramètre du scénario
+     de résultat correspondant (basse = hypothèse défavorable).
+     type : "budget" (CHF/mois), "unite" (nombre), "niveau" (liste). */
+  var CANAUX = [
+    { id: "gads", nom: "Google Ads Search (+ marque)", court: "Google Ads", role: "capter", type: "budget",
+      min: 0, max: 3000, pas: 50, unite: "CHF/mois", paye: true,
+      p: { cpc: [4.5, 3.0, 2.2], cvr: [0.03, 0.045, 0.06], plafond: [30, 45, 55] },
+      agenceH: function (v) { return v > 0 ? 3 + v / 1000 : 0; },
+      rampe: { debut: 1, init: 0.6, plein: 3 }, delai: 1, qualite: 0.9, partAB: 0.55, profil: "recherche" },
+    { id: "msads", nom: "Microsoft Ads (Bing)", court: "Microsoft Ads", role: "capter", type: "budget",
+      min: 0, max: 500, pas: 25, unite: "CHF/mois", paye: true,
+      p: { cpc: [3.0, 2.0, 1.4], cvr: [0.03, 0.045, 0.06], plafond: [3, 5, 7] },
+      agenceH: function (v) { return v > 0 ? 0.5 : 0; },
+      rampe: { debut: 1, init: 0.6, plein: 3 }, delai: 1, qualite: 0.9, partAB: 0.55, profil: "recherche" },
+    { id: "plateformes", nom: "Plateformes de mise en relation (Renovero, Ofri)", court: "Plateformes", role: "capter", type: "unite",
+      min: 0, max: 20, pas: 1, unite: "contacts/mois", paye: true,
+      p: { abonnement: [125, 125, 125], coutContact: [60, 25, 10], disponibilite: [0.7, 1, 1] },
+      agenceH: function () { return 0; }, associesParUnite: 0.5,
+      rampe: { debut: 1, init: 0.7, plein: 2 }, delai: 1, qualite: 0.5, partAB: 0.35, profil: "particuliers" },
+    { id: "annuaires", nom: "Annuaires payants (local.ch, search.ch)", court: "Annuaires payants", role: "capter", type: "niveau",
+      niveaux: ["Arrêt (fiche gratuite seulement)", "Formule d'entrée", "Formule supérieure"], mult: [0, 1, 1.5], fixeNiveau: [0, 50, 130],
+      p: { base: [0.2, 0.7, 1.5] }, paye: true,
+      agenceH: function (n) { return n > 0 ? 0.2 : 0; },
+      rampe: { debut: 1, init: 0.5, plein: 3 }, delai: 1, qualite: 0.9, partAB: 0.5, profil: "annuaire" },
+    { id: "seo", nom: "SEO local et contenus", court: "SEO et contenus", role: "capter", type: "niveau",
+      niveaux: ["Arrêt", "Léger (1 fiche projet tous les 2 mois)", "Standard (1 fiche projet + 1 guide par mois)", "Intensif (2 fiches + 2 guides par mois)"],
+      mult: [0, 0.45, 1, 1.6], fixeNiveau: [0, 0, 0, 0], agenceNiveau: [0, 4, 8, 15], associesNiveau: [0, 0.4, 0.7, 1.2],
+      p: { base: [1.5, 4, 7] },
+      rampe: { debut: 3, init: 0.1, plein: 12 }, delai: 1, qualite: 1.0, partAB: 0.6, profil: "contenu" },
+    { id: "gbp", nom: "Fiche Google et programme d'avis", court: "Fiche Google et avis", role: "confiance", type: "niveau",
+      niveaux: ["Arrêt", "Minimal (fiche sans programme d'avis)", "Standard (fiche, avis, 2 posts par mois)", "Intensif (+ photos chaque semaine, Bing et Apple)"],
+      mult: [0, 0.4, 1, 1.25], fixeNiveau: [0, 0, 5, 5], agenceNiveau: [0, 0.5, 2, 3], associesNiveau: [0, 0.3, 1.5, 2.5],
+      p: { base: [2.5, 5, 8] },
+      rampe: { debut: 1, init: 0.2, plein: 9 }, delai: 1, qualite: 1.1, partAB: 0.6, profil: "fiche" },
+    { id: "geo", nom: "GEO (citations dans les IA)", court: "GEO", role: "confiance", type: "niveau",
+      niveaux: ["Arrêt", "Actif (llms.txt, FAQ, test mensuel)"], mult: [0, 1], fixeNiveau: [0, 0], agenceNiveau: [0, 1], associesNiveau: [0, 0],
+      p: { base: [0, 0.5, 1.5] },
+      rampe: { debut: 4, init: 0.1, plein: 12 }, delai: 1, qualite: 1.0, partAB: 0.7, profil: "ia" },
+    { id: "reco", nom: "Recommandation et parrainage", court: "Recommandation", role: "confiance", type: "niveau",
+      niveaux: ["Arrêt", "Actif (question en fin de chantier, cartes, remerciement)"], mult: [0, 1], fixeNiveau: [0, 15], agenceNiveau: [0, 0.2], associesNiveau: [0, 0.2],
+      p: { base: [1, 2, 3.5] },
+      rampe: { debut: 1, init: 0.3, plein: 8 }, delai: 1, qualite: 1.6, partAB: 0.8, profil: "bouche" },
+    { id: "entretien", nom: "Entretien des clients existants", court: "Clients existants", role: "confiance", type: "niveau",
+      niveaux: ["Arrêt", "Actif (courrier annuel, contrôle à 2 ans, régies en octobre)"], mult: [0, 1], fixeNiveau: [0, 20], agenceNiveau: [0, 0.5], associesNiveau: [0, 0.5],
+      p: { base: [0.7, 1.5, 3] },
+      rampe: { debut: 1, init: 0.5, plein: 3 }, delai: 1, qualite: 1.6, partAB: 0.75, profil: "clients" },
+    { id: "b2b", nom: "Prospection B2B (courrier + appel)", court: "Prospection B2B", role: "b2b", type: "unite",
+      min: 0, max: 10, pas: 1, unite: "comptes/semaine",
+      p: { rendement: [0.05, 0.12, 0.2], coutCompte: [5, 5, 5] },
+      agenceH: function (v) { return v > 0 ? 1.5 : 0; }, associesParUnite: 0.1, unitesParMois: 4.33,
+      rampe: { debut: 3, init: 0.15, plein: 10 }, delai: 2, qualite: 1.3, partAB: 0.9, profil: "b2b" },
+    { id: "partenariats", nom: "Partenariats (architectes, régies, fournisseurs, corps de métier)", court: "Partenariats", role: "b2b", type: "unite",
+      min: 0, max: 15, pas: 1, unite: "partenaires actifs",
+      p: { rendement: [0.08, 0.2, 0.35], coutUnite: [5, 5, 5] },
+      agenceH: function (v) { return v > 0 ? 0.3 : 0; }, associesParUnite: 0.3, unitesParMois: 1,
+      rampe: { debut: 3, init: 0.1, plein: 12 }, delai: 1, qualite: 1.4, partAB: 0.85, profil: "partenaires" },
+    { id: "simap", nom: "Appels d'offres publics (simap, FAO)", court: "Appels d'offres", role: "b2b", type: "unite",
+      min: 0, max: 3, pas: 0.5, unite: "dossiers déposés/mois", horsDemandes: true,
+      p: { adjudication: [0.08, 0.15, 0.25] },
+      agenceH: function (v) { return v > 0 ? 0.5 : 0; }, associesParUnite: 12, associesFixe: 0.5, unitesParMois: 1,
+      rampe: { debut: 2, init: 1, plein: 2 }, delai: 3, qualite: 1, partAB: 1, profil: "public" },
+    { id: "linkedin", nom: "LinkedIn organique", court: "LinkedIn organique", role: "b2b", type: "niveau",
+      niveaux: ["Arrêt", "Actif (2 publications par mois, 5 invitations par semaine)"], mult: [0, 1], fixeNiveau: [0, 0], agenceNiveau: [0, 1], associesNiveau: [0, 1],
+      p: { base: [0.1, 0.5, 1] },
+      rampe: { debut: 2, init: 0.1, plein: 12 }, delai: 2, qualite: 1.1, partAB: 0.8, profil: "linkedin" },
+    { id: "chantier", nom: "Chantier visible (panneaux, avis aux voisins, véhicules)", court: "Chantier visible", role: "creer", type: "niveau",
+      niveaux: ["Arrêt", "Panneaux de chantier et avis aux voisins", "+ véhicules lettrés et bâches"], mult: [0, 1, 1.5], fixeNiveau: [0, 40, 120], agenceNiveau: [0, 0.2, 0.3], associesNiveau: [0, 0.3, 0.4],
+      p: { base: [0.3, 1, 2] },
+      rampe: { debut: 2, init: 0.3, plein: 6 }, delai: 1, qualite: 1.2, partAB: 0.6, profil: "voisinage" },
+    { id: "meta", nom: "Meta (reciblage et notoriété locale)", court: "Meta", role: "creer", type: "budget",
+      min: 0, max: 1000, pas: 50, unite: "CHF/mois", paye: true,
+      p: { cpc: [2.0, 1.2, 0.8], cvr: [0.004, 0.008, 0.015], plafond: [6, 10, 15] },
+      agenceH: function (v) { return v > 0 ? 2 : 0; }, associesFixe: 0.3,
+      rampe: { debut: 1, init: 0.5, plein: 3 }, delai: 1, qualite: 0.6, partAB: 0.35, profil: "particuliers" },
+    { id: "linkedinads", nom: "LinkedIn sponsorisé", court: "LinkedIn sponsorisé", role: "creer", type: "budget",
+      min: 0, max: 1500, pas: 50, unite: "CHF/mois", paye: true,
+      p: { cpc: [20, 12, 6], cvr: [0.008, 0.015, 0.03], plafond: [2, 4, 6] },
+      agenceH: function (v) { return v > 0 ? 3 : 0; },
+      rampe: { debut: 1, init: 0.5, plein: 3 }, delai: 2, qualite: 1.1, partAB: 0.85, profil: "linkedin" }
+  ];
+
+  var GLOBAL = {
+    marge: 0.30, dto: 0.60, tos: 0.28, capacite: 8,
+    tarifAgence: 120, valeurHeureAssocie: 85, outilsBase: 60,
+    heuresParDemande: 0.5, heuresParOffre: 3, disponibiliteAssocies: 80,
+    bonusAvisAds: 0.10, geoSansSeo: 0.3
+  };
+
+  var PRESETS = {
+    A: { nom: "Socle sans publicité",
+      v: { gbp: 2, seo: 2, geo: 1, reco: 1, entretien: 1, chantier: 1, linkedin: 1, partenariats: 5 } },
+    B: { nom: "Socle + Google Ads",
+      v: { gbp: 2, seo: 2, geo: 1, reco: 1, entretien: 1, chantier: 1, linkedin: 1, partenariats: 5, gads: 1200, msads: 100 } },
+    C: { nom: "Socle + Ads + B2B actif + simap", recommande: true,
+      v: { gbp: 2, seo: 2, geo: 1, reco: 1, entretien: 1, chantier: 1, linkedin: 1, partenariats: 8, gads: 1000, msads: 100, b2b: 5, simap: 0.5 } },
+    D: { nom: "Plateformes + partenariats, sans Google Ads",
+      v: { gbp: 2, seo: 2, geo: 1, reco: 1, entretien: 1, chantier: 1, linkedin: 1, partenariats: 12, plateformes: 10, annuaires: 1, b2b: 3 } }
+  };
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function profilPanier(nom, paniers) {
+    var pr = PROFILS[nom], s = 0;
+    for (var k in pr) { s += pr[k] * paniers[k]; }
+    return s;
+  }
+
+  function rampe(r, m) {
+    if (m < r.debut) return 0;
+    if (r.plein <= r.debut) return 1;
+    return Math.min(1, r.init + (1 - r.init) * (m - r.debut) / (r.plein - r.debut));
+  }
+
+  // Paramètres effectifs : la valeur centrale est modifiable ; basse et haute suivent
+  // le même rapport que les valeurs par défaut.
+  function param(c, nom, k, surcharges) {
+    var t = c.p[nom], cen = t[1];
+    var s = surcharges && surcharges[c.id] && surcharges[c.id][nom];
+    if (s === undefined || s === null || isNaN(s)) return t[k];
+    if (cen === 0) return k === 1 ? s : t[k];
+    return s * t[k] / cen;
+  }
+
+  function opt(c, nom, surcharges) {
+    var s = surcharges && surcharges[c.id] && surcharges[c.id][nom];
+    return (s === undefined || s === null || isNaN(s)) ? c[nom] : s;
+  }
+
+  /* reglages : { canalId: valeur } ; hyp : globales + paniers ; k : scénario */
+  function simuler(reglages, hyp, k, surcharges) {
+    var H = hyp || {}, g = {};
+    for (var key in GLOBAL) g[key] = (H[key] !== undefined ? H[key] : GLOBAL[key]);
+    var paniers = {};
+    TYPES.forEach(function (t) { paniers[t.id] = (H.paniers && H.paniers[t.id] !== undefined) ? H.paniers[t.id] : t.panier; });
+    var M = 12, res = { mois: [], canaux: {}, k: k };
+    var v = function (id) { return reglages[id] || 0; };
+
+    CANAUX.forEach(function (c) {
+      res.canaux[c.id] = { demandes: [], signes: [], ca: [], depense: [], medias: [], supports: [], agenceH: [], associesH: [], offres: [], qualifiees: [] };
+    });
+
+    // 1. Demandes (ou dossiers) par canal et par mois
+    for (var m = 1; m <= M; m++) {
+      var gbpNiv = v("gbp"), gbpCanal = CANAUX.filter(function (c) { return c.id === "gbp"; })[0];
+      var gbpEffet = gbpNiv > 0 ? Math.min(1, gbpCanal.mult[gbpNiv]) * rampe(gbpCanal.rampe, m) : 0;
+      CANAUX.forEach(function (c) {
+        var val = v(c.id), d = 0, r = rampe(c.rampe, m);
+        if (val > 0) {
+          if (c.type === "budget") {
+            var cvr = param(c, "cvr", k, surcharges);
+            if (c.id === "gads" || c.id === "msads") cvr = cvr * (1 + g.bonusAvisAds * gbpEffet);
+            var cpl0 = param(c, "cpc", k, surcharges) / cvr;
+            var plaf = param(c, "plafond", k, surcharges);
+            d = plaf * (1 - Math.exp(-val / (plaf * cpl0)));
+          } else if (c.type === "unite") {
+            if (c.id === "plateformes") d = val * param(c, "disponibilite", k, surcharges);
+            else if (c.id === "simap") d = val;
+            else d = val * (c.unitesParMois || 1) * param(c, "rendement", k, surcharges);
+          } else {
+            d = param(c, "base", k, surcharges) * c.mult[val];
+            if (c.id === "geo" && v("seo") === 0) d = d * g.geoSansSeo;
+          }
+        }
+        res.canaux[c.id].demandes.push(d * r);
+      });
+    }
+
+    // 2. Offres, signatures, CA, coûts
+    var totS = [], totCA = [], totCAPub = [], depassement = [];
+    for (m = 1; m <= M; m++) {
+      var sMois = 0, caMois = 0, caPub = 0;
+      CANAUX.forEach(function (c) {
+        var R = res.canaux[c.id], val = v(c.id);
+        var d = R.demandes[m - 1];
+        var delai = opt(c, "delai", surcharges);
+        var dPasse = (m - delai >= 1) ? R.demandes[m - delai - 1] : 0;
+        var s, offres;
+        if (c.id === "simap") {
+          offres = d;
+          s = dPasse * param(c, "adjudication", k, surcharges);
+        } else {
+          offres = d * g.dto;
+          s = dPasse * g.dto * g.tos * opt(c, "qualite", surcharges);
+        }
+        var ca = s * profilPanier(c.profil, paniers);
+        R.offres.push(offres);
+        R.qualifiees.push(c.horsDemandes ? 0 : d * opt(c, "partAB", surcharges));
+        R.signes.push(s);
+        R.ca.push(ca);
+        if (c.id === "simap") { caPub += ca; } else { sMois += s; caMois += ca; }
+
+        // Coûts
+        var medias = 0, supports = 0, agH = 0, asH = 0;
+        if (val > 0) {
+          if (c.type === "budget") { medias = val; agH = c.agenceH(val); asH = c.associesFixe || 0; }
+          else if (c.type === "unite") {
+            if (c.id === "plateformes") { medias = param(c, "abonnement", k, surcharges) + d * param(c, "coutContact", k, surcharges); }
+            else if (c.id === "b2b") { supports = val * c.unitesParMois * param(c, "coutCompte", k, surcharges); }
+            else if (c.id === "partenariats") { supports = val * param(c, "coutUnite", k, surcharges); }
+            agH = c.agenceH(val);
+            asH = (c.associesFixe || 0) + val * (c.unitesParMois || 1) * (c.associesParUnite || 0);
+            if (c.id === "plateformes") asH = d * c.associesParUnite;
+          } else {
+            supports = c.fixeNiveau[val] || 0;
+            agH = c.agenceNiveau ? c.agenceNiveau[val] : c.agenceH(val);
+            asH = c.associesNiveau ? c.associesNiveau[val] : 0;
+          }
+        }
+        R.medias.push(medias); R.supports.push(supports); R.agenceH.push(agH); R.associesH.push(asH);
+        R.depense.push(medias + supports + agH * g.tarifAgence);
+      });
+      var f = 1, dep = 0;
+      if (sMois > g.capacite && sMois > 0) { f = g.capacite / sMois; dep = sMois - g.capacite; }
+      totS.push(sMois); totCA.push(caMois * f); totCAPub.push(caPub); depassement.push(dep);
+    }
+
+    // 3. Agrégats mensuels
+    for (m = 1; m <= M; m++) {
+      var o = { m: m, demandes: 0, qualifiees: 0, offres: 0, dossiers: 0, signes: 0, signesPublic: 0, medias: 0, supports: 0, agenceH: 0, associesMarketingH: 0, parRole: {} };
+      ROLES.forEach(function (r) { o.parRole[r.id] = 0; });
+      CANAUX.forEach(function (c) {
+        var R = res.canaux[c.id], i = m - 1;
+        if (c.horsDemandes) { o.dossiers += R.demandes[i]; o.signesPublic += R.signes[i]; }
+        else { o.demandes += R.demandes[i]; o.qualifiees += R.qualifiees[i]; o.parRole[c.role] += R.demandes[i]; o.signes += R.signes[i]; }
+        o.offres += R.offres[i];
+        o.medias += R.medias[i]; o.supports += R.supports[i]; o.agenceH += R.agenceH[i]; o.associesMarketingH += R.associesH[i];
+      });
+      o.supports += g.outilsBase;
+      o.agence = o.agenceH * g.tarifAgence;
+      o.depense = o.medias + o.supports + o.agence;
+      o.associesCommerciauxH = o.demandes * g.heuresParDemande + o.offres * g.heuresParOffre;
+      o.associesH = o.associesMarketingH + o.associesCommerciauxH;
+      o.ca = totCA[m - 1]; o.caPublic = totCAPub[m - 1];
+      o.caTotal = o.ca + o.caPublic;
+      o.marge = o.caTotal * g.marge;
+      o.depassement = depassement[m - 1];
+      o.signesAbsorbes = Math.min(o.signes, g.capacite);
+      res.mois.push(o);
+    }
+
+    // 4. Totaux sur 12 mois
+    var T = { demandes: 0, qualifiees: 0, offres: 0, dossiers: 0, signes: 0, signesPublic: 0, ca: 0, caPublic: 0, caTotal: 0, marge: 0,
+      depense: 0, medias: 0, supports: 0, agence: 0, agenceH: 0, associesH: 0, associesMarketingH: 0, depassementMois: 0 };
+    var cumM = 0, cumD = 0, rentable = null;
+    res.mois.forEach(function (o) {
+      ["demandes", "qualifiees", "offres", "dossiers", "signes", "signesPublic", "ca", "caPublic", "caTotal", "marge", "depense", "medias", "supports", "agence", "agenceH", "associesH", "associesMarketingH"].forEach(function (x) { T[x] += o[x]; });
+      if (o.depassement > 0.05) T.depassementMois += 1;
+      cumM += o.marge; cumD += o.depense;
+      if (rentable === null && cumM >= cumD && cumD > 0) rentable = o.m;
+    });
+    T.cpl = T.demandes > 0 ? T.depense / T.demandes : null;
+    var signesTot = T.signes + T.signesPublic;
+    T.cac = signesTot > 0 ? T.depense / signesTot : null;
+    T.roas = T.depense > 0 ? T.caTotal / T.depense : null;
+    T.roi = T.depense > 0 ? (T.marge - T.depense) / T.depense : null;
+    T.roiHorsPublic = T.depense > 0 ? (T.ca * g.marge - T.depense) / T.depense : null;
+    T.coutComplet = T.depense + T.associesH * g.valeurHeureAssocie;
+    T.roiComplet = T.coutComplet > 0 ? (T.marge - T.coutComplet) / T.coutComplet : null;
+    T.cacComplet = signesTot > 0 ? T.coutComplet / signesTot : null;
+    T.moisSurchargeAssocies = res.mois.filter(function (o) { return o.associesH > g.disponibiliteAssocies; }).length;
+    T.rentableMois = rentable;
+    T.partAB = T.demandes > 0 ? T.qualifiees / T.demandes : null;
+
+    // Dépendance : part des demandes du mois 12 qui viennent de canaux payants
+    var m12 = res.mois[M - 1], paye = 0;
+    CANAUX.forEach(function (c) { if (c.paye) paye += res.canaux[c.id].demandes[M - 1]; });
+    T.dependance = m12.demandes > 0 ? paye / m12.demandes : 0;
+
+    // Par canal (12 mois)
+    T.parCanal = CANAUX.map(function (c) {
+      var R = res.canaux[c.id];
+      var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+      var dep = sum(R.depense), dem = sum(R.demandes), sig = sum(R.signes);
+      var hCom = c.horsDemandes ? 0 : dem * g.heuresParDemande + sum(R.offres) * g.heuresParOffre;
+      var hTot = sum(R.associesH) + hCom;
+      var complet = dep + hTot * g.valeurHeureAssocie;
+      return { id: c.id, nom: c.court, role: c.role, actif: v(c.id) > 0, demandesM12: R.demandes[M - 1], demandes: dem, signes: sig, ca: sum(R.ca), depense: dep,
+        cpl: dem > 0 ? dep / dem : null, cac: sig > 0 ? dep / sig : null, associesH: hTot / M, coutComplet: complet,
+        cacComplet: sig > 0 ? complet / sig : null, horsDemandes: !!c.horsDemandes };
+    });
+
+    // Seuils de décision pour Google Ads
+    var gads = CANAUX[0];
+    var panierAds = profilPanier(gads.profil, paniers);
+    var tauxSignAds = g.dto * g.tos * opt(gads, "qualite", surcharges);
+    T.cplMaxAds = panierAds * g.marge * tauxSignAds;
+    T.cplCibleAds = T.cplMaxAds / 3;
+    T.panierAds = panierAds;
+    res.totaux = T;
+    res.global = g;
+    return res;
+  }
+
+  function fourchette(reglages, hyp, surcharges) {
+    return [0, 1, 2].map(function (k) { return simuler(reglages, hyp, k, surcharges); });
+  }
+
+  return { TYPES: TYPES, ROLES: ROLES, PROFILS: PROFILS, CANAUX: CANAUX, GLOBAL: GLOBAL, PRESETS: PRESETS,
+    simuler: simuler, fourchette: fourchette, profilPanier: profilPanier, rampe: rampe, clone: clone };
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var M = MODELE;
+  var CLE = "andy-simulateur-v1";
+  var ROLE_COUL = { capter: "var(--s1)", confiance: "var(--s2)", b2b: "var(--s3)", creer: "var(--s4)" };
+  var ROLE_COURT = { capter: "Capter", confiance: "Confiance", b2b: "B2B", creer: "Créer" };
+
+  function hypDefaut() {
+    var h = {}, k;
+    for (k in M.GLOBAL) h[k] = M.GLOBAL[k];
+    h.paniers = {};
+    M.TYPES.forEach(function (t) { h.paniers[t.id] = t.panier; });
+    return h;
+  }
+  var etat = { preset: "C", reglages: M.clone(M.PRESETS.C.v), hyp: hypDefaut(), surcharges: {}, comparer: "B", metrique: "demandesM12" };
+  try {
+    var sauve = JSON.parse(localStorage.getItem(CLE) || "null");
+    if (sauve && sauve.reglages && sauve.hyp) { etat = sauve; if (!etat.hyp.paniers) etat.hyp.paniers = hypDefaut().paniers; }
+  } catch (e) { /* stockage indisponible : on garde les valeurs du plan */ }
+  function sauver() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) { /* rien */ } }
+
+  /* Mise en forme */
+  function nombre(x, dec) {
+    if (x === null || x === undefined || !isFinite(x)) return "–";
+    var s = Math.abs(x).toFixed(dec || 0).split(".");
+    s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    return (x < 0 && Math.abs(x) >= Math.pow(10, -(dec || 0)) / 2 ? "−" : "") + s.join(",");
+  }
+  function chf(x) { if (x === null || !isFinite(x)) return "–"; var a = Math.abs(x) >= 10000 ? Math.round(x / 100) * 100 : Math.round(x); return "CHF " + nombre(a); }
+  function pct(x) { return nombre(x * 100, 0) + " %"; }
+  function moisTxt(m) { return m ? "M" + m : "au-delà de 12 mois"; }
+  function four(a, b, fmt) { var lo = Math.min(a, b), hi = Math.max(a, b); return "de " + fmt(lo) + " à " + fmt(hi); }
+  function fourMois(a, b) {
+    if (!a && !b) return "au-delà de 12 mois dans tous les cas";
+    if (!a || !b) return "entre M" + (a || b) + " et plus de 12 mois";
+    return "entre M" + Math.min(a, b) + " et M" + Math.max(a, b);
+  }
+  function el(tag, attrs, txt) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) { if (k === "class") e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+    if (txt !== undefined && txt !== null) e.textContent = txt;
+    return e;
+  }
+  function vider(e) { while (e.firstChild) e.removeChild(e.firstChild); }
+  function canal(id) { return M.CANAUX.filter(function (c) { return c.id === id; })[0]; }
+
+  /* Combinaisons */
+  function construirePresets() {
+    var box = document.getElementById("presets-choix");
+    var liste = ["A", "B", "C", "D", "P"];
+    liste.forEach(function (id) {
+      var input = el("input", { type: "radio", name: "preset", id: "p-" + id, value: id });
+      var lab = el("label", { "for": "p-" + id });
+      lab.appendChild(el("span", { "class": "lettre", "aria-hidden": "true" }, id === "P" ? "…" : id));
+      var t = el("span");
+      if (id === "P") { t.appendChild(el("span", null, "Personnalisé")); t.appendChild(el("span", { "class": "reco" }, "Vos propres réglages")); }
+      else {
+        t.appendChild(el("span", null, id + ". " + M.PRESETS[id].nom));
+        if (M.PRESETS[id].recommande) t.appendChild(el("span", { "class": "reco" }, "Mix recommandé par le plan"));
+      }
+      lab.appendChild(t);
+      input.addEventListener("change", function () {
+        etat.preset = id;
+        if (id !== "P") etat.reglages = M.clone(M.PRESETS[id].v);
+        majControles(); calculer();
+      });
+      box.appendChild(input); box.appendChild(lab);
+    });
+  }
+
+  /* Hypothèses économiques */
+  var HYP = [
+    { cle: "marge", lib: "Marge brute", pct: true, min: 5, max: 70, pas: 1 },
+    { cle: "dto", lib: "Taux demande → offre", pct: true, min: 10, max: 100, pas: 1 },
+    { cle: "tos", lib: "Taux offre → signée", pct: true, min: 5, max: 80, pas: 1 },
+    { cle: "capacite", lib: "Capacité (chantiers signés absorbables par mois)", min: 1, max: 40, pas: 1 },
+    { cle: "disponibiliteAssocies", lib: "Temps commercial disponible des associés (h/mois)", min: 10, max: 300, pas: 5 }
+  ];
+  var HYP_AV = [
+    { cle: "tarifAgence", lib: "Tarif horaire de l'agence (CHF, à remplacer)", min: 0, max: 400, pas: 5 },
+    { cle: "valeurHeureAssocie", lib: "Valeur d'une heure d'associé (CHF)", min: 0, max: 300, pas: 5 },
+    { cle: "outilsBase", lib: "Outils de base : CRM, n8n, SMS (CHF/mois)", min: 0, max: 500, pas: 5 },
+    { cle: "heuresParDemande", lib: "Heures par demande (rappel, qualification)", min: 0, max: 5, pas: 0.1 },
+    { cle: "heuresParOffre", lib: "Heures par offre (visite, chiffrage)", min: 0, max: 20, pas: 0.5 },
+    { cle: "bonusAvisAds", lib: "Effet des avis sur le taux de conversion des annonces", pct: true, min: 0, max: 50, pas: 1 }
+  ];
+  function champHyp(box, h, idPref) {
+    var id = idPref + h.cle;
+    box.appendChild(el("label", { "for": id }, h.lib));
+    var inp = el("input", { type: "number", id: id, min: h.min, max: h.max, step: h.pas, inputmode: "decimal" });
+    inp.addEventListener("change", function () {
+      var v = parseFloat(inp.value);
+      if (isNaN(v)) return;
+      etat.hyp[h.cle] = h.pct ? v / 100 : v;
+      calculer();
+    });
+    box.appendChild(inp);
+  }
+  function construireHyp() {
+    var box = document.getElementById("hyp");
+    M.TYPES.forEach(function (t) {
+      var id = "pan-" + t.id;
+      box.appendChild(el("label", { "for": id }, t.nom + " (CHF)"));
+      var inp = el("input", { type: "number", id: id, min: 0, max: 2000000, step: 500, inputmode: "numeric" });
+      inp.addEventListener("change", function () { var v = parseFloat(inp.value); if (!isNaN(v)) { etat.hyp.paniers[t.id] = v; calculer(); } });
+      box.appendChild(inp);
+    });
+    box.appendChild(el("div", { "class": "sep" }, "Entonnoir et capacité"));
+    HYP.forEach(function (h) { champHyp(box, h, "h-"); });
+    var av = document.getElementById("hyp-avance");
+    HYP_AV.forEach(function (h) { champHyp(av, h, "ha-"); });
+  }
+
+  /* Canaux */
+  function construireCanaux() {
+    var box = document.getElementById("canaux");
+    M.ROLES.forEach(function (r) {
+      var fs = el("fieldset", { "class": "groupe" });
+      fs.appendChild(el("legend", null, r.nom));
+      M.CANAUX.filter(function (c) { return c.role === r.id; }).forEach(function (c) {
+        var d = el("div", { "class": "canal" });
+        var idc = "c-" + c.id;
+        d.appendChild(el("label", { "for": idc }, c.nom));
+        var ligne = el("div", { "class": "ligne" + (c.type === "niveau" ? " select" : "") });
+        if (c.type === "niveau") {
+          var s = el("select", { id: idc });
+          c.niveaux.forEach(function (n, i) { s.appendChild(el("option", { value: i }, n)); });
+          s.addEventListener("change", function () { etat.reglages[c.id] = parseInt(s.value, 10); etat.preset = "P"; majPresetRadio(); calculer(); });
+          ligne.appendChild(s);
+        } else {
+          var rg = el("input", { type: "range", id: idc, min: c.min, max: c.max, step: c.pas, "aria-describedby": "u-" + c.id });
+          var nb = el("input", { type: "number", id: "n-" + c.id, min: c.min, max: c.max, step: c.pas, "aria-label": c.court + " : valeur exacte en " + c.unite, inputmode: "decimal" });
+          var maj = function (v) { v = Math.max(c.min, Math.min(c.max, v)); etat.reglages[c.id] = v; rg.value = v; nb.value = v; etat.preset = "P"; majPresetRadio(); calculer(); };
+          rg.addEventListener("input", function () { maj(parseFloat(rg.value)); });
+          nb.addEventListener("change", function () { var v = parseFloat(nb.value); if (!isNaN(v)) maj(v); });
+          ligne.appendChild(rg); ligne.appendChild(nb);
+        }
+        d.appendChild(ligne);
+        var eff = el("div", { "class": "effet", id: "e-" + c.id });
+        if (c.type !== "niveau") { var u = el("span", { "class": "unite", id: "u-" + c.id }, c.unite); eff.appendChild(u); eff.appendChild(el("span", { id: "o-" + c.id })); }
+        else { eff.appendChild(el("span", { id: "o-" + c.id })); }
+        d.appendChild(eff);
+        fs.appendChild(d);
+      });
+      box.appendChild(fs);
+    });
+  }
+
+  function majPresetRadio() {
+    // Si les réglages correspondent exactement à une combinaison, on la coche.
+    var trouve = "P";
+    ["A", "B", "C", "D"].forEach(function (id) {
+      var p = M.PRESETS[id].v, ok = true;
+      M.CANAUX.forEach(function (c) { if ((p[c.id] || 0) !== (etat.reglages[c.id] || 0)) ok = false; });
+      if (ok) trouve = id;
+    });
+    etat.preset = trouve;
+    var r = document.getElementById("p-" + trouve); if (r) r.checked = true;
+  }
+
+  function majControles() {
+    M.TYPES.forEach(function (t) { document.getElementById("pan-" + t.id).value = etat.hyp.paniers[t.id]; });
+    HYP.forEach(function (h) { var v = etat.hyp[h.cle]; document.getElementById("h-" + h.cle).value = h.pct ? Math.round(v * 1000) / 10 : v; });
+    HYP_AV.forEach(function (h) { var v = etat.hyp[h.cle]; document.getElementById("ha-" + h.cle).value = h.pct ? Math.round(v * 1000) / 10 : v; });
+    M.CANAUX.forEach(function (c) {
+      var v = etat.reglages[c.id] || 0;
+      if (c.type === "niveau") document.getElementById("c-" + c.id).value = v;
+      else { document.getElementById("c-" + c.id).value = v; document.getElementById("n-" + c.id).value = v; }
+    });
+    majPresetRadio();
+    construireAvance();
+    document.getElementById("metrique").value = etat.metrique;
+  }
+
+  /* Hypothèses avancées par canal */
+  var PARAMS_LIB = { cpc: ["CPC (CHF)", 1, 0.1], cvr: ["Clic → demande (%)", 100, 0.1], plafond: ["Plafond (demandes/mois)", 1, 1],
+    abonnement: ["Abonnement (CHF/mois)", 1, 5], coutContact: ["Coût par contact (CHF)", 1, 1], disponibilite: ["Contacts utiles (%)", 100, 1],
+    base: ["Demandes/mois en régime", 1, 0.1], rendement: ["Demandes/mois par unité", 1, 0.01], coutCompte: ["Coût par compte (CHF)", 1, 1],
+    coutUnite: ["Coût par partenaire (CHF/mois)", 1, 1], adjudication: ["Taux d'adjudication (%)", 100, 1] };
+  function txtProfil(c) {
+    var p = M.PROFILS[c.profil], noms = { part: "particuliers", pme: "PME", regie: "régies", archi: "architectes/EG", commune: "communes", public: "marchés publics" };
+    return Object.keys(p).map(function (k) { return Math.round(p[k] * 100) + " % " + noms[k]; }).join(", ");
+  }
+  function construireAvance() {
+    var t = document.getElementById("table-avance"); vider(t);
+    var th = el("thead"), tr = el("tr");
+    ["Canal", "Paramètres (valeur centrale)", "Délai (mois)", "Qualité", "Part A+B (%)", "Clientèle, montée en charge"].forEach(function (h) { tr.appendChild(el("th", { scope: "col" }, h)); });
+    th.appendChild(tr); t.appendChild(th);
+    var tb = el("tbody");
+    M.CANAUX.forEach(function (c) {
+      var r = el("tr");
+      r.appendChild(el("th", { scope: "row" }, c.court));
+      var tdp = el("td");
+      Object.keys(c.p).forEach(function (nom) {
+        if (!PARAMS_LIB[nom]) return;
+        var lib = PARAMS_LIB[nom], idp = "av-" + c.id + "-" + nom;
+        var s = etat.surcharges[c.id] && etat.surcharges[c.id][nom];
+        var val = (s !== undefined && s !== null) ? s : c.p[nom][1];
+        var lab = el("label", { "for": idp, style: "display:block;font-size:0.82rem;color:var(--encre-2);margin-top:4px" }, lib[0]);
+        var inp = el("input", { type: "number", id: idp, step: lib[2], min: 0, inputmode: "decimal" });
+        inp.value = Math.round(val * lib[1] * 1000) / 1000;
+        inp.addEventListener("change", function () {
+          var v = parseFloat(inp.value); if (isNaN(v)) return;
+          etat.surcharges[c.id] = etat.surcharges[c.id] || {};
+          etat.surcharges[c.id][nom] = v / lib[1];
+          calculer();
+        });
+        tdp.appendChild(lab); tdp.appendChild(inp);
+      });
+      r.appendChild(tdp);
+      [["delai", 1, 1], ["qualite", 1, 0.1], ["partAB", 100, 1]].forEach(function (o) {
+        var td = el("td"), idp = "av-" + c.id + "-" + o[0];
+        var s = etat.surcharges[c.id] && etat.surcharges[c.id][o[0]];
+        var val = (s !== undefined && s !== null) ? s : c[o[0]];
+        var inp = el("input", { type: "number", id: idp, step: o[2], min: 0, "aria-label": c.court + " : " + (o[0] === "delai" ? "délai en mois" : o[0] === "qualite" ? "facteur de qualité" : "part A+B en %"), inputmode: "decimal" });
+        inp.value = Math.round(val * o[1] * 100) / 100;
+        inp.addEventListener("change", function () {
+          var v = parseFloat(inp.value); if (isNaN(v)) return;
+          etat.surcharges[c.id] = etat.surcharges[c.id] || {};
+          etat.surcharges[c.id][o[0]] = o[0] === "delai" ? Math.round(v) : v / o[1];
+          calculer();
+        });
+        td.appendChild(inp); r.appendChild(td);
+      });
+      r.appendChild(el("td", { style: "font-size:0.82rem;min-width:220px" }, txtProfil(c) + ". Dès M" + c.rampe.debut + ", plein effet à M" + c.rampe.plein + "."));
+      tb.appendChild(r);
+    });
+    t.appendChild(tb);
+  }
+
+  /* Calcul et rendu */
+  var dernier = null;
+  function calculer() {
+    var F = M.fourchette(etat.reglages, etat.hyp, etat.surcharges);
+    dernier = F;
+    sauver();
+    rendre(F);
+  }
+
+  function tuile(box, lib, val, four, sous, mise) {
+    var d = el("div", { "class": "tuile" + (mise ? " mise" : "") });
+    d.appendChild(el("div", { "class": "lib" }, lib));
+    d.appendChild(el("div", { "class": "val" }, val));
+    if (four) d.appendChild(el("div", { "class": "four" }, four));
+    if (sous) d.appendChild(el("div", { "class": "sous" }, sous));
+    box.appendChild(d);
+  }
+
+  function rendre(F) {
+    var b = F[0], c = F[1], h = F[2], T = c.totaux, Tb = b.totaux, Th = h.totaux;
+    var m12 = c.mois[11];
+    document.getElementById("t-combi").textContent = etat.preset === "P" ? "(personnalisé)" : "(combinaison " + etat.preset + ")";
+
+    // Effet par canal dans les réglages
+    T.parCanal.forEach(function (pc) {
+      var o = document.getElementById("o-" + pc.id); if (!o) return;
+      var cc = canal(pc.id);
+      var pre = cc.type === "niveau" ? "" : " ; ";
+      if (!pc.actif) o.textContent = cc.type === "niveau" ? "Inactif" : pre + "inactif";
+      else if (pc.horsDemandes) o.textContent = pre + "≈ " + nombre(pc.signes, 1) + " adjudication(s) attendue(s) sur 12 mois";
+      else o.textContent = pre + "≈ " + nombre(pc.demandesM12, 1) + " demande(s)/mois à M12, CPL " + chf(pc.cpl);
+    });
+
+    // Alertes
+    var al = document.getElementById("alertes"); vider(al);
+    var depC = c.mois.filter(function (o) { return o.depassement > 0.05; }).map(function (o) { return o.m; });
+    var depH = h.mois.filter(function (o) { return o.depassement > 0.05; }).map(function (o) { return o.m; });
+    if (depC.length) {
+      var a = el("div", { "class": "alerte" });
+      a.appendChild(el("strong", null, "Capacité dépassée. "));
+      a.appendChild(document.createTextNode("Valeurs centrales : plus de " + nombre(c.global.capacite) + " chantiers signés par mois dès M" + depC[0] + ". Règle du plan : baisser d'abord Google Ads, puis Meta ; ne pas toucher aux avis, au SEO ni au B2B."));
+      al.appendChild(a);
+    } else if (depH.length) {
+      var a2 = el("div", { "class": "alerte info" });
+      a2.appendChild(el("strong", null, "Capacité à surveiller. "));
+      a2.appendChild(document.createTextNode("Dans la fourchette haute, la capacité serait dépassée dès M" + depH[0] + ". Préparer la règle de baisse des annonces."));
+      al.appendChild(a2);
+    }
+    var surch = c.mois.filter(function (o) { return o.associesH > c.global.disponibiliteAssocies; }).map(function (o) { return o.m; });
+    if (surch.length) {
+      var a3 = el("div", { "class": "alerte" });
+      a3.appendChild(el("strong", null, "Temps des associés insuffisant. "));
+      a3.appendChild(document.createTextNode("Rappels, visites et offres demandent plus de " + nombre(c.global.disponibiliteAssocies) + " h par mois dès M" + surch[0] + " (" + nombre(m12.associesH) + " h à M12). Trier plus tôt (scoring, appel de qualification) ou réduire les canaux à faible taux de signature."));
+      al.appendChild(a3);
+    }
+    var gads = T.parCanal.filter(function (p) { return p.id === "gads"; })[0];
+    if (gads.actif && gads.cpl > T.cplCibleAds) {
+      var a4 = el("div", { "class": "alerte info" });
+      a4.appendChild(el("strong", null, "Google Ads au-dessus de la cible. "));
+      a4.appendChild(document.createTextNode("CPL simulé " + chf(gads.cpl) + " pour une cible de " + chf(T.cplCibleAds) + " (un tiers du CPL maximal)."));
+      al.appendChild(a4);
+    }
+
+    // Tuiles
+    var tu = document.getElementById("tuiles"); vider(tu);
+    tuile(tu, "Demandes par mois à M12", nombre(m12.demandes, 0), four(b.mois[11].demandes, h.mois[11].demandes, function (x) { return nombre(x, 0); }), "dont A ou B : " + nombre(m12.qualifiees, 0), true);
+    tuile(tu, "Chantiers signés par mois à M12", nombre(m12.signes, 1), four(b.mois[11].signes, h.mois[11].signes, function (x) { return nombre(x, 1); }), T.signesPublic > 0 ? "+ marchés publics : " + nombre(T.signesPublic, 1) + " par an (espérance)" : "hors marchés publics", true);
+    tuile(tu, "CA signé sur 12 mois", chf(T.ca), four(Tb.ca, Th.ca, chf), T.caPublic > 0 ? "+ marchés publics : " + chf(T.caPublic) + " (espérance)" : "hors marchés publics");
+    tuile(tu, "Dépense sur 12 mois", chf(T.depense), "soit " + chf(T.depense / 12) + " par mois", "dont médias et abonnements " + chf(T.medias));
+    tuile(tu, "Coût par demande (CPL)", chf(T.cpl), four(Tb.cpl, Th.cpl, chf), "toutes dépenses comprises");
+    tuile(tu, "Coût par chantier signé (CAC)", chf(T.cac), four(Tb.cac, Th.cac, chf), "coût complet : " + chf(T.cacComplet));
+    tuile(tu, "ROI sur 12 mois", nombre(T.roi, 1), four(Tb.roi, Th.roi, function (x) { return nombre(x, 1); }), "avec le temps des associés : " + nombre(T.roiComplet, 1));
+    tuile(tu, "Rentable à partir de", moisTxt(T.rentableMois), fourMois(Tb.rentableMois, Th.rentableMois), "marge cumulée ≥ dépense cumulée");
+    tuile(tu, "Temps des associés", nombre(T.associesH / 12, 0) + " h/mois", "dont marketing " + nombre(T.associesMarketingH / 12, 0) + " h", "le reste : rappels, visites, offres");
+    tuile(tu, "Dépendance au budget payant", pct(T.dependance), "des demandes de M12", "perdues en un mois si l'on coupe le budget");
+
+    // Résumé mobile
+    document.getElementById("r-dem").textContent = nombre(m12.demandes, 0);
+    document.getElementById("r-sig").textContent = nombre(m12.signes, 1);
+    document.getElementById("r-dep").textContent = nombre(T.depense / 12, 0);
+    document.getElementById("r-roi").textContent = nombre(T.roi, 1);
+
+    graphDemandes(c);
+    graphSignes(F);
+    rangs(T);
+    tableCanaux(T);
+    comparer(F);
+    regles(c);
+  }
+
+  /* Graphiques SVG */
+  var NS = "http://www.w3.org/2000/svg";
+  function sv(tag, attrs, txt) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (txt !== undefined) e.textContent = txt; return e; }
+  function pasRond(max, n) {
+    if (max <= 0) return 1;
+    var brut = max / n, p = Math.pow(10, Math.floor(Math.log(brut) / Math.LN10)), f = brut / p;
+    var s = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+    return s * p;
+  }
+  function colonneArrondie(x, y, w, h, r) {
+    if (h <= 0) return "";
+    r = Math.min(r, h, w / 2);
+    return "M" + x + "," + (y + h) + "V" + (y + r) + "Q" + x + "," + y + " " + (x + r) + "," + y + "H" + (x + w - r) + "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) + "V" + (y + h) + "Z";
+  }
+  function cadre(zone, hauteur, ymax, pas) {
+    vider(zone);
+    var W = Math.max(280, zone.clientWidth || 600), H = hauteur;
+    var g = { W: W, H: H, ml: 40, mr: 12, mt: 22, mb: 26 };
+    g.pw = W - g.ml - g.mr; g.ph = H - g.mt - g.mb;
+    var svg = sv("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, role: "group", "aria-label": zone.getAttribute("data-titre") || "Graphique" });
+    g.svg = svg; g.y = function (v) { return g.mt + g.ph - (v / ymax) * g.ph; };
+    for (var t = 0; t <= ymax + 1e-9; t += pas) {
+      var yy = Math.round(g.y(t)) + 0.5;
+      svg.appendChild(sv("line", { x1: g.ml, x2: W - g.mr, y1: yy, y2: yy, stroke: t === 0 ? "var(--axe)" : "var(--grille)", "stroke-width": 1 }));
+      svg.appendChild(sv("text", { x: g.ml - 6, y: yy + 4, "text-anchor": "end", "class": "num" }, nombre(t, pas < 1 ? 1 : 0)));
+    }
+    g.bande = g.pw / 12;
+    g.bw = Math.min(24, g.bande * 0.62);
+    g.x = function (i) { return g.ml + g.bande * i + (g.bande - g.bw) / 2; };
+    for (var i = 0; i < 12; i++) {
+      if (g.bande < 26 && i % 2 === 0) continue;
+      svg.appendChild(sv("text", { x: g.ml + g.bande * i + g.bande / 2, y: H - 8, "text-anchor": "middle" }, "M" + (i + 1)));
+    }
+    zone.appendChild(svg);
+    return g;
+  }
+  function bulle(fig, cible, titre, lignes) {
+    var b = fig.querySelector(".bulle");
+    var montrer = function (ev) {
+      vider(b);
+      b.appendChild(el("div", { "class": "t" }, titre));
+      lignes.forEach(function (l) {
+        var r = el("div", { "class": "r" });
+        var k = el("span", { "class": "k" }); if (l.c) k.style.background = l.c; r.appendChild(k);
+        r.appendChild(el("span", null, l.lib));
+        r.appendChild(el("b", null, l.val));
+        b.appendChild(r);
+      });
+      b.style.display = "block";
+      var fr = fig.getBoundingClientRect(), cr = cible.getBoundingClientRect();
+      var left = cr.left - fr.left + cr.width / 2 - b.offsetWidth / 2;
+      left = Math.max(0, Math.min(fr.width - b.offsetWidth, left));
+      var top = cr.top - fr.top - b.offsetHeight - 6;
+      if (top < 0) top = cr.top - fr.top + 30;
+      b.style.left = left + "px"; b.style.top = top + "px";
+    };
+    var cacher = function () { b.style.display = "none"; };
+    cible.addEventListener("pointerenter", montrer);
+    cible.addEventListener("pointerleave", cacher);
+    cible.addEventListener("focus", montrer);
+    cible.addEventListener("blur", cacher);
+  }
+
+  function graphDemandes(c) {
+    var fig = document.getElementById("g-demandes"), zone = document.getElementById("svg-demandes");
+    var leg = document.getElementById("leg-demandes"); vider(leg);
+    M.ROLES.forEach(function (r) { var li = el("li"); var s = el("span", { "class": "pastille" }); s.style.background = ROLE_COUL[r.id]; li.appendChild(s); li.appendChild(el("span", null, r.nom)); leg.appendChild(li); });
+    var max = Math.max.apply(null, c.mois.map(function (o) { return o.demandes; }));
+    var pas = pasRond(max * 1.1, 4), ymax = Math.max(pas, Math.ceil(max * 1.1 / pas) * pas);
+    var g = cadre(zone, 250, ymax, pas);
+    c.mois.forEach(function (o, i) {
+      var x = g.x(i), base = 0, segs = [];
+      M.ROLES.forEach(function (r) { var v = o.parRole[r.id]; if (v > 0.001) segs.push({ r: r.id, v: v }); });
+      segs.forEach(function (s, j) {
+        var y0 = g.y(base), y1 = g.y(base + s.v);
+        var hgt = y0 - y1 - (j > 0 ? 2 : 0);
+        if (hgt > 0.3) {
+          if (j === segs.length - 1) g.svg.appendChild(sv("path", { d: colonneArrondie(x, y1, g.bw, hgt, 4), fill: ROLE_COUL[s.r] }));
+          else g.svg.appendChild(sv("rect", { x: x, y: y1, width: g.bw, height: hgt, fill: ROLE_COUL[s.r] }));
+        }
+        base += s.v;
+      });
+      if (i === 2 || i === 5 || i === 11) g.svg.appendChild(sv("text", { x: x + g.bw / 2, y: g.y(o.demandes) - 6, "text-anchor": "middle", "class": "fort num" }, nombre(o.demandes, 0)));
+      var hit = sv("rect", { x: g.ml + g.bande * i, y: g.mt, width: g.bande, height: g.ph, "class": "hit", tabindex: 0, role: "img",
+        "aria-label": "M" + o.m + " : " + nombre(o.demandes, 1) + " demandes" });
+      g.svg.appendChild(hit);
+      bulle(fig, hit, "M" + o.m + " : " + nombre(o.demandes, 1) + " demandes",
+        M.ROLES.slice().reverse().map(function (r) { return { c: ROLE_COUL[r.id], lib: r.nom, val: nombre(o.parRole[r.id], 1) }; }));
+    });
+    // tableau
+    var t = document.getElementById("tab-demandes"); vider(t);
+    var tr = el("tr"); tr.appendChild(el("th", { scope: "col" }, "Mois"));
+    M.ROLES.forEach(function (r) { tr.appendChild(el("th", { scope: "col", "class": "n" }, r.nom)); });
+    tr.appendChild(el("th", { scope: "col", "class": "n" }, "Total")); tr.appendChild(el("th", { scope: "col", "class": "n" }, "dont A ou B"));
+    var th = el("thead"); th.appendChild(tr); t.appendChild(th);
+    var tb = el("tbody");
+    c.mois.forEach(function (o) {
+      var r = el("tr"); r.appendChild(el("th", { scope: "row" }, "M" + o.m));
+      M.ROLES.forEach(function (ro) { r.appendChild(el("td", { "class": "n" }, nombre(o.parRole[ro.id], 1))); });
+      r.appendChild(el("td", { "class": "n" }, nombre(o.demandes, 1))); r.appendChild(el("td", { "class": "n" }, nombre(o.qualifiees, 1)));
+      tb.appendChild(r);
+    });
+    t.appendChild(tb);
+  }
+
+  function graphSignes(F) {
+    var b = F[0], c = F[1], h = F[2];
+    var fig = document.getElementById("g-signes"), zone = document.getElementById("svg-signes");
+    var cap = c.global.capacite;
+    var leg = document.getElementById("leg-signes"); vider(leg);
+    var l1 = el("li"), p1 = el("span", { "class": "pastille" }); p1.style.background = "var(--barre)"; l1.appendChild(p1); l1.appendChild(el("span", null, "Chantiers signés (central)")); leg.appendChild(l1);
+    var l2 = el("li"), p2 = el("span", { "class": "pastille" }); p2.style.background = "var(--rouge)"; l2.appendChild(p2); l2.appendChild(el("span", null, "Au-delà de la capacité")); leg.appendChild(l2);
+    var l3 = el("li"), p3 = el("span", { "class": "ligne-cle" }); p3.style.background = "var(--rouge)"; l3.appendChild(p3); l3.appendChild(el("span", null, "Capacité")); leg.appendChild(l3);
+    var l4 = el("li"), p4 = el("span", { "class": "moustache" }); l4.appendChild(p4); l4.appendChild(el("span", null, "Fourchette basse à haute")); leg.appendChild(l4);
+    var max = Math.max(cap, Math.max.apply(null, h.mois.map(function (o) { return o.signes; })));
+    var pas = pasRond(max * 1.1, 4), ymax = Math.max(pas, Math.ceil(max * 1.12 / pas) * pas);
+    var g = cadre(zone, 250, ymax, pas);
+    c.mois.forEach(function (o, i) {
+      var x = g.x(i), v = o.signes, sous = Math.min(v, cap), dessus = Math.max(0, v - cap);
+      var ySous = g.y(sous), hSous = g.y(0) - ySous;
+      if (dessus > 0.01) {
+        g.svg.appendChild(sv("rect", { x: x, y: ySous, width: g.bw, height: hSous, fill: "var(--barre)" }));
+        var yD = g.y(v), hD = ySous - yD - 2;
+        if (hD > 0.3) g.svg.appendChild(sv("path", { d: colonneArrondie(x, yD, g.bw, hD, 4), fill: "var(--rouge)" }));
+      } else if (hSous > 0.3) {
+        g.svg.appendChild(sv("path", { d: colonneArrondie(x, ySous, g.bw, hSous, 4), fill: "var(--barre)" }));
+      }
+      // moustache basse-haute
+      var xm = x + g.bw / 2 + Math.min(10, g.bande * 0.32), yb = g.y(b.mois[i].signes), yh = g.y(h.mois[i].signes);
+      g.svg.appendChild(sv("line", { x1: xm, x2: xm, y1: yb, y2: yh, stroke: "var(--encre-3)", "stroke-width": 1 }));
+      g.svg.appendChild(sv("line", { x1: xm - 3, x2: xm + 3, y1: yh, y2: yh, stroke: "var(--encre-3)", "stroke-width": 1 }));
+      g.svg.appendChild(sv("line", { x1: xm - 3, x2: xm + 3, y1: yb, y2: yb, stroke: "var(--encre-3)", "stroke-width": 1 }));
+      if (i === 2 || i === 5 || i === 11) g.svg.appendChild(sv("text", { x: x + g.bw / 2 - 2, y: g.y(v) - 6, "text-anchor": "middle", "class": "fort num" }, nombre(v, 1)));
+      var hit = sv("rect", { x: g.ml + g.bande * i, y: g.mt, width: g.bande, height: g.ph, "class": "hit", tabindex: 0, role: "img", "aria-label": "M" + o.m + " : " + nombre(v, 1) + " chantiers signés" });
+      g.svg.appendChild(hit);
+      bulle(fig, hit, "M" + o.m + " : " + nombre(v, 1) + " chantiers signés", [
+        { c: "var(--barre)", lib: "Central", val: nombre(v, 1) },
+        { c: "var(--encre-3)", lib: "Fourchette", val: nombre(b.mois[i].signes, 1) + " à " + nombre(h.mois[i].signes, 1) },
+        { c: "var(--rouge)", lib: "Au-delà de la capacité", val: nombre(dessus, 1) },
+        { c: null, lib: "CA du mois (central)", val: chf(o.ca) }
+      ]);
+    });
+    var yc = Math.round(g.y(cap)) + 0.5;
+    g.svg.appendChild(sv("line", { x1: g.ml, x2: g.W - g.mr, y1: yc, y2: yc, stroke: "var(--rouge)", "stroke-width": 2 }));
+    g.svg.appendChild(sv("text", { x: g.ml + 4, y: yc - 6, "text-anchor": "start", "class": "fort" }, "Capacité : " + nombre(cap) + " par mois"));
+    var t = document.getElementById("tab-signes"); vider(t);
+    var tr = el("tr");
+    ["Mois", "Basse", "Centrale", "Haute", "Au-delà de la capacité", "CA signé (central)", "Marchés publics (espérance)"].forEach(function (x, j) { tr.appendChild(el("th", { scope: "col", "class": j ? "n" : "" }, x)); });
+    var th = el("thead"); th.appendChild(tr); t.appendChild(th);
+    var tb = el("tbody");
+    c.mois.forEach(function (o, i) {
+      var r = el("tr"); r.appendChild(el("th", { scope: "row" }, "M" + o.m));
+      [nombre(b.mois[i].signes, 1), nombre(o.signes, 1), nombre(h.mois[i].signes, 1), nombre(o.depassement, 1), chf(o.ca), chf(o.caPublic)].forEach(function (x) { r.appendChild(el("td", { "class": "n" }, x)); });
+      tb.appendChild(r);
+    });
+    t.appendChild(tb);
+  }
+
+  function rangs(T) {
+    var ol = document.getElementById("rangs"); vider(ol);
+    var met = etat.metrique;
+    var lignes = T.parCanal.filter(function (p) { return p.actif && !(met === "demandesM12" && p.horsDemandes); }).map(function (p) { return { p: p, v: p[met] || 0 }; });
+    lignes.sort(function (a, b) { return b.v - a.v; });
+    var max = lignes.length ? lignes[0].v : 1;
+    var fmt = met === "ca" || met === "depense" ? chf : function (x) { return nombre(x, 1); };
+    lignes.forEach(function (l) {
+      var li = el("li");
+      var nom = el("span", { "class": "nom" });
+      var pa = el("span", { "class": "pastille", "aria-hidden": "true" }); pa.style.background = ROLE_COUL[l.p.role];
+      nom.appendChild(pa); nom.appendChild(el("span", null, l.p.nom));
+      var piste = el("span", { "class": "piste" });
+      var barre = el("span", { "class": "barre" }); barre.style.width = (max > 0 ? Math.max(0.5, 100 * l.v / max) * 0.78 : 0) + "%";
+      piste.appendChild(barre); piste.appendChild(el("span", { "class": "v" }, fmt(l.v)));
+      li.appendChild(nom); li.appendChild(piste);
+      ol.appendChild(li);
+    });
+    if (!lignes.length) ol.appendChild(el("li", null, "Aucun canal actif."));
+  }
+
+  function tableCanaux(T) {
+    var t = document.getElementById("tab-canaux"); vider(t);
+    var tr = el("tr");
+    ["Canal", "Rôle", "Demandes/mois à M12", "Demandes sur 12 mois", "Signés sur 12 mois", "CA signé 12 mois", "Dépense 12 mois", "CPL", "CAC", "CAC complet", "Heures associés/mois"].forEach(function (x, j) { tr.appendChild(el("th", { scope: "col", "class": j > 1 ? "n" : "" }, x)); });
+    var th = el("thead"); th.appendChild(tr); t.appendChild(th);
+    var tb = el("tbody");
+    T.parCanal.filter(function (p) { return p.actif; }).forEach(function (p) {
+      var r = el("tr");
+      r.appendChild(el("th", { scope: "row" }, p.nom));
+      r.appendChild(el("td", null, ROLE_COURT[p.role]));
+      [p.horsDemandes ? "dossiers : " + nombre(p.demandesM12, 1) : nombre(p.demandesM12, 1), p.horsDemandes ? nombre(p.demandes, 1) + " dossiers" : nombre(p.demandes, 0), nombre(p.signes, 1), chf(p.ca), chf(p.depense), chf(p.cpl), chf(p.cac), chf(p.cacComplet), nombre(p.associesH, 1)].forEach(function (x) { r.appendChild(el("td", { "class": "n" }, x)); });
+      tb.appendChild(r);
+    });
+    t.appendChild(tb);
+  }
+
+  function comparer(F) {
+    var sel = document.getElementById("comparer");
+    if (!sel.options.length) {
+      ["A", "B", "C", "D"].forEach(function (id) { sel.appendChild(el("option", { value: id }, id + ". " + M.PRESETS[id].nom)); });
+      sel.addEventListener("change", function () { etat.comparer = sel.value; sauver(); comparer(dernier); });
+    }
+    sel.value = etat.comparer;
+    var G = M.fourchette(M.PRESETS[etat.comparer].v, etat.hyp, etat.surcharges);
+    var a = F[1].totaux, bb = G[1].totaux, am = F[1].mois, bm = G[1].mois;
+    var t = document.getElementById("tab-comparer"); vider(t);
+    var tr = el("tr");
+    ["Indicateur (valeurs centrales)", "Affichée : " + (etat.preset === "P" ? "personnalisée" : etat.preset), "Comparée : " + etat.comparer, "Écart"].forEach(function (x, j) { tr.appendChild(el("th", { scope: "col", "class": j ? "n" : "" }, x)); });
+    var th = el("thead"); th.appendChild(tr); t.appendChild(th);
+    var tb = el("tbody");
+    var L = [
+      ["Dépense moyenne par mois", a.depense / 12, bb.depense / 12, chf],
+      ["dont médias et abonnements", a.medias / 12, bb.medias / 12, chf],
+      ["Temps des associés (h/mois)", a.associesH / 12, bb.associesH / 12, function (x) { return nombre(x, 0); }],
+      ["Demandes par mois à M3", am[2].demandes, bm[2].demandes, function (x) { return nombre(x, 1); }],
+      ["Demandes par mois à M6", am[5].demandes, bm[5].demandes, function (x) { return nombre(x, 1); }],
+      ["Demandes par mois à M12", am[11].demandes, bm[11].demandes, function (x) { return nombre(x, 1); }],
+      ["Chantiers signés par mois à M6", am[5].signes, bm[5].signes, function (x) { return nombre(x, 1); }],
+      ["Chantiers signés par mois à M12", am[11].signes, bm[11].signes, function (x) { return nombre(x, 1); }],
+      ["CA signé sur 12 mois, hors marchés publics", a.ca, bb.ca, chf],
+      ["Marchés publics, espérance sur 12 mois", a.caPublic, bb.caPublic, chf],
+      ["CPL", a.cpl, bb.cpl, chf],
+      ["CAC", a.cac, bb.cac, chf],
+      ["ROI", a.roi, bb.roi, function (x) { return nombre(x, 1); }],
+      ["ROI avec le temps des associés", a.roiComplet, bb.roiComplet, function (x) { return nombre(x, 1); }],
+      ["Dépendance au budget payant", a.dependance, bb.dependance, pct]
+    ];
+    L.forEach(function (l) {
+      var r = el("tr");
+      r.appendChild(el("th", { scope: "row" }, l[0]));
+      r.appendChild(el("td", { "class": "n" }, l[3](l[1])));
+      r.appendChild(el("td", { "class": "n" }, l[3](l[2])));
+      var d = (l[1] !== null && l[2] !== null) ? l[1] - l[2] : null;
+      var txt = d === null ? "–" : (d > 0 ? "+" : "") + l[3](d);
+      if (d !== null && Math.abs(d) < 1e-9) txt = "=";
+      r.appendChild(el("td", { "class": "n" }, txt));
+      tb.appendChild(r);
+    });
+    var r2 = el("tr"); r2.appendChild(el("th", { scope: "row" }, "Rentable à partir de"));
+    r2.appendChild(el("td", { "class": "n" }, moisTxt(a.rentableMois))); r2.appendChild(el("td", { "class": "n" }, moisTxt(bb.rentableMois))); r2.appendChild(el("td", { "class": "n" }, ""));
+    tb.appendChild(r2);
+    t.appendChild(tb);
+  }
+
+  function regles(c) {
+    var T = c.totaux, g = c.global, box = document.getElementById("regles"); vider(box);
+    var gads = canal("gads");
+    var q = (etat.surcharges.gads && etat.surcharges.gads.qualite) || gads.qualite;
+    var r1 = el("div", { "class": "regle" });
+    r1.appendChild(el("strong", null, "CPL maximal Google Ads : " + chf(T.cplMaxAds) + ", cible " + chf(T.cplCibleAds)));
+    r1.appendChild(el("div", { "class": "calc" }, "Panier moyen des demandes Ads " + chf(T.panierAds) + " × marge " + pct(g.marge) + " × taux de signature par demande " + pct(g.dto * g.tos * q) + " (" + pct(g.dto) + " × " + pct(g.tos) + " × qualité " + nombre(q, 1) + "). Cible : un tiers du maximum."));
+    var pg = T.parCanal.filter(function (p) { return p.id === "gads"; })[0];
+    if (pg.actif) r1.appendChild(el("div", { "class": "calc" }, "CPL simulé de Google Ads (avec la gestion par l'agence) : " + chf(pg.cpl) + (pg.cpl <= T.cplCibleAds ? ", sous la cible." : ", au-dessus de la cible.")));
+    box.appendChild(r1);
+    var r2 = el("div", { "class": "regle" });
+    r2.appendChild(el("strong", null, "Augmenter le budget Ads de 20 %"));
+    r2.appendChild(el("div", { "class": "calc" }, "si le CPL des demandes A et B reste sous " + chf(T.cplCibleAds) + " deux mois de suite, que la part d'impressions perdue faute de budget dépasse 20 % et que le carnet est à moins de 8 semaines."));
+    box.appendChild(r2);
+    var r3 = el("div", { "class": "regle" });
+    r3.appendChild(el("strong", null, "Couper ou réduire de 30 %"));
+    r3.appendChild(el("div", { "class": "calc" }, "un groupe d'annonces dont le CPL dépasse " + chf(T.cplMaxAds / 2) + " (la moitié du maximum) sur deux mois avec au moins 15 demandes, ou dont moins de 40 % des demandes sont A ou B."));
+    box.appendChild(r3);
+    var r4 = el("div", { "class": "regle" });
+    r4.appendChild(el("strong", null, "Capacité : carnet plein à plus de 8 semaines"));
+    r4.appendChild(el("div", { "class": "calc" }, "baisser Google Ads de 50 % (garder la campagne de marque), puis Meta. Remonter quand le carnet repasse sous 4 semaines. Capacité saisie : " + nombre(g.capacite) + " chantiers par mois."));
+    box.appendChild(r4);
+  }
+
+  /* Démarrage */
+  construirePresets();
+  construireHyp();
+  construireCanaux();
+  majControles();
+  document.getElementById("metrique").addEventListener("change", function (e) { etat.metrique = e.target.value; sauver(); rangs(dernier[1].totaux); });
+  document.getElementById("reinit").addEventListener("click", function () {
+    etat = { preset: "C", reglages: M.clone(M.PRESETS.C.v), hyp: hypDefaut(), surcharges: {}, comparer: "B", metrique: "demandesM12" };
+    majControles(); calculer();
+  });
+  calculer();
+  var attente = null;
+  var redessiner = function () { if (attente) cancelAnimationFrame(attente); attente = requestAnimationFrame(function () { if (dernier) { graphDemandes(dernier[1]); graphSignes(dernier); } }); };
+  if (window.ResizeObserver) new ResizeObserver(redessiner).observe(document.getElementById("svg-demandes"));
+  else window.addEventListener("resize", redessiner);
+})();
+</script>
+</body>
+</html>
