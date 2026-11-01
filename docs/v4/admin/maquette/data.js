@@ -167,6 +167,12 @@ window.MAQ = (function () {
     '2027-01': { demandes: 9, A: 6, B: 2, C: 1, HC: 0, offres: 3, signees: 1, ca: 12400 }
   };
 
+  /* Répartition par canal des demandes de novembre à janvier (pour les tendances). */
+  var HISTORIQUE_CANAUX = {
+    'google-ads': [3, 2, 3], meta: [0, 0, 0], b2b: [0, 0, 1], recherche: [1, 1, 2],
+    fiche: [1, 1, 1], recommandation: [0, 1, 1], autres: [1, 0, 1]
+  };
+
   var MOIS = ['2026-11', '2026-12', '2027-01', '2027-02', '2027-03', '2027-04'];
   var MOIS_M = { '2026-11': 1, '2026-12': 2, '2027-01': 3, '2027-02': 4, '2027-03': 5, '2027-04': 6 };
 
@@ -266,7 +272,7 @@ window.MAQ = (function () {
 
   return {
     MAINTENANT: MAINTENANT, UTILISATEURS: UTILISATEURS, MOI: MOI, GRILLE: GRILLE, DEMANDES: DEMANDES,
-    OFFRES_ANCIENNES: OFFRES_ANCIENNES, HISTORIQUE: HISTORIQUE, MOIS: MOIS, MOIS_M: MOIS_M, SITE: SITE,
+    OFFRES_ANCIENNES: OFFRES_ANCIENNES, HISTORIQUE: HISTORIQUE, HISTORIQUE_CANAUX: HISTORIQUE_CANAUX, MOIS: MOIS, MOIS_M: MOIS_M, SITE: SITE,
     DEPENSES: DEPENSES, GOOGLE_ADS: GOOGLE_ADS, AVIS: AVIS, IA: IA, MOTIFS: MOTIFS, PARAMETRES: PARAMETRES, OBJECTIFS: OBJECTIFS
   };
 })();

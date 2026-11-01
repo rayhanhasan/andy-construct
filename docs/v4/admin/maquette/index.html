@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestion Andy Construct (maquette)</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Thème choisi par la personne (mémoire du navigateur, facultative).
+  (function () { try { var t = localStorage.getItem('ac-maquette-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {} })();
+</script>
+</head>
+<body>
+<a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+<aside class="bandeau-maquette" aria-label="Avertissement">
+  <strong>Maquette — données fictives</strong>
+  <span class="complement">Aucun nom, montant ni chiffre n'est réel. « Aujourd'hui » : jeudi 22 avril 2027, 9 h 40. Les objectifs viennent de la stratégie v2 (§1.1).</span>
+</aside>
+
+<div class="app">
+  <aside class="lateral" aria-label="Navigation principale">
+    <a class="marque" href="#/">
+      <img src="logo-blanc.png" alt="Andy Construct" width="132" height="34">
+      <span>Gestion des demandes</span>
+    </a>
+    <nav aria-label="Écrans">
+      <ul class="nav-groupe">
+        <li><a href="#/" data-route="vue"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="6" height="6"/><rect x="11.5" y="2.5" width="6" height="6"/><rect x="2.5" y="11.5" width="6" height="6"/><rect x="11.5" y="11.5" width="6" height="6"/></svg>Vue d'ensemble</a></li>
+        <li><a href="#/a-traiter" data-route="a-traiter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 11.5h4l1.5 2.5h4l1.5-2.5h4"/><path d="M4.5 4.5h11l2 7v5h-15v-5z"/></svg>À traiter<span class="pastille" id="pastille-lateral"></span></a></li>
+        <li><a href="#/demandes" data-route="demandes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>Demandes</a></li>
+        <li><a href="#/offres" data-route="offres"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 2.5h7l3 3v12H5z"/><path d="M8 9h5M8 12h5M8 15h3"/></svg>Offres et chantiers</a></li>
+        <li><a href="#/saisie" data-route="saisie"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5.5 3h2.5l1 4-2 1.2a8 8 0 0 0 4.8 4.8l1.2-2 4 1v2.5A1.5 1.5 0 0 1 15.5 16 12.5 12.5 0 0 1 4 4.5 1.5 1.5 0 0 1 5.5 3z"/><path d="M14 2.5v5M11.5 5h5"/></svg>Saisir un appel</a></li>
+      </ul>
+      <ul class="nav-groupe">
+        <li><a href="#/acquisition" data-route="acquisition"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 16.5h14"/><path d="M5 13V9M9 13V5M13 13v-3M17 13V7"/></svg>Acquisition</a></li>
+        <li><a href="#/visibilite" data-route="visibilite"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5"/><path d="M12.5 12.5l5 5"/></svg>SEO et visibilité</a></li>
+        <li><a href="#/avis" data-route="avis"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2.8l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5L2.8 8l5-.6z"/></svg>Avis</a></li>
+        <li><a href="#/rapport" data-route="rapport"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4.5 2.5h11v15h-11z"/><path d="M7.5 13v-2M10 13V8M12.5 13v-4"/></svg>Rapport mensuel</a></li>
+      </ul>
+      <ul class="nav-groupe">
+        <li><a href="#/parametres" data-route="parametres"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/></svg>Paramètres</a></li>
+        <li><a href="#/donnees" data-route="donnees"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2.5l6 2.5v4.5c0 4-2.6 6.6-6 8-3.4-1.4-6-4-6-8V5z"/><path d="M7.5 10l2 2 3.5-3.5"/></svg>Journal et données</a></li>
+      </ul>
+    </nav>
+    <div class="lateral-pied"><strong>Alex Modèle</strong>Associé, rôle « terrain »</div>
+  </aside>
+
+  <div class="principal">
+    <header class="haut">
+      <img class="logo-mobile" src="logo.png" alt="Andy Construct" width="86" height="22">
+      <div class="recherche">
+        <label class="sr" for="recherche-globale">Rechercher une demande</label>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.5 12.5l5 5"/></svg>
+        <input id="recherche-globale" type="search" role="combobox" aria-autocomplete="list" autocomplete="off" placeholder="Nom, référence, téléphone ou commune" aria-controls="resultats-recherche" aria-expanded="false">
+        <ul class="resultats" id="resultats-recherche" hidden></ul>
+      </div>
+      <div class="haut-actions">
+        <a class="btn btn-sombre btn-saisir" href="#/saisie">Saisir un appel</a>
+        <button class="btn btn-discret btn-icone" type="button" id="bouton-theme" aria-pressed="false" title="Thème sombre">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15.5 12.5A6.5 6.5 0 0 1 7.5 4.5a6.5 6.5 0 1 0 8 8z"/></svg>
+          <span class="sr">Thème sombre</span>
+        </button>
+        <div class="utilisateur"><strong>Alex Modèle</strong>Associé</div>
+      </div>
+    </header>
+    <main id="contenu" tabindex="-1"></main>
+  </div>
+</div>
+
+<nav class="barre-bas" aria-label="Navigation sur téléphone">
+  <a href="#/a-traiter" data-route="a-traiter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 11.5h4l1.5 2.5h4l1.5-2.5h4"/><path d="M4.5 4.5h11l2 7v5h-15v-5z"/></svg>À traiter<span class="pastille" id="pastille-bas"></span></a>
+  <a href="#/demandes" data-route="demandes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg>Demandes</a>
+  <a href="#/saisie" data-route="saisie" class="saisir"><span class="rond"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></span>Saisir</a>
+  <a href="#/" data-route="vue"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 16.5h14"/><path d="M5 13V9M9 13V5M13 13v-3M17 13V7"/></svg>Chiffres</a>
+  <button type="button" id="bouton-plus" aria-haspopup="dialog"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg>Plus</button>
+</nav>
+
+<div id="infobulle" role="tooltip"></div>
+<div id="messages" aria-live="polite"></div>
+<dialog id="dialogue" aria-labelledby="dialogue-titre"></dialog>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
