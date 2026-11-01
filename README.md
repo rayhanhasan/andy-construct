@@ -16,6 +16,7 @@ Pour reprendre le projet : lire **`HANDOFF.md`**.
 | `automation/messages/` | Tous les messages (accusés, relances, avis, SMS, courriers et script de prospection) |
 | `livrables/` | Zips v3 (validation et production), plaquette de validation, suivi Excel des demandes et KPI, sources des PDF |
 | `site/assets/docs/` | PDF téléchargeables : dossier de références, guide bruit, check-list régies |
+| `docs/v4/` | Audit SEO, plan de mix d'acquisition + simulateur, plans du tableau de bord admin + maquette cliquable |
 | `docs/v3/` | Brief v3, CRO et preuve sociale, direction artistique (tokens, mouvement, wireframes, drapeaux), crédits des images |
 | `.claude/skills/` | Skills Claude Code installés pour le projet (design, tests, CRO, copywriting, A/B, SEO…) |
 | `docs/v2/` | Programme, audit, enquête client, concurrence, personas, stratégie, logos, architecture CRO, copy deck, contrat d'interface, automatisation, décisions, QA |

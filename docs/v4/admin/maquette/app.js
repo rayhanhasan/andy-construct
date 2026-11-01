@@ -273,7 +273,9 @@
   function cplMax(asOf) {
     var pm = panierMoyen(asOf), co = cohorte(asOf);
     var taux = co.offres >= 10 ? co.taux : M.OBJECTIFS.offreSignee.M6 / 100;
-    return pm ? { max: pm * M.PARAMETRES.margeBrute * taux, panier: pm, taux: taux } : null;
+    // Taux de signature par demande = demande→offre × offre→signée (plan d'acquisition v4 §2.5, qui corrige v2 §1.3)
+    var tdo = M.OBJECTIFS.demandeOffre.M6 / 100;
+    return pm ? { max: pm * M.PARAMETRES.margeBrute * tdo * taux, panier: pm, taux: taux, tdo: tdo } : null;
   }
   function chantiers() { return D.filter(function (r) { return r.chantier; }); }
   function carnet() {
@@ -536,7 +538,7 @@
       '<span class="compl">Taux offre→signée : <b>' + pct(co.taux) + '</b> (' + co.signees + ' sur ' + co.offres + ', objectif ' + pct(objCo) + ')</span>' +
       etat(ca >= objCa, 'Objectif atteint', 'En dessous', courant && ca < objCa ? 'Mois en cours, signatures irrégulières' : null) + '</div>',
 
-      '<div class="tuile"><div class="tete"><span class="libelle">CPL, canaux payants</span>' + aide('def-5') + '</div>' + definition('def-5', 'CPL = dépense / demandes, sur Google Ads, Meta et la prospection B2B. Cible : un tiers du CPL max = panier moyen × marge brute × taux offre→signée (v2 §1.3). Marge brute : 30 %, paramètre fictif.') +
+      '<div class="tuile"><div class="tete"><span class="libelle">CPL, canaux payants</span>' + aide('def-5') + '</div>' + definition('def-5', 'CPL = dépense / demandes, sur Google Ads, Meta et la prospection B2B. Cible : un tiers du CPL max = panier moyen × marge brute × taux demande→offre × taux offre→signée (plan d’acquisition v4 §2.5). Marge brute : 30 %, paramètre fictif.') +
       '<span class="valeur">' + (cpl != null ? chf(cpl) : '—') + '</span>' +
       '<span class="objectif">Cible ≤ ' + (cible ? chf(cible) : '—') + ' (CPL max ' + (cm ? chf(cm.max) : '—') + ')</span>' +
       (cpl != null && cible ? metre(cpl, Math.max(cpl, cible) * 1.4, cible, 'CPL ' + chf(cpl) + ', cible ' + chf(cible)) : '') +
@@ -886,7 +888,7 @@
       '<section class="panneau" aria-labelledby="t-can"><div class="panneau-entete"><h2 id="t-can">Par canal</h2><span class="discret">CPL = dépense / demandes ; CAC = dépense / chantiers signés ; ROAS = CA signé / dépense ; ROI = (marge brute − dépense) / dépense, marge 30 % (fictive)</span></div>' + tab +
       '<p class="petit discret mt">* Moins de 3 chantiers signés : CAC, ROAS et ROI indicatifs. Dépense : médias et courrier, hors honoraires d’agence (décision G5). CA et signatures rattachés au canal d’origine de la demande, à la date de signature : une demande de janvier signée en février compte en février. Les appels saisis prennent le canal déclaré.</p></section>' +
       '<div class="grille-3 mt"><section class="panneau" aria-labelledby="t-b1"><h2 id="t-b1">Demandes par canal</h2>' + bDem + '</section><section class="panneau" aria-labelledby="t-b2"><h2 id="t-b2">CA signé par canal</h2>' + bCa + '</section><section class="panneau" aria-labelledby="t-b3"><h2 id="t-b3">CPL, canaux payants</h2>' + bCpl +
-      '<p class="petit discret">Cible = 1/3 du CPL max (' + chf(cm.max) + ' = panier ' + chf(cm.panier) + ' × marge 30 % × taux offre→signée ' + pct(cm.taux) + ').</p></section></div>' +
+      '<p class="petit discret">Cible = 1/3 du CPL max (' + chf(cm.max) + ' = panier ' + chf(cm.panier) + ' × marge 30 % × demande→offre ' + pct(cm.tdo) + ' × offre→signée ' + pct(cm.taux) + ').</p></section></div>' +
       '<section class="panneau mt" aria-labelledby="t-ga"><div class="panneau-entete"><h2 id="t-ga">Google Ads</h2><span class="discret">coûts importés chaque jour (rapport programmé) ; conversions hors ligne en V3</span></div><div class="grille-2"><div><table class="tableau"><caption class="sr">Google Ads par mois</caption><thead><tr><th scope="col">Mois</th><th scope="col" class="num">Dépense</th><th scope="col" class="num">Clics</th><th scope="col" class="num">CPC</th><th scope="col" class="num">Part d’impressions</th></tr></thead><tbody>' +
       '<tr><th scope="row">Mars</th><td class="num">' + chf(depense('2027-03', 'google-ads')) + '</td><td class="num">' + gaM.clics + '</td><td class="num">CHF ' + nb(gaM.cpc, 2) + '</td><td class="num">' + gaM.partImpr + ' %</td></tr>' +
       '<tr><th scope="row">Avril (au 21)</th><td class="num">' + chf(depense('2027-04', 'google-ads')) + '</td><td class="num">' + ga.clics + '</td><td class="num">CHF ' + nb(ga.cpc, 2) + '</td><td class="num">' + ga.partImpr + ' %</td></tr></tbody></table>' +
@@ -989,7 +991,7 @@
     } else if (onglet === 'economie') {
       var cm = cplMax(NOW);
       corps = '<div class="grille-2"><div class="formulaire panneau"><label class="champ"><span>Taux de marge brute de référence <span class="aide-champ">décision G4 ; valeur fictive</span></span><input value="30 %"></label><label class="champ"><span>Panier de référence (objectif de CA)</span><input value="CHF 10\'000"></label><label class="champ"><span>Honoraires d’agence dans la dépense</span><select><option>Non (médias, courrier, impression)</option><option>Oui (coût complet)</option></select></label><label class="champ"><span>Équipes</span><input value="2" inputmode="numeric"></label><label class="champ"><span>Seuil d’alerte du carnet</span><input value="8 semaines"></label><button class="btn btn-principal" type="button" data-maquette="Paramètres enregistrés.">Enregistrer</button></div>' +
-        '<div class="panneau"><h2>Ce que ces paramètres donnent aujourd’hui</h2><dl class="dl mt"><dt>Panier moyen, 6 mois</dt><dd>' + chf(cm.panier) + '</dd><dt>Taux offre→signée</dt><dd>' + pct(cm.taux) + ' (cohorte)</dd><dt>CPL max</dt><dd>' + chf(cm.max) + '</dd><dt>Cible de CPL</dt><dd>' + chf(cm.max / 3) + '</dd><dt>ROAS d’équilibre</dt><dd>' + nb(1 / M.PARAMETRES.margeBrute, 1) + '</dd></dl><p class="petit discret mt">CPL max = panier moyen × marge brute × taux offre→signée (v2 §1.3).</p></div></div>';
+        '<div class="panneau"><h2>Ce que ces paramètres donnent aujourd’hui</h2><dl class="dl mt"><dt>Panier moyen, 6 mois</dt><dd>' + chf(cm.panier) + '</dd><dt>Taux demande→offre</dt><dd>' + pct(cm.tdo) + ' (objectif M6)</dd><dt>Taux offre→signée</dt><dd>' + pct(cm.taux) + ' (cohorte)</dd><dt>CPL max</dt><dd>' + chf(cm.max) + '</dd><dt>Cible de CPL</dt><dd>' + chf(cm.max / 3) + '</dd><dt>ROAS d’équilibre</dt><dd>' + nb(1 / M.PARAMETRES.margeBrute, 1) + '</dd></dl><p class="petit discret mt">CPL max = panier moyen × marge brute × taux demande→offre × taux offre→signée (plan d’acquisition v4 §2.5).</p></div></div>';
     } else if (onglet === 'motifs') {
       var cpt = {}; D.forEach(function (r) { if (r.perdue) cpt[r.perdue.motif] = (cpt[r.perdue.motif] || 0) + 1; });
       corps = '<table class="tableau"><caption class="sr">Motifs de perte</caption><thead><tr><th scope="col">Motif</th><th scope="col">Relance à 6 mois</th><th scope="col" class="num">Utilisé (3 mois)</th></tr></thead><tbody>' +

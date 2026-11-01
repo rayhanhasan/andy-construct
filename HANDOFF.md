@@ -1,7 +1,7 @@
 # HANDOFF — Andy Construct, site d'acquisition (v3)
 
 Document de passation pour reprendre le projet en local (Claude Code ou à la main).
-Mise à jour : 31 octobre 2026. État : **v3 (refonte visuelle « le trait de niveau ») livrée sur les 13 pages, testée et poussée ; en attente de validation client, des accords écrits pour les logos et de la mise en place des outils (SMTP, n8n, CRM)**. La v2 (stratégie, copy, API, automatisation) reste la base : la v3 change le design, la preuve sociale, les images et ajoute les drapeaux A/B.
+Mise à jour : 1er novembre 2026 (v4 : audit SEO, plan de mix d'acquisition, plans du tableau de bord admin ; voir §5). État du site : **v3 (refonte visuelle « le trait de niveau ») livrée sur les 13 pages, testée et poussée ; en attente de validation client, des accords écrits pour les logos et de la mise en place des outils (SMTP, n8n, CRM)**. La v2 (stratégie, copy, API, automatisation) reste la base : la v3 change le design, la preuve sociale, les images et ajoute les drapeaux A/B.
 
 ---
 
@@ -86,7 +86,18 @@ Version définitive, **site d'acquisition** : tous les agents et skills utiles, 
 | v3 | Direction artistique | `docs/v3/direction-artistique.md` (benchmark, tokens, échelle typographique, mouvement, wireframes, drapeaux A/B, §12 portage sur toutes les pages) |
 | v3 | Intégration | accueil puis 12 autres pages au même niveau ; QA axe, Lighthouse, captures Playwright |
 
+| v4 | Audit SEO | `docs/v4/seo/audit-seo.md` (note 6/10 : technique 9, local 3, autorité 2 ; plan d'action, plan de migration J-7 à J+90, carte des mots-clés, 301 testées) ; 7 corrections dans `tools/build/` |
+| v4 | Mix d'acquisition | `docs/v4/acquisition/plan-mix-acquisition.md` (portefeuille de canaux, 4 combinaisons chiffrées, séquence M0-M12, règles de décision, attribution) et `simulateur.html` (autonome) |
+| v4 | Tableau de bord admin (plans) | `docs/v4/admin/plan-dashboard-admin.md` (architecture A/B/C, 13 écrans, modèle de données, indicateurs, sécurité nLPD, feuille de route) et `maquette/index.html` (cliquable, données fictives) |
+
 Arbitrages du chef de projet : `docs/v2/decisions-chef-de-projet.md` (D1-D8) ; arbitrages v3 dans `docs/v3/direction-artistique.md` §10-12.
+
+### v4 en bref (1er novembre 2026) : faire rapporter des clients
+
+- **SEO** : le code est prêt (9/10, 301 des 17 anciennes URL testées sur Apache). Ce qui manque est hors du code : fiche Google en zone desservie et avis (0 avis partout), NAP incohérent dans au moins 8 annuaires (Chêne-Bourg, mauvaises catégories), LinkedIn à jour, contenu propre des pages services trop court (190-330 mots), prix et lieux de chantiers à confirmer (C31, C25, C22). **Décider C16 avant la mise en ligne** : « cloison isotherme » est associé aux chambres froides, « cloison isolante » au besoin réel.
+- **Acquisition** : recommandation **combinaison C** (socle fiche Google + avis + SEO + recommandation, Google Ads CHF 1'000 + Microsoft CHF 100/mois, prospection B2B par courrier et appel, 1 dossier simap tous les 2 mois) ≈ CHF 3'750/mois tout compris ; ≈ 34 demandes et 6 chantiers signés/mois à M12 (fourchettes 15-60 et 3-11). **La contrainte est le temps des associés** (≈ 70 h/mois à 30 demandes) : tri téléphonique avant visite. CPL max corrigé : panier × marge × demande→offre × offre→signée ≈ CHF 430 (v2 surestimait). Annonces Local Services de Google : non confirmées en Suisse, hors budget. Plateformes de mise en relation écartées en année 1 (coût complet par chantier plus élevé).
+- **Tableau de bord** : recommandation **A, admin maison** (PHP 8 + MariaDB sur l'hébergement, `gestion.andyconstruct.ch`), Pipedrive abandonné, n8n conservé mais branché sur l'API de l'admin (14 workflows sur 16 à adapter). MVP ≈ 20 jours, V2 ≈ 13, V3 ≈ 8 (estimations). Aujourd'hui l'API n'a **aucune base** : une demande n'existe que dans les e-mails et la file d'attente. Risque relevé : la grille de score classe beaucoup de demandes en A → recalibrer à M3.
+- **Indicateurs communs** au simulateur, au plan et au tableau de bord (mêmes noms et formules) : demandes, part A+B, délai de premier contact, demande→offre, offre→signée, CA signé, CPL, CAC, ROAS, ROI, avis, Search Console, fiche Google, citations IA.
 Skills utilisés : `pdf`, `xlsx`, `artifact-design` (v2) ; en v3, les skills installés depuis GitHub listés au §2 (`frontend-design`, `webapp-testing`, `cro`, `copywriting`, `marketing-psychology`, `ab-testing`…).
 
 ### Design v3 en bref (« le trait de niveau »)
@@ -169,6 +180,12 @@ Statistiques : Umami sans cookie (suivi.js + data-suivi), activé en production 
 - [ ] Confirmer les paramètres de l'API simap (WF08). Affiner la table NPA → zone (`site/api/data/zones.json`).
 - [ ] Umami (cloud UE ou auto-hébergé) → `tools/build/donnees/config.json`.
 - [ ] Non livrés : WF05 (récap du lundi), WF11 (avis Google par API), WF15 (fiche projet).
+
+**v4 — à trancher avec le client** (détails : `docs/v4/acquisition/plan-mix-acquisition.md` §7, `docs/v4/admin/plan-dashboard-admin.md` §7.4, `docs/v4/seo/audit-seo.md` §3.5)
+- [ ] Séance de 30 min pour les chiffres 2025 : demandes, offres, signatures, panier par type de client, marge brute, capacité, heures disponibles des associés, montant minimum d'intervention. Les saisir dans le simulateur.
+- [ ] Budget mensuel (A ≈ 1'750 / D ≈ 2'500 / B-C ≈ 3'600-3'750), engagement 6 mois ; particuliers hors Genève et La Côte ; marchés publics (taille de lot, qui chiffre) ; qui rappelle et qui visite ; bandeau de consentement ; panneaux de chantier ; adhésion GPG.
+- [ ] Architecture du tableau de bord (A recommandée) et abandon de Pipedrive ; hébergeur (pays, PHP 8.1, MariaDB) ; logiciel d'offres utilisé ; import des chantiers signés dans Google Ads.
+- [ ] Accès à la fiche Google, LinkedIn et aux annuaires ; Search Console (propriété Domaine, DNS) dès maintenant ; C16, C03, C25, C22, C31, C30, C29.
 
 **Juridique** : faire relire par un avocat les 8 points de `docs/v2/qa/relecture-juridique-copy.md` (demande d'avis, exception « clients » LCD, transferts hors UE, droit des défauts 2026, politique de confidentialité).
 
