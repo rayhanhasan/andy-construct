@@ -9,8 +9,10 @@ from carte import carte_svg
 
 
 def build():
+    # Les horaires (C03) ne figurent dans la meta qu'une fois confirmés, comme dans la page (audit SEO v4)
     p = dict(fichier='contact.html', formulaire=True, title='Contact et demande de devis, Genève | Andy Construct',
-             desc='Demandez un devis en trois étapes ou appelez le +41 22 771 20 15, du lundi au vendredi. Route des Acacias 48, Carouge. Toute la Suisse romande.')
+             desc='Demandez un devis en trois étapes ou appelez le +41 22 771 20 15%s. Route des Acacias 48, Carouge. Toute la Suisse romande.'
+                  % V('C03', ', du lundi au vendredi', ''))
     p['ld'] = [ld_page('contact.html', p['title'], 'Contact', typ='ContactPage', extra={'about': {'@id': PROD + '#entreprise'}})]
 
     h = horaires()

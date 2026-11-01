@@ -240,7 +240,7 @@ Tous les canaux pointent vers le même parcours : page de service ou fiche proje
 - **Photos.** 30 au lancement (sélection du site, `selection-photos.md`), puis **4 à 8 par mois**, prises à chaque chantier : avant, pendant, après. Pas de visage sans accord ; pas d'intérieur identifiable de client privé sans accord.
 - **Liens avec suivi.**
   - Site : `https://www.andyconstruct.ch/?utm_source=google&utm_medium=organic-local&utm_campaign=gbp-site`
-  - Rendez-vous : `/contact.html?utm_source=google&utm_medium=organic-local&utm_campaign=gbp-rdv#formulaire`
+  - Rendez-vous : `/contact.html?utm_source=google&utm_medium=organic-local&utm_campaign=gbp-rdv#demande` (ancre corrigée le 01.11.2026, audit SEO v4)
 
 **Fonctionnement courant :**
 

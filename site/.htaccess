@@ -83,6 +83,8 @@ RewriteRule ^prestations\.html$ / [R=301,L]
   </If>
   # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).
   # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  # Version de validation : jamais indexée, y compris les PDF, les images et les fichiers texte
+  Header always set X-Robots-Tag "noindex, nofollow"
 </IfModule>
 
 # Fichiers sensibles ou inutiles en ligne

@@ -27,7 +27,10 @@ def robots():
     if ctx.prod():
         txt = 'User-agent: *\nDisallow: /api/\nDisallow: /interne/\n\nSitemap: %ssitemap.xml\n' % PROD
     else:
-        txt = '# Version de validation (%s) : ne pas indexer.\nUser-agent: *\nDisallow: /\n' % ctx.MODE
+        # Exploration permise : un robot bloqué ne lit pas le noindex (balise et en-tête X-Robots-Tag du .htaccess)
+        # et peut indexer l'adresse nue. Le noindex suffit à tenir la version de validation hors des résultats.
+        txt = ('# Version de validation (%s) : non indexée (balise robots noindex et en-tête X-Robots-Tag).\n'
+               '# Exploration laissée ouverte pour que le noindex soit lu.\nUser-agent: *\nDisallow:\n' % ctx.MODE)
     ecrire('robots.txt', txt)
 
 
@@ -127,7 +130,11 @@ def htaccess():
     csp = ("default-src 'self'; script-src 'self' %s%s; style-src 'self'; img-src 'self' data:; font-src 'self'; "
            "connect-src 'self'%s; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
            % (csp_hash(), origine_umami, origine_umami))
-    hote = ('''# 2) Une seule adresse : https://www.andyconstruct.ch (en une seule redirection)
+    hote = ('''# 2) Accueil : une seule adresse « / » (le lien direct vers /index.html est redirigé ; DirectoryIndex n'est pas concerné)
+RewriteCond %{THE_REQUEST} \\s/index\\.html[\\s?]
+RewriteRule ^index\\.html$ https://www.andyconstruct.ch/ [R=301,L]
+
+# 3) Une seule adresse : https://www.andyconstruct.ch (en une seule redirection)
 RewriteCond %{HTTPS} off [OR]
 RewriteCond %{HTTP_HOST} !^www\\.andyconstruct\\.ch$ [NC]
 RewriteRule ^(.*)$ https://www.andyconstruct.ch/$1 [R=301,L]
@@ -207,7 +214,7 @@ RewriteRule ^index\\.php/?$ %(base)s [R=301,L]
   </If>
   # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).
   # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-</IfModule>
+%(xrobots)s</IfModule>
 
 # Fichiers sensibles ou inutiles en ligne
 <FilesMatch "(^\\.|\\.(md|py|json\\.bak|log|sh)$)">
@@ -215,7 +222,9 @@ RewriteRule ^index\\.php/?$ %(base)s [R=301,L]
     Require all denied
   </IfModule>
 </FilesMatch>
-''' % dict(mode=ctx.MODE, base=base, regles=regles, hote=hote, csp=csp)
+''' % dict(mode=ctx.MODE, base=base, regles=regles, hote=hote, csp=csp,
+           xrobots='' if ctx.prod() else ('  # Version de validation : jamais indexée, y compris les PDF, les images et les fichiers texte\n'
+                                         '  Header always set X-Robots-Tag "noindex, nofollow"\n'))
     ecrire('.htaccess', txt)
 
 

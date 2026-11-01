@@ -8,7 +8,7 @@ from common import (page, page_head, ld_page, TEL, TEL_URI, MOB, tel_link, horai
 import portfolio as pf
 
 MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
-DATE = '%d %s %d' % (AUJOURDHUI.day, MOIS[AUJOURDHUI.month - 1], AUJOURDHUI.year)
+DATE = '%s %s %d' % ('1er' if AUJOURDHUI.day == 1 else AUJOURDHUI.day, MOIS[AUJOURDHUI.month - 1], AUJOURDHUI.year)
 
 
 def merci():

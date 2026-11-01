@@ -473,7 +473,7 @@ def methode(complete=True, titre_id='methode-titre', h2=None, lien=True, surtitr
 def faq_items(questions):
     """questions : liste de (question, réponse_html, réponse_texte). Renvoie (html, entités JSON-LD)."""
     html = ''.join('<details><summary>%s</summary><div><p>%s</p></div></details>' % (q, a) for q, a, _ in questions)
-    ld = [{'@type': 'Question', 'name': ctx.fr(q), 'acceptedAnswer': {'@type': 'Answer', 'text': ctx.fr(t)}} for q, _, t in questions]
+    ld = [{'@type': 'Question', 'name': ctx.fr(q.strip()), 'acceptedAnswer': {'@type': 'Answer', 'text': ctx.fr(t.strip())}} for q, _, t in questions]
     return html, ld
 
 

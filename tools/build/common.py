@@ -427,6 +427,10 @@ def page(p, corps):
            + '  <main id="contenu">\n' + corps + '  </main>\n' + ft + '</body>\n</html>\n')
     doc = doc.replace('<!--LEGENDE-->', legende_html(ctx.UTILISES))
     doc = re.sub(r'(<a [^>]*class="[^"]*link-arrow[^"]*"[^>]*>)([^<]*?)(\S+)(</a>)', r'\1\2<span class="la">\3</span>\4', doc)
+    if ctx.prod():
+        # Liens internes vers l'adresse canonique de l'accueil (« / »), et non vers /index.html (doublon d'URL).
+        # En preview et en vérification, « index.html » reste, pour l'ouverture en local (file://).
+        doc = re.sub(r'href="index\.html(#[^"]*)?"', lambda m: 'href="./%s"' % (m.group(1) or ''), doc)
     doc = ctx.typo(doc)
     controler(p['fichier'], doc)
     with open(os.path.join(ctx.OUT, p['fichier']), 'w', encoding='utf-8') as f:

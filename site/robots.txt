@@ -1,3 +1,4 @@
-# Version de validation (preview) : ne pas indexer.
+# Version de validation (preview) : non indexée (balise robots noindex et en-tête X-Robots-Tag).
+# Exploration laissée ouverte pour que le noindex soit lu.
 User-agent: *
-Disallow: /
+Disallow:
