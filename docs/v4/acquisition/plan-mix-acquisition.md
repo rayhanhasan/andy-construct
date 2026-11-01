@@ -17,7 +17,7 @@
 
 **La recommandation en cinq lignes**
 
-1. **Combinaison C** : un socle gratuit en cash (fiche Google et avis, SEO, recommandation, clients existants, chantier visible), Google Ads à CHF 1'000 par mois, la prospection B2B par courrier et appel (5 comptes par semaine) et un dossier d'appel d'offres public tous les deux mois.
+1. **Combinaison C** : un socle sans dépense média (fiche Google et avis, SEO, recommandation, clients existants, chantier visible), Google Ads à CHF 1'000 par mois, la prospection B2B par courrier et appel (5 comptes par semaine) et un dossier d'appel d'offres public tous les deux mois.
 2. **Coût** : environ CHF 3'750 par mois tout compris (CHF 1'100 de médias, CHF 290 d'outils et supports, environ 20 h d'agence), soit CHF 45'000 la première année. Plus environ 15 h de marketing par mois pour les associés.
 3. **Résultat attendu à M12** : environ 34 demandes par mois (fourchette 15 à 60) et 6 chantiers signés par mois (fourchette 3 à 11). Sur 12 mois : environ CHF 510'000 de chiffre d'affaires signé hors marchés publics (fourchette 230'000 à 790'000).
 4. **La contrainte principale sera le temps des associés.** À 30 demandes par mois, rappels, visites et offres prennent 60 à 80 heures par mois. Le plan prévoit donc un tri par téléphone avant visite et écarte les canaux à faible taux de signature (plateformes, Meta) tant que ce temps manque.
