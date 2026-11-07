@@ -76,7 +76,7 @@ final class Auth
             'path' => '/',
             'secure' => $this->cookieSecurise(),
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => 'Lax',
         ]);
         session_start();
         if (!isset($_SESSION['csrf'])) {

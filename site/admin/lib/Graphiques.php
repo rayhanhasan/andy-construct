@@ -95,9 +95,9 @@ final class Graphiques
             return '<p class="petit discret">Aucune donnée sur la période.</p>';
         }
         usort($items, static fn ($a, $b) => $b['v'] <=> $a['v']);
-        $W = 480;
-        $lab = 150;
-        $val = 90;
+        $W = 360;
+        $lab = 104;
+        $val = 74;
         $h = 20;
         $gap = 8;
         $H = max(1, count($items)) * ($h + $gap) + ($cible ? 18 : 0);

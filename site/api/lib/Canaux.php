@@ -13,20 +13,20 @@ namespace AndyConstruct\Api;
  */
 final class Canaux
 {
-    /** id => [libellé, catégories Source.php, payant (dépense rattachée)] */
+    /** id => [libellé, catégories Source.php, payant (dépense rattachée), libellé court] */
     public const LISTE = [
-        'google_ads' => ['Google Ads', ['google-ads'], true],
-        'meta' => ['Meta', ['meta'], true],
-        'linkedin' => ['LinkedIn', ['linkedin'], true],
-        'b2b' => ['Prospection B2B', ['b2b'], true],
-        'recherche' => ['Recherche Google', ['recherche-google'], false],
-        'fiche' => ['Fiche Google', ['carte-google'], false],
-        'recommandation' => ['Recommandation et partenaires', ['recommandation', 'partenaire'], false],
-        'clients' => ['Clients existants', ['client-existant', 'crm'], false],
-        'guides' => ['Guides', ['aimant'], false],
-        'annuaires' => ['Annuaires et plateformes', ['annuaire', 'plateforme'], false],
-        'panneaux' => ['Panneaux et véhicules', ['panneau-vehicule'], false],
-        'autres' => ['Autres et inconnu', ['site-referent', 'autre', 'direct-inconnu', 'appel-direct'], false],
+        'google_ads' => ['Google Ads', ['google-ads'], true, 'Google Ads'],
+        'meta' => ['Meta', ['meta'], true, 'Meta'],
+        'linkedin' => ['LinkedIn', ['linkedin'], true, 'LinkedIn'],
+        'b2b' => ['Prospection B2B', ['b2b'], true, 'B2B'],
+        'recherche' => ['Recherche Google', ['recherche-google'], false, 'Recherche'],
+        'fiche' => ['Fiche Google', ['carte-google'], false, 'Fiche Google'],
+        'recommandation' => ['Recommandation et partenaires', ['recommandation', 'partenaire'], false, 'Recommandation'],
+        'clients' => ['Clients existants', ['client-existant', 'crm'], false, 'Clients'],
+        'guides' => ['Guides', ['aimant'], false, 'Guides'],
+        'annuaires' => ['Annuaires et plateformes', ['annuaire', 'plateforme'], false, 'Annuaires'],
+        'panneaux' => ['Panneaux et véhicules', ['panneau-vehicule'], false, 'Panneaux'],
+        'autres' => ['Autres et inconnu', ['site-referent', 'autre', 'direct-inconnu', 'appel-direct'], false, 'Autres'],
     ];
 
     /** Canaux dont la dépense entre dans le CPL de la vue d'ensemble. */
@@ -35,6 +35,11 @@ final class Canaux
     public static function libelle(?string $id): string
     {
         return self::LISTE[(string) $id][0] ?? 'Autres et inconnu';
+    }
+
+    public static function court(?string $id): string
+    {
+        return self::LISTE[(string) $id][3] ?? 'Autres';
     }
 
     public static function depuisCategorie(string $categorie): string

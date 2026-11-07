@@ -527,7 +527,7 @@ try {
     $r = $http('?p=connexion');
     ok(str_contains($r['entetes'], "Content-Security-Policy: default-src 'self'; script-src 'self'") && str_contains($r['entetes'], "frame-ancestors 'none'"), 'CSP stricte (aucun script en ligne, pas d\'iframe)');
     ok(str_contains($r['entetes'], 'X-Robots-Tag: noindex') && str_contains($r['entetes'], 'X-Content-Type-Options: nosniff') && str_contains($r['entetes'], 'Referrer-Policy: no-referrer'), 'en-têtes de sécurité et noindex');
-    ok((bool) preg_match('/Set-Cookie: ac_admin=[^;]+; path=\/; HttpOnly; SameSite=Strict/i', $r['entetes']), 'cookie de session HttpOnly, SameSite=Strict');
+    ok((bool) preg_match('/Set-Cookie: ac_admin=[^;]+; path=\/; HttpOnly; SameSite=Lax/i', $r['entetes']), 'cookie de session HttpOnly, SameSite=Lax');
     ok(!preg_match('/<script(?![^>]*\bsrc=)[^>]*>/i', $r['corps']) && !str_contains($r['corps'], 'style="'), 'aucun script ni style en ligne dans la page');
     egal(403, $http('?p=connexion', ['etape' => 'mot_de_passe', 'email' => 'http.associe@exemple.test', 'mot_de_passe' => 'phrase de passe du test http'])['code'], 'POST sans jeton CSRF : 403');
     egal(404, $http('?p=inconnue')['code'], 'écran inconnu : 404');

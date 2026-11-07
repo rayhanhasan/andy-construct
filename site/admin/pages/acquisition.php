@@ -9,6 +9,7 @@ use AndyConstruct\Admin\Graphiques;
 use AndyConstruct\Admin\Http;
 use AndyConstruct\Admin\Indicateurs;
 use AndyConstruct\Admin\Vue;
+use AndyConstruct\Api\Canaux;
 
 return static function (App $app): string {
     $e = static fn ($v) => Vue::e($v);
@@ -72,9 +73,9 @@ return static function (App $app): string {
         . '<section class="panneau" aria-labelledby="t-canaux"><div class="panneau-entete"><h2 id="t-canaux">Par canal</h2><span class="discret">' . $e(implode(', ', array_map([Format::class, 'mois'], $mois))) . '</span></div>' . $table
         . '<p class="petit discret mt">CPL = dépense / demandes · CAC = dépense / chantiers signés · ROAS = CA signé / dépense · ROI = (CA signé × marge brute − dépense) / dépense. « — » : aucune dépense ou aucun chantier signé.</p></section>'
         . '<div class="grille-3 mt">'
-        . '<section class="panneau" aria-labelledby="t-b1"><h2 id="t-b1">Demandes par canal</h2>' . Graphiques::barres('Demandes par canal', array_values(array_map(static fn ($l) => ['lib' => $l['libelle'], 'v' => $l['demandes']], array_filter($a['lignes'], static fn ($l) => $l['demandes'] > 0))), static fn ($v) => Format::nb($v)) . '</section>'
-        . '<section class="panneau" aria-labelledby="t-b2"><h2 id="t-b2">CA signé par canal</h2>' . Graphiques::barres('CA signé par canal', array_values(array_map(static fn ($l) => ['lib' => $l['libelle'], 'v' => $l['ca']], array_filter($a['lignes'], static fn ($l) => $l['ca'] > 0))), [Format::class, 'chf']) . '</section>'
-        . '<section class="panneau" aria-labelledby="t-b3"><h2 id="t-b3">CPL des canaux payants</h2>' . Graphiques::barres('CPL des canaux payants face à la cible', array_values(array_map(static fn ($l) => ['lib' => $l['libelle'], 'v' => $l['cpl']], array_filter($payants, static fn ($l) => $l['cpl'] !== null))), [Format::class, 'chf'], $cible ? ['v' => $cible, 'lib' => 'cible ' . Format::chf($cible)] : null)
+        . '<section class="panneau" aria-labelledby="t-b1"><h2 id="t-b1">Demandes par canal</h2>' . Graphiques::barres('Demandes par canal', array_values(array_map(static fn ($l) => ['lib' => Canaux::court($l['id']), 'v' => $l['demandes']], array_filter($a['lignes'], static fn ($l) => $l['demandes'] > 0))), static fn ($v) => Format::nb($v)) . '</section>'
+        . '<section class="panneau" aria-labelledby="t-b2"><h2 id="t-b2">CA signé par canal</h2>' . Graphiques::barres('CA signé par canal', array_values(array_map(static fn ($l) => ['lib' => Canaux::court($l['id']), 'v' => $l['ca']], array_filter($a['lignes'], static fn ($l) => $l['ca'] > 0))), [Format::class, 'chf']) . '</section>'
+        . '<section class="panneau" aria-labelledby="t-b3"><h2 id="t-b3">CPL des canaux payants</h2>' . Graphiques::barres('CPL des canaux payants face à la cible', array_values(array_map(static fn ($l) => ['lib' => Canaux::court($l['id']), 'v' => $l['cpl']], array_filter($payants, static fn ($l) => $l['cpl'] !== null))), [Format::class, 'chf'], $cible ? ['v' => $cible, 'lib' => 'cible ' . Format::chf($cible)] : null)
         . '<p class="petit discret">' . $e($cm ? 'Cible = CPL max / 3 = ' . Format::chf($cm['max']) . ' / 3 ; CPL max = panier ' . Format::chf($cm['panier']) . ' × marge ' . Format::pct($cm['marge']) . ' × demande→offre ' . Format::pct($cm['tdo']) . ' × offre→signée ' . Format::pct($cm['tos']) . ($cm['sources'] ? ' (' . implode(', ', $cm['sources']) . ')' : '') . '.' : 'Cible non calculable : renseignez la marge brute et le panier de référence.') . '</p></section>'
         . '</div>';
     return Vue::page($app, 'acquisition', 'Acquisition', $html);
