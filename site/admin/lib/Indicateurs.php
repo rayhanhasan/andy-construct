@@ -170,7 +170,7 @@ final class Indicateurs
 
         $depPayante = $this->depense([$mois], Canaux::PAYANTS);
         $dmPayantes = count(array_filter($dm, static fn ($d) => in_array($d['canal_m'], Canaux::PAYANTS, true)));
-        $cplMax = $this->cplMax($asOf, $tdo['taux'] ?? null, $tos['taux'], $mois);
+        $cplMax = $this->cplMax($asOf, $this->tauxDemandeOffreTrimestre($mois, $offres), $tos['taux'], $mois);
 
         return [
             'mois' => $mois,
@@ -240,6 +240,25 @@ final class Indicateurs
     {
         $n = count(array_filter($offres, static fn ($o) => substr((string) $o['envoyee_le'], 0, 7) === $mois));
         return $demandesMoisPrecedent > 0 ? ['taux' => $n / $demandesMoisPrecedent, 'offres' => $n, 'demandes' => $demandesMoisPrecedent, 'mois_demandes' => self::moisDecale($mois, -1)] : null;
+    }
+
+    /**
+     * Taux demande→offre lissé pour le CPL max : 3 mois complets précédant $mois
+     * (somme des offres / somme des demandes du mois d'avant), moins sensible aux petits nombres.
+     */
+    public function tauxDemandeOffreTrimestre(string $mois, array $offres): ?float
+    {
+        $o = $d = 0;
+        for ($i = 1; $i <= 3; $i++) {
+            $m = self::moisDecale($mois, -$i);
+            $n = count($this->demandes(...$this->bornes(self::moisDecale($m, -1))));
+            $t = $this->tauxDemandeOffre($m, $offres, $n);
+            if ($t !== null) {
+                $o += $t['offres'];
+                $d += $t['demandes'];
+            }
+        }
+        return $d > 0 ? $o / $d : null;
     }
 
     /** Taux offre→signée : cohorte des offres envoyées entre J−180 et J−60. */

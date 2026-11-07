@@ -237,6 +237,19 @@ final class Demandes
         return $l ? implode(', ', $l) : '—';
     }
 
+    /** Valeur lisible d'un critère du score (le détail garde les codes de la grille). */
+    public static function libelleCritere(string $critere, string $valeur): string
+    {
+        return match ($critere) {
+            'type_client' => self::TYPES_CLIENT[$valeur] ?? $valeur,
+            'service' => $valeur === 'plusieurs' ? 'Plusieurs prestations' : (self::TRAVAUX[$valeur] ?? $valeur),
+            'surface' => self::SURFACES[$valeur] ?? $valeur,
+            'delai' => self::DELAIS[$valeur] ?? $valeur,
+            'zone' => is_numeric($valeur) ? 'Zone ' . $valeur : $valeur,
+            default => $valeur,
+        };
+    }
+
     /** Relances d'une offre ouverte : jours écoulés, étape (J+3, J+10, J+21), prochaine action. */
     public function relance(array $d): ?array
     {

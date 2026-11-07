@@ -93,7 +93,7 @@ return static function (App $app): string {
             $courant = ($f['tri'] ?: 'echeance') === $cle;
             return '<a class="tri" href="' . $e(Vue::url('demandes', ['tri' => $cle] + array_filter($f))) . '"' . ($courant ? ' aria-current="true"' : '') . '>' . $e($lib) . ($courant ? ' <span aria-hidden="true">↓</span><span class="sr"> (tri actuel)</span>' : '') . '</a>';
         };
-        $corps = '<p class="petit discret">' . count($lignes) . ' demande' . (count($lignes) > 1 ? 's' : '') . '.</p><div class="defile tableau-liste"><table class="tableau compact"><caption class="sr">Demandes</caption><thead><tr>'
+        $corps = '<p class="petit discret">' . count($lignes) . ' demande' . (count($lignes) > 1 ? 's' : '') . '.</p><div class="defile tableau-liste" tabindex="0" role="region" aria-label="Liste des demandes, défile horizontalement"><table class="tableau compact"><caption class="sr">Demandes</caption><thead><tr>'
             . '<th scope="col">Réf.</th><th scope="col">' . $tri('recue', 'Reçue') . '</th><th scope="col">Nom</th><th scope="col">Type</th><th scope="col">Travaux</th><th scope="col">Commune</th>'
             . '<th scope="col">' . $tri('score', 'Priorité') . '</th><th scope="col">Canal</th><th scope="col">Statut</th><th scope="col">' . $tri('echeance', 'Prochaine action') . '</th><th scope="col" class="num">' . $tri('montant', 'Montant') . '</th><th scope="col">Associé</th></tr></thead><tbody>';
         $cartes = '<ul class="cartes-liste">';

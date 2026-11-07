@@ -1,5 +1,5 @@
 # Andy Construct : configuration Apache / LiteSpeed (généré par tools/build, mode preview)
-# Le dossier api/ garde son propre .htaccess (accès, en-têtes) : ses règles de réécriture remplacent celles-ci.
+# Les dossiers api/ et admin/ gardent leur propre .htaccess (accès, en-têtes, CSP) : leurs règles de réécriture remplacent celles-ci.
 
 Options -Indexes
 AddDefaultCharset utf-8
@@ -78,7 +78,7 @@ RewriteRule ^prestations\.html$ / [R=301,L]
   Header always set X-Frame-Options "SAMEORIGIN"
   # CSP stricte : aucun script ni style en ligne, sauf le script d'amorçage (empreinte ci-dessous).
   # Umami : renseigner umami_src et umami_id dans tools/build/donnees/config.json, puis regénérer.
-  <If "%{REQUEST_URI} !~ m#^/api/#">
+  <If "%{REQUEST_URI} !~ m#^/(api|admin)/#">
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-j2l2RtRi5HpGP6WXkzpyfCT7RtTQvYLiwl0suTMDrD0='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
   </If>
   # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).

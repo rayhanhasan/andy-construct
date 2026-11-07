@@ -121,7 +121,7 @@ final class Vue
 
     public static function tableDonnees(string $titre, array $entetes, array $lignes): string
     {
-        $h = '<details class="donnees"><summary>Voir les données</summary><div class="defile"><table class="tableau"><caption class="sr">' . self::e($titre) . '</caption><thead><tr>';
+        $h = '<details class="donnees"><summary>Voir les données</summary><div class="defile" tabindex="0" role="region" aria-label="Tableau, défile horizontalement"><table class="tableau"><caption class="sr">' . self::e($titre) . '</caption><thead><tr>';
         foreach ($entetes as $i => $e) {
             $h .= '<th scope="col"' . ($i ? ' class="num"' : '') . '>' . self::e($e) . '</th>';
         }

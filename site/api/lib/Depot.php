@@ -228,6 +228,9 @@ final class Depot
                 ]);
             } else {
                 $contactId = (int) $contact['id'];
+                if (isset($valeursContact['nom'])) {
+                    $valeursContact['prenom'] = $c['prenom'] ?: null; // le nom saisi remplace le nom complet précédent
+                }
                 $b->maj('contact', $valeursContact + ['modifie_le' => $maintenant], 'id = ?', [$contactId]);
             }
 

@@ -25,7 +25,7 @@ def sitemap():
 
 def robots():
     if ctx.prod():
-        txt = 'User-agent: *\nDisallow: /api/\nDisallow: /interne/\n\nSitemap: %ssitemap.xml\n' % PROD
+        txt = 'User-agent: *\nDisallow: /api/\nDisallow: /admin/\nDisallow: /interne/\n\nSitemap: %ssitemap.xml\n' % PROD
     else:
         # Exploration permise : un robot bloqué ne lit pas le noindex (balise et en-tête X-Robots-Tag du .htaccess)
         # et peut indexer l'adresse nue. Le noindex suffit à tenir la version de validation hors des résultats.
@@ -144,7 +144,7 @@ RewriteRule ^(.*)$ https://www.andyconstruct.ch/$1 [R=301,L]
 # RewriteRule ^(.*)$ https://www.andyconstruct.ch/$1 [R=301,L]
 ''')
     txt = '''# Andy Construct : configuration Apache / LiteSpeed (généré par tools/build, mode %(mode)s)
-# Le dossier api/ garde son propre .htaccess (accès, en-têtes) : ses règles de réécriture remplacent celles-ci.
+# Les dossiers api/ et admin/ gardent leur propre .htaccess (accès, en-têtes, CSP) : leurs règles de réécriture remplacent celles-ci.
 
 Options -Indexes
 AddDefaultCharset utf-8
@@ -209,7 +209,7 @@ RewriteRule ^index\\.php/?$ %(base)s [R=301,L]
   Header always set X-Frame-Options "SAMEORIGIN"
   # CSP stricte : aucun script ni style en ligne, sauf le script d'amorçage (empreinte ci-dessous).
   # Umami : renseigner umami_src et umami_id dans tools/build/donnees/config.json, puis regénérer.
-  <If "%%{REQUEST_URI} !~ m#^/api/#">
+  <If "%%{REQUEST_URI} !~ m#^/(api|admin)/#">
     Header always set Content-Security-Policy "%(csp)s"
   </If>
   # HSTS : à activer en production une fois HTTPS vérifié sur www et sans www (puis ne plus revenir en arrière).

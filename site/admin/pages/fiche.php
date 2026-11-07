@@ -98,7 +98,7 @@ return static function (App $app): string {
     // Score détaillé
     $lignesScore = '';
     foreach ($detail as $l) {
-        $lignesScore .= '<tr><th scope="row">' . $e(Demandes::CRITERES[$l['critere']] ?? $l['critere']) . '</th><td>' . $e($l['valeur']) . '</td><td class="num">' . ($l['points'] > 0 ? '+' : '') . (int) $l['points'] . '</td></tr>';
+        $lignesScore .= '<tr><th scope="row">' . $e(Demandes::CRITERES[$l['critere']] ?? $l['critere']) . '</th><td>' . $e(Demandes::libelleCritere((string) $l['critere'], (string) $l['valeur'])) . '</td><td class="num">' . ($l['points'] > 0 ? '+' : '') . (int) $l['points'] . '</td></tr>';
     }
     $s = $app->grille['seuils'] ?? ['A' => 65, 'B' => 40];
     $optPrio = '';

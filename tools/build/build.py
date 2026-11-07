@@ -148,6 +148,9 @@ def copier_site(out, mode):
                 continue
             if r in ('api/config.php', 'assets/css/styles.css', 'assets/js/main.js', 'assets/js/suivi.js') or f == '.DS_Store':
                 continue
+            # Admin : le script de données de démonstration ne part jamais en production.
+            if mode == 'production' and r == os.path.join('admin', 'outils', 'demo.php'):
+                continue
             if rel in (os.path.join('assets', 'img', 'references'), os.path.join('assets', 'img', 'references', 'couleur')) and (
                     f in exclus_logos or (mode == 'production' and f.endswith('.json'))):
                 continue

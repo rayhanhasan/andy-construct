@@ -78,19 +78,22 @@ final class Graphiques
         foreach ($etapes as $i => [$lib, $v]) {
             $y = $i * ($hBar + $gap);
             $w = max(2, ($W - $lab - 90) * $v / $max);
-            $passage = $i > 0 && $etapes[$i - 1][1] > 0 ? Format::pct($v / $etapes[$i - 1][1]) : '';
+            $passage = $i > 0 && $max > 0 ? Format::pct($v / $max) : '';
             $s .= '<text x="0" y="' . ($y + 17) . '">' . self::e($lib) . '</text>'
-                . '<rect class="ord-' . ($i + 1) . '" x="' . $lab . '" y="' . $y . '" width="' . round($w, 1) . '" height="' . $hBar . '"><title>' . self::e($lib . ' : ' . $v . ($passage ? ' (' . $passage . ' de l\'étape précédente)' : '')) . '</title></rect>'
+                . '<rect class="ord-' . ($i + 1) . '" x="' . $lab . '" y="' . $y . '" width="' . round($w, 1) . '" height="' . $hBar . '"><title>' . self::e($lib . ' : ' . $v . ($passage ? ' (' . $passage . ' des demandes)' : '')) . '</title></rect>'
                 . '<text class="t-fort" x="' . round($lab + $w + 8, 1) . '" y="' . ($y + 17) . '">' . $v . ($passage ? ' <tspan class="t-leger">(' . self::e($passage) . ')</tspan>' : '') . '</text>';
         }
-        return $s . '</svg>' . Vue::tableDonnees('Entonnoir', ['Étape', 'Demandes', 'Passage'], array_map(static fn ($e, $i) => [
-            $e[0], $e[1], $i > 0 && $etapes[$i - 1][1] > 0 ? Format::pct($e[1] / $etapes[$i - 1][1]) : '—',
+        return $s . '</svg>' . Vue::tableDonnees('Entonnoir', ['Étape', 'Demandes', 'Part des demandes'], array_map(static fn ($e, $i) => [
+            $e[0], $e[1], $i > 0 && $max > 0 ? Format::pct($e[1] / $max) : '—',
         ], $etapes, array_keys($etapes)));
     }
 
     /** Barres horizontales classées (Acquisition). */
     public static function barres(string $titre, array $items, callable $format, ?array $cible = null): string
     {
+        if ($items === []) {
+            return '<p class="petit discret">Aucune donnée sur la période.</p>';
+        }
         usort($items, static fn ($a, $b) => $b['v'] <=> $a['v']);
         $W = 480;
         $lab = 150;
