@@ -121,6 +121,46 @@ final class HeuresOuvrables
         return $t;
     }
 
+    /** Minutes ouvrables écoulées entre deux instants (0 si $fin précède $debut). */
+    public function minutesOuvrables(\DateTimeImmutable $debut, \DateTimeImmutable $fin): int
+    {
+        $debut = $debut->setTimezone($this->tz);
+        $fin = $fin->setTimezone($this->tz);
+        if ($fin <= $debut) {
+            return 0;
+        }
+        $total = 0;
+        $jour = $debut->setTime(0, 0);
+        for ($i = 0; $i < 3700 && $jour <= $fin; $i++) {
+            if ($this->estJourOuvrable($jour)) {
+                $a = max($jour->setTime($this->debut, 0)->getTimestamp(), $debut->getTimestamp());
+                $b = min($jour->setTime($this->fin, 0)->getTimestamp(), $fin->getTimestamp());
+                if ($b > $a) {
+                    $total += intdiv($b - $a, 60);
+                }
+            }
+            $jour = $jour->modify('+1 day');
+        }
+        return $total;
+    }
+
+    /** Nombre de jours ouvrables d'un mois (AAAA-MM), et ceux écoulés jusqu'à $jusqua inclus. */
+    public function joursOuvrablesMois(string $mois, ?\DateTimeImmutable $jusqua = null): int
+    {
+        $jour = new \DateTimeImmutable($mois . '-01 00:00', $this->tz);
+        $n = 0;
+        while ($jour->format('Y-m') === $mois) {
+            if ($jusqua !== null && $jour->format('Y-m-d') > $jusqua->setTimezone($this->tz)->format('Y-m-d')) {
+                break;
+            }
+            if ($this->estJourOuvrable($jour)) {
+                $n++;
+            }
+            $jour = $jour->modify('+1 day');
+        }
+        return $n;
+    }
+
     /** Prochain jour ouvrable strictement après la date donnée, à l'heure indiquée. */
     public function jourOuvrableSuivant(\DateTimeImmutable $t, int $heure): \DateTimeImmutable
     {

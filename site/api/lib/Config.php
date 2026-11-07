@@ -167,6 +167,22 @@ final class Config
             'cron_cle' => '',
             'healthcheck_url' => '',
             'reference_prefixe' => 'AC',
+            // Base de données des demandes (admin, docs/v4/admin/plan-dashboard-admin.md §4).
+            // dsn vide : SQLite dans <stockage>/base/andy-construct.sqlite.
+            'base' => [
+                'actif' => true,
+                'dsn' => '',
+                'utilisateur' => '',
+                'mot_de_passe' => '',
+            ],
+            'admin' => [
+                'url' => 'https://www.andyconstruct.ch/admin',
+                'cookie_securise' => true,
+                'session_inactivite_min' => 480,
+                'tentatives_max' => 5,
+                'blocage_min' => 15,
+                'tentatives_ip_15min' => 30,
+            ],
         ];
     }
 

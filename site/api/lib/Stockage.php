@@ -16,6 +16,8 @@ final class Stockage
     public const SOUS_DOSSIERS = [
         'fichiers', 'file-attente', 'mails-echec', 'journaux', 'limites',
         'compteurs', 'verrous', 'test-mails', 'test-webhooks',
+        // Admin (docs/v4/admin) : base SQLite, demandes à rejouer en base, sessions.
+        'base', 'file-attente-base', 'sessions',
     ];
 
     private const HTACCESS = <<<'TXT'
