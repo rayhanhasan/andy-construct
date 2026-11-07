@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pilotage Andy Construct</title>
+  <meta name="description" content="Tableau de bord privé du projet Andy Construct, entre l'agence Harbor Digital et Claude.">
+  <script>
+    /* Thème appliqué avant l'affichage, pour éviter un éclair clair en mode sombre. */
+    try { var t = JSON.parse(localStorage.getItem('andy-projet-v1') || '{}').theme; if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="sauter" href="#contenu">Aller au contenu</a>
+
+  <header class="cartouche">
+    <div class="cartouche__titre">
+      <p class="cartouche__projet">Andy Construct</p>
+      <h1>Pilotage du projet</h1>
+    </div>
+    <dl class="cartouche__meta" id="meta"></dl>
+    <div class="cartouche__actions">
+      <label class="recherche">
+        <span class="vh">Rechercher dans cette vue</span>
+        <input id="recherche" type="search" placeholder="Rechercher dans cette vue" autocomplete="off">
+      </label>
+      <button class="btn btn--discret" id="theme" type="button" aria-live="polite">Thème : système</button>
+      <div class="local" id="local" aria-live="polite">
+        <span class="local__etat" id="local-etat">Aucune modification locale</span>
+        <button class="btn" id="exporter" type="button">Exporter donnees.js</button>
+        <button class="btn btn--discret" id="annuler" type="button" hidden>Annuler les modifications</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="cadre">
+    <nav class="rail" aria-label="Sections">
+      <ul id="nav"></ul>
+    </nav>
+
+    <main id="contenu" tabindex="-1">
+
+      <section class="vue" id="v-apercu" data-vue="apercu" aria-labelledby="h-apercu">
+        <h2 id="h-apercu" class="vue__titre">Vue d'ensemble</h2>
+        <div class="niveau" id="niveau"></div>
+        <div class="grille-apercu">
+          <section class="bloc bloc--large" aria-labelledby="h-chantiers">
+            <h3 id="h-chantiers">Avancement par chantier</h3>
+            <p class="bloc__aide">Part des tâches faites. Cliquez sur un chantier pour voir ses tâches.</p>
+            <ul class="chantiers" id="chantiers"></ul>
+          </section>
+          <section class="bloc" aria-labelledby="h-echeance">
+            <h3 id="h-echeance">Prochaine échéance</h3>
+            <div id="echeance"></div>
+          </section>
+          <section class="bloc" aria-labelledby="h-repartition">
+            <h3 id="h-repartition">Tâches par statut</h3>
+            <div id="repartition"></div>
+          </section>
+          <section class="bloc bloc--large" aria-labelledby="h-blocages">
+            <h3 id="h-blocages">Blocages</h3>
+            <p class="bloc__aide">Tâches prioritaires en attente du client, et décisions qui bloquent la suite.</p>
+            <ul class="liste-blocages" id="blocages"></ul>
+          </section>
+          <section class="bloc" aria-labelledby="h-infos-resume">
+            <h3 id="h-infos-resume">Infos à compléter</h3>
+            <div id="infos-resume"></div>
+          </section>
+          <section class="bloc bloc--large" aria-labelledby="h-ecarts">
+            <h3 id="h-ecarts">Écarts entre sources</h3>
+            <ul class="ecarts" id="ecarts"></ul>
+          </section>
+        </div>
+      </section>
+
+      <section class="vue" id="v-taches" data-vue="taches" aria-labelledby="h-taches" hidden>
+        <h2 id="h-taches" class="vue__titre">Tâches</h2>
+        <div class="filtres" id="filtres-taches"></div>
+        <div class="kanban" id="kanban"></div>
+      </section>
+
+      <section class="vue" id="v-decisions" data-vue="decisions" aria-labelledby="h-decisions" hidden>
+        <h2 id="h-decisions" class="vue__titre">Décisions à prendre</h2>
+        <p class="vue__intro">Chaque décision liste les options, notre recommandation et ce qu'elle bloque.</p>
+        <div class="filtres" id="filtres-decisions"></div>
+        <div id="decisions"></div>
+      </section>
+
+      <section class="vue" id="v-questionnaire" data-vue="questionnaire" aria-labelledby="h-questionnaire" hidden>
+        <h2 id="h-questionnaire" class="vue__titre">Questionnaire client</h2>
+        <p class="vue__intro">Questions de validation, avec notre proposition. Le client confirme ou corrige.</p>
+        <div class="barre-q">
+          <button class="btn" id="copier-q" type="button">Copier le questionnaire</button>
+          <button class="btn btn--discret" id="envoyer-q" type="button">Marquer « à envoyer » comme envoyées</button>
+          <p class="barre-q__retour" id="retour-q" role="status"></p>
+        </div>
+        <div class="filtres" id="filtres-questionnaire"></div>
+        <details class="apercu-texte">
+          <summary>Voir le texte de l'e-mail</summary>
+          <label class="vh" for="texte-q">Texte du questionnaire</label>
+          <textarea id="texte-q" rows="14" readonly></textarea>
+        </details>
+        <div id="questionnaire"></div>
+      </section>
+
+      <section class="vue" id="v-infos" data-vue="infos" aria-labelledby="h-infos" hidden>
+        <h2 id="h-infos" class="vue__titre">Infos à compléter</h2>
+        <p class="vue__intro">Résultat de la recherche publique du 7 novembre 2026. Détail : <a href="infos-a-completer.md">infos-a-completer.md</a>.</p>
+        <div class="filtres" id="filtres-infos"></div>
+        <div id="infos"></div>
+      </section>
+
+      <section class="vue" id="v-assets" data-vue="assets" aria-labelledby="h-assets" hidden>
+        <h2 id="h-assets" class="vue__titre">Assets à fournir</h2>
+        <p class="vue__intro">Ce que le client doit nous envoyer. Changez le statut à réception.</p>
+        <div class="filtres" id="filtres-assets"></div>
+        <div id="assets"></div>
+      </section>
+
+      <section class="vue" id="v-juridique" data-vue="juridique" aria-labelledby="h-juridique" hidden>
+        <h2 id="h-juridique" class="vue__titre">Juridique</h2>
+        <p class="vue__intro">Analyse documentaire, pas un avis d'avocat. Les points ouverts partent à la relecture.</p>
+        <div id="juridique"></div>
+      </section>
+
+      <section class="vue" id="v-strategie" data-vue="strategie" aria-labelledby="h-strategie" hidden>
+        <h2 id="h-strategie" class="vue__titre">Stratégie</h2>
+        <div id="strategie"></div>
+      </section>
+
+      <section class="vue" id="v-livrables" data-vue="livrables" aria-labelledby="h-livrables" hidden>
+        <h2 id="h-livrables" class="vue__titre">Livrables et liens</h2>
+        <p class="vue__intro">Liens relatifs au dépôt : ils s'ouvrent depuis ce dossier, sans serveur.</p>
+        <div id="livrables"></div>
+      </section>
+
+      <section class="vue" id="v-journal" data-vue="journal" aria-labelledby="h-journal" hidden>
+        <h2 id="h-journal" class="vue__titre">Journal</h2>
+        <p class="vue__intro">Dates clés tirées de l'historique git.</p>
+        <ol class="journal" id="journal"></ol>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="bulle" id="bulle" role="tooltip" hidden></div>
+
+  <script src="donnees.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
