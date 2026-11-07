@@ -484,14 +484,14 @@ dialog::backdrop { background: rgba(16, 17, 19, .45); }
   .fiche-entete h1 { font-size: 20px; }
   .fiche-entete .boutons-entete { display: none; }
   .fiche-corps { grid-template-columns: minmax(0, 1fr); }
-  .fiche-corps .colonne-actions .panneau-actions { display: none; }
+  .fiche-corps .panneau-actions { order: -1; scroll-margin-top: 200px; }
   .barre-action-mobile {
     display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; position: fixed; left: 0; right: 0; bottom: 64px; z-index: 25;
     padding: 8px 16px; background: var(--panneau); border-top: 1px solid var(--bord);
   }
   .historique li { grid-template-columns: 100px 1fr; }
   .fiche-corps > .pile { display: contents; }
-  .fiche-corps .panneau-coord { order: -1; }
+  .fiche-corps .panneau-coord { order: -2; }
   .dl { grid-template-columns: minmax(96px, auto) 1fr; }
   .barre-bas {
     display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 26;

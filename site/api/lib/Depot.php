@@ -318,7 +318,7 @@ final class Depot
             $b->inserer('interaction', [
                 'demande_id' => $demandeId,
                 'type' => $saisie ? 'appel_entrant' : 'systeme',
-                'contenu' => $saisie ? 'Demande saisie dans l\'admin (' . $e['canal'] . ')' : 'Demande reçue par le site (' . ($libelles[$e['formulaire']] ?? $e['formulaire']) . ')',
+                'contenu' => $saisie ? 'Demande saisie dans l\'admin (' . (['telephone' => 'appel reçu', 'email' => 'e-mail reçu', 'visite' => 'visite au bureau', 'recommandation' => 'rencontre'][$e['canal']] ?? $e['canal']) . ')' : 'Demande reçue par le site (' . ($libelles[$e['formulaire']] ?? $e['formulaire']) . ')',
                 'auteur_id' => $e['cree_par'] ?? null,
                 'origine' => $saisie ? 'admin' : 'site',
                 'cree_le' => $e['recue_le'],
