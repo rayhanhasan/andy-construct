@@ -3,6 +3,7 @@
  * Tâche planifiée (toutes les 10 minutes) :
  *  - renvoie à n8n les demandes restées en file d'attente ;
  *  - renvoie les e-mails mis de côté après un échec SMTP ;
+ *  - insère en base les demandes restées en attente (base indisponible lors de l'envoi) ;
  *  - purge les fichiers, journaux et limites expirés ;
  *  - alerte l'agence si une demande attend depuis plus d'une heure ;
  *  - signale son passage à Healthchecks.io (si configuré).
@@ -54,6 +55,7 @@ $forcer = $cli && in_array('--forcer', $argv ?? [], true);
 
 $file = $traitement->webhook()->traiterFile(50, $forcer);
 $mails = $traitement->courriel()->reessayer(20);
+$base = $traitement->depot()->traiterFile(50);
 $purge = $traitement->purger();
 
 if ($file['a_signaler'] !== [] && (string) $config->get('alerte_email', '') !== '') {
@@ -95,6 +97,8 @@ $bilan = [
     'file_plus_ancien_min' => $file['plus_ancien_minutes'],
     'mails_renvoyes' => $mails['envoyes'],
     'mails_echecs' => $mails['echecs'],
+    'base_inserees' => $base['inserees'],
+    'base_restantes' => $base['restantes'],
 ] + array_combine(array_map(static fn ($k) => "purge_$k", array_keys($purge)), array_values($purge));
 $journal->info('cron', $bilan);
 

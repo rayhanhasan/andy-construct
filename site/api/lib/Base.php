@@ -304,6 +304,7 @@ final class Base
                     score_regles TEXT NULL,
                     grille_version VARCHAR(20) NULL,
                     echeance_le DATETIME NULL,
+                    echeance_initiale_le DATETIME NULL,
                     associe_id INTEGER NULL,
                     statut VARCHAR(20) NOT NULL,
                     statut_change_le DATETIME NOT NULL,

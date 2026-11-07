@@ -24,6 +24,9 @@ final class Traitement
     private HeuresOuvrables $heures;
     private Scoring $scoring;
     private Localite $localite;
+    private Depot $depot;
+    /** @var array{auteur_id: int, canal: string}|null saisie d'un appel depuis l'admin (authentifiée, CSRF) */
+    private ?array $saisieAdmin = null;
 
     public function __construct(private Config $config, private bool $exigerTeleversementHttp = true)
     {
@@ -39,6 +42,25 @@ final class Traitement
         $this->heures = HeuresOuvrables::depuisConfig($config);
         $this->scoring = Scoring::depuisFichier($racine . '/data/scoring.json');
         $this->localite = Localite::depuisFichier($racine . '/data/zones.json');
+        $this->depot = new Depot($config, $this->stockage, $this->journal);
+    }
+
+    public function depot(): Depot
+    {
+        return $this->depot;
+    }
+
+    /**
+     * Saisie d'un appel par un utilisateur connecté à l'admin : même chemin que la
+     * saisie interne (pas de piège temporel ni de limite de débit), sans clé partagée.
+     * L'admin vérifie lui-même la session et le jeton CSRF avant d'appeler executer().
+     *
+     * @param array{auteur_id: int, canal: string} $infos
+     */
+    public function pourSaisieAdmin(array $infos): self
+    {
+        $this->saisieAdmin = $infos;
+        return $this;
     }
 
     public function stockage(): Stockage
@@ -106,14 +128,15 @@ final class Traitement
             $this->journal->alerte('requete_trop_volumineuse', ['octets' => (int) $server['CONTENT_LENGTH']]);
             return $this->erreur($json, 413, 'trop_volumineux', [], $server);
         }
-        if (!$this->antiSpam->origineAutorisee($server)) {
+        $interneAdmin = $this->saisieAdmin !== null;
+        if (!$interneAdmin && !$this->antiSpam->origineAutorisee($server)) {
             $this->journal->alerte('origine_refusee', ['origine' => mb_substr((string) ($server['HTTP_ORIGIN'] ?? ''), 0, 100)]);
             return $this->erreur($json, 403, 'origine', [], $server);
         }
 
         $cleInterne = (string) $this->config->get('cle_saisie_interne', '');
-        $saisieInterne = $cleInterne !== '' && is_string($post['cle_interne'] ?? null)
-            && hash_equals($cleInterne, (string) $post['cle_interne']);
+        $saisieInterne = $interneAdmin || ($cleInterne !== '' && is_string($post['cle_interne'] ?? null)
+            && hash_equals($cleInterne, (string) $post['cle_interne']));
 
         $ip = LimiteDebit::ipClient(
             $server,
@@ -214,6 +237,15 @@ final class Traitement
             return $this->erreur($json, 500, 'technique', [], $server);
         }
 
+        // Base de données (admin) : après l'e-mail et le webhook, qui n'en dépendent jamais.
+        // Base indisponible : file d'attente locale, rejouée par cron.php.
+        try {
+            $bilan['base'] = $this->depot->enregistrer(Depot::preparer($demande, $bilan, $this->saisieAdmin, $this->config->modeTest()));
+        } catch (\Throwable $e) {
+            $bilan['base'] = 'erreur';
+            $this->journal->erreur('base_preparation', ['ref' => $demande['ref'], 'erreur' => Journal::nettoyerMessage($e->getMessage())]);
+        }
+
         $this->journal->info('demande_recue', [
             'ref' => $demande['ref'],
             'formulaire' => $formulaire,
@@ -225,6 +257,7 @@ final class Traitement
             'interne' => $bilan['interne'],
             'accuse' => $bilan['accuse'],
             'webhook' => $bilan['webhook'],
+            'base' => $bilan['base'],
             'jeton' => $jeton['statut'],
             'ip_hachee' => $empreinteIp,
             'avertissements' => $avertissements,
@@ -613,6 +646,7 @@ final class Traitement
     {
         try {
             $this->webhook->traiterFile(3);
+            $this->depot->traiterFile(5);
             $marqueur = $this->stockage->dossier('verrous') . '/derniere-purge';
             if (!is_file($marqueur) || filemtime($marqueur) < time() - 3600) {
                 @touch($marqueur);

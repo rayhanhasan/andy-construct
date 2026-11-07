@@ -263,6 +263,7 @@ final class Depot
                 'score_regles' => $s === null ? null : json_encode($s['regles'], JSON_UNESCAPED_UNICODE),
                 'grille_version' => $s === null ? null : $this->versionGrille(),
                 'echeance_le' => $e['echeance_le'],
+                'echeance_initiale_le' => $e['echeance_le'],
                 'associe_id' => $associe !== null ? (int) $associe : null,
                 // Une demande de guide imprimé n'attend pas de rappel : elle n'est pas « nouvelle ».
                 'statut' => $e['formulaire'] === 'envoi_postal_guide' ? 'guide' : 'nouvelle',

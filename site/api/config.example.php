@@ -53,6 +53,9 @@ return [
         'actions' => '',      // À REMPLIR
         // Propre au PHP : jeton horodaté, liens de fichiers, hachage des adresses IP.
         'local' => '',        // À REMPLIR
+        // Admin (/admin/) : chiffre les secrets de double authentification en base.
+        // Ne plus le changer une fois des comptes créés (sinon : réinitialiser la 2FA de chacun).
+        'admin' => '',        // À REMPLIR
     ],
 
     // SMTP authentifié de la messagerie du domaine (Infomaniak : mail.infomaniak.com,
@@ -208,4 +211,29 @@ return [
 
     // Préfixe des références (AC-2026-0042).
     'reference_prefixe' => 'AC',
+
+    // Base de données des demandes (lue et écrite par l'admin /admin/, docs/v4/admin/README-admin.md).
+    // dsn vide : SQLite dans <stockage>/base/andy-construct.sqlite (développement, petits volumes).
+    // MariaDB (recommandé en production) :
+    //   'dsn' => 'mysql:host=localhost;dbname=andy_construct;charset=utf8mb4',
+    //   'utilisateur' => 'andy_app', 'mot_de_passe' => '…',
+    // Base indisponible : la demande part quand même (e-mail, n8n) et entre en base plus tard (cron.php).
+    'base' => [
+        'actif' => true,
+        'dsn' => '',
+        'utilisateur' => '',
+        'mot_de_passe' => '',
+    ],
+
+    // Tableau de bord d'administration (/admin/).
+    'admin' => [
+        'url' => 'https://www.andyconstruct.ch/admin',
+        // Cookie de session « __Host- », Secure : laisser true (HTTPS obligatoire en ligne).
+        // false seulement pour un serveur de développement en http sur une autre adresse que localhost.
+        'cookie_securise' => true,
+        'session_inactivite_min' => 480, // 8 h sans activité : reconnexion
+        'tentatives_max' => 5,           // échecs avant blocage du compte
+        'blocage_min' => 15,
+        'tentatives_ip_15min' => 30,     // essais par adresse IP et par quart d'heure
+    ],
 ];
