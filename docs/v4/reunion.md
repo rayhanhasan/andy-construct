@@ -8,24 +8,23 @@ Pour présenter :
 - **N** affiche ce qu'il faut dire et les questions à poser à chaque étape ;
 - **F** passe en plein écran.
 
-Principe : 12 schémas reliés par le trait rouge, peu de mots. On ne montre pas le panel admin, et on n'avance aucune prévision chiffrée : rien n'est encore mesuré.
+Principe : 11 schémas reliés par le trait rouge, en langage simple (le jargon n'apparaît qu'en petit). Pas de panel admin, aucune prévision chiffrée : rien n'est encore mesuré.
 
 ## Le fil
 
 | # | Étape | Visuel | À dire |
 |---|---|---|---|
-| 1 | Le point de départ | 5 cercles cassés : copywriting, design, notoriété, SEO, GEO | Le savoir-faire est là. Il ne se voit pas. |
-| 2 | Le marché | Carte : visible / invisible × revend / réalise | Les plateformes captent les demandes sans faire les travaux, les bons artisans sont invisibles : la place à prendre, c'est les deux. |
-| 3 | Notre promesse | La phrase, les pros (fiabilité) et les particuliers (confiance) | La rigueur des chantiers publics, au service de tous les chantiers. |
-| 4 | Pour qui | Orbite : 5 clients types et ce qu'ils achètent vraiment | Chaque client a ses mots, le site leur parle à tous. |
-| 5 | Le site | Arbre des pages | Une page par métier, le téléphone toujours à un clic. |
-| 6 | La page d'accueil | Téléphone découpé en 6 blocs = 6 questions du visiteur | La page répond aux questions dans l'ordre où on se les pose. |
-| 7 | Ce qu'on a corrigé | Les 5 cercles réparés, la notoriété encore à faire | Quatre chantiers terminés, le cinquième se fait avec vous. |
-| 8 | Le tri des demandes | Entonnoir, notes A / B / C, boucle des avis | Le site trie, vous rappelez les bonnes demandes en premier. |
-| 9 | SEO | Barre de recherche Google, 3 leviers | Le SEO se juge à 6 mois, pas à 6 semaines. |
-| 10 | GEO | Une question posée à une IA, les sources qu'elle vérifie | Une IA ne cite que ce qu'elle peut vérifier ailleurs. |
-| 11 | Trouver des clients | Deux courbes : publicité (rapide) / référencement + avis (durable) | On ne prédit pas : on mesure dès le premier jour et on ajuste à 3 mois. |
-| 12 | La suite | Le chemin des prochaines étapes, les 6 décisions | On se revoit à 3 mois avec les vrais chiffres. |
+| 1 | Le point de départ | 5 cercles cassés : les mots, l'image, la réputation, Google, les IA | Le savoir-faire est là. Il ne se voit pas. |
+| 2 | Le marché | Carte : visible / invisible × revend / réalise | La place à prendre : faire les travaux ET être visible. |
+| 3 | Notre promesse | La phrase, et 5 clients en orbite avec ce qu'ils achètent | La rigueur des chantiers publics, au service de tous les chantiers. |
+| 4 | Le site | Arbre des pages | Une page par métier, le téléphone toujours à un clic. |
+| 5 | La page d'accueil | Téléphone découpé en 6 blocs = 6 questions | La page répond dans l'ordre où le visiteur se pose les questions. |
+| 6 | Ce qui change | Les 5 cercles réparés, la réputation encore à faire | Quatre défauts réglés dans le nouveau site, le cinquième se fait avec vous. |
+| 7 | Le tri des demandes | Entonnoir, notes A / B / C, boucle des avis | Le site trie, vous rappelez les bonnes demandes en premier. |
+| 8 | Être trouvé | Google et une IA côte à côte, 4 points qu'ils vérifient | Le site est prêt, le reste se joue dehors. |
+| 9 | Trouver des clients | Deux courbes : publicité (rapide) / référencement + avis (durable) | On ne prédit pas : on mesure dès le premier jour, on ajuste à 3 mois. |
+| 10 | Ce qu'il nous faut de vous | 5 éléments autour du site | Photos, avis, accord des logos, une heure de relecture, les accès. |
+| 11 | La suite | Le chemin des prochaines étapes, les 6 décisions | On se revoit à 3 mois avec les vrais chiffres. |
 
 ## Questions à poser
 
