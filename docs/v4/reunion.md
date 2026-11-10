@@ -1,38 +1,74 @@
-# Réunion de présentation : support
+# Réunion de présentation (Inès + dirigeant d'Andy Construct)
 
-**Support à utiliser : [tableau blanc en ligne (privé)](https://claude.ai/artifact/EcBMvSFvH6gMXr2xAG5LfJ).** Glisser pour se déplacer, molette ou pincer pour zoomer, ← → pour passer d'une étape à l'autre, clic sur une capture pour l'agrandir, N pour afficher la phrase clé de l'étape, F pour le plein écran. À partager avec Inès et le client via « Share » avant la réunion.
+**Support : [tableau blanc en ligne (privé)](https://claude.ai/artifact/EcBMvSFvH6gMXr2xAG5LfJ).** À partager via « Share » avant la réunion.
 
-FigJam de secours : [Andy Construct — Réunion de présentation](https://www.figma.com/board/yF8CMRAXFzM8OYpkqpi0b7). **Vide au 10.11.2026** : la limite d'appels du serveur MCP de Figma (plan Starter) est tombée au premier appel de construction. Le tableau en ligne reprend exactement le même contenu et la même disposition.
+Pour présenter :
+- glisser pour se déplacer, molette pour zoomer ;
+- ← → pour passer d'une étape à l'autre ;
+- **N** affiche ce qu'il faut dire et les questions à poser à chaque étape ;
+- **F** passe en plein écran.
 
-Participants : Harbor Digital (présente à l'oral), Inès (associée), le dirigeant d'Andy Construct.
-Principe : 12 sections reliées par des flèches rouges, en 3 rangées de 4, à lire de gauche à droite. Presque pas de texte : titres, chiffres, étiquettes.
+Principe : 12 schémas reliés par le trait rouge, peu de mots. On ne montre pas le panel admin, et on n'avance aucune prévision chiffrée : rien n'est encore mesuré.
 
-## Ordre de présentation et phrase clé
+## Le fil
 
-| # | Section | Phrase à dire |
-|---|---|---|
-| 1 | Point de départ | « Aujourd'hui, on ne vous trouve pas, on ne peut pas vous vérifier, et rien n'est mesuré : 0 avis, Chêne-Bourg dans au moins 8 annuaires, aucune donnée depuis 2023. » |
-| 2 | Marché & concurrence | « Les demandes sont captées par des réseaux qui n'exécutent pas, et personne ne combine des références publiques nommées avec le placo et l'acoustique : c'est votre place. » |
-| 3 | Positionnement & cibles | « La rigueur des chantiers publics, au service de tous les chantiers : les pros achètent de la fiabilité, les particuliers de la confiance. » |
-| 4 | Le site : arborescence | « 13 pages, une par métier et par question, et le téléphone toujours à un clic. » |
-| 5 | Le site : design & preuve | « Le trait rouge, c'est votre niveau laser ; vos références sont visibles dès le premier écran, avec environ 40 % de texte en moins et 98-99/100 sur mobile. » |
-| 6 | Conversion & tri automatique | « Le site trie chaque demande en A, B ou C et vous alerte ; vous, vous rappelez, visitez et chiffrez. » |
-| 7 | Panel admin | « Chaque demande est enregistrée au même endroit, protégée par une double authentification, plus rien ne se perd dans les e-mails. » |
-| 8 | SEO | « La technique est à 9/10 et la migration ne perd aucune page ; ce qui manque est hors du code : fiche Google, avis, adresse identique partout. » |
-| 9 | GEO (IA) | « Les IA ne citent que ce qu'elles peuvent vérifier ailleurs : le site est prêt, il manque des mentions externes. » |
-| 10 | Acquisition & vente | « Nous recommandons la combinaison C, environ CHF 3'750 par mois, pour environ 34 demandes et 6 chantiers par mois à un an : ce sont des estimations, recalées à trois mois. » |
-| 11 | Ce qui marche / pas encore | « Le site, la preuve et le tri fonctionnent ; il nous manque vos avis, vos photos récentes, les accords des logos et du temps de votre côté. » |
-| 12 | Reste à faire & décisions | « Six décisions aujourd'hui, à commencer par le budget et le nom de la 4e page, et on se revoit pour le bilan à 90 jours. » |
+| # | Étape | Visuel | À dire |
+|---|---|---|---|
+| 1 | Le point de départ | 5 cercles cassés : copywriting, design, notoriété, SEO, GEO | Le savoir-faire est là. Il ne se voit pas. |
+| 2 | Le marché | Carte : visible / invisible × revend / réalise | Les plateformes captent les demandes sans faire les travaux, les bons artisans sont invisibles : la place à prendre, c'est les deux. |
+| 3 | Notre promesse | La phrase, les pros (fiabilité) et les particuliers (confiance) | La rigueur des chantiers publics, au service de tous les chantiers. |
+| 4 | Pour qui | Orbite : 5 clients types et ce qu'ils achètent vraiment | Chaque client a ses mots, le site leur parle à tous. |
+| 5 | Le site | Arbre des pages | Une page par métier, le téléphone toujours à un clic. |
+| 6 | La page d'accueil | Téléphone découpé en 6 blocs = 6 questions du visiteur | La page répond aux questions dans l'ordre où on se les pose. |
+| 7 | Ce qu'on a corrigé | Les 5 cercles réparés, la notoriété encore à faire | Quatre chantiers terminés, le cinquième se fait avec vous. |
+| 8 | Le tri des demandes | Entonnoir, notes A / B / C, boucle des avis | Le site trie, vous rappelez les bonnes demandes en premier. |
+| 9 | SEO | Barre de recherche Google, 3 leviers | Le SEO se juge à 6 mois, pas à 6 semaines. |
+| 10 | GEO | Une question posée à une IA, les sources qu'elle vérifie | Une IA ne cite que ce qu'elle peut vérifier ailleurs. |
+| 11 | Trouver des clients | Deux courbes : publicité (rapide) / référencement + avis (durable) | On ne prédit pas : on mesure dès le premier jour et on ajuste à 3 mois. |
+| 12 | La suite | Le chemin des prochaines étapes, les 6 décisions | On se revoit à 3 mois avec les vrais chiffres. |
 
-Les six décisions de la section 12 : budget mensuel (reco C), nom de la 4e page C16 (reco « cloisons isolantes » + 301), hébergeur (PHP 8.1 + MariaDB), logos des références (lettres + noms en attendant), particuliers hors Genève (reco Genève + La Côte), marchés publics (reco 6 dossiers par an). Sources : `projet/donnees.js` (décisions), `HANDOFF.md` §8-9.
+## Questions à poser
 
-## Reprise (quand des appels Figma sont de nouveau disponibles)
+On a déjà la plupart des réponses : ces questions montrent qu'on s'intéresse à leur métier et elles valident nos hypothèses devant eux.
 
-Tout est dans le scratchpad de la session, dossier `reunion/` :
+**L'entreprise**
+- Qu'est-ce qui vous a fait dire, à un moment, « il faut refaire le site » ?
+- Depuis 2007, quel est le chantier dont vous êtes le plus fier ? Pourquoi celui-là ?
+- Quand un client vous recommande, qu'est-ce qu'il dit de vous ?
 
-- `img/` : 34 captures JPEG (qualité 80, ≤ 1600 px), dont l'ancien site capturé le 10.11.2026 ; `images.json` donne l'ordre.
-- `call1.js` : squelette (en-tête, 12 sections, 34 cadres vides nommés « capture : <fichier> », connecteurs entre sections) ; il renvoie `imgIds`.
-- `call2.js`, `call3.js`, `call4.js` : contenu des sections 1-4, 5-8 et 9-12 (ils retrouvent les sections par leur nom, aucun ID à recopier ; ils peuvent partir en parallèle après `call1.js`).
-- `upload.sh urls.txt` : poste les 34 images vers les URL de `upload_assets` (`count` 34, `nodeIds` = `imgIds` dans l'ordre de `images.json`, `scaleMode` FILL).
+**Les clients**
+- Aujourd'hui, d'où viennent vos meilleurs clients : bouche-à-oreille, régies, architectes ?
+- Quel type de client voulez-vous voir plus souvent ? Et lequel moins ?
+- Quelle part pour les particuliers et pour les pros dans les deux prochaines années ?
+- Jusqu'où vous déplacez-vous volontiers : Genève, La Côte, Lausanne ?
 
-Budget restant nécessaire : environ 7 appels (1 session, 4 `use_figma`, 1 `upload_assets`, 1 à 2 `get_screenshot`).
+**Le marché**
+- Quels concurrents croisez-vous le plus souvent, sur les chantiers ou les appels d'offres ?
+- Recevez-vous des demandes via des plateformes de mise en relation ? Qu'en pensez-vous ?
+- L'acoustique : c'est un métier que vous voulez développer ?
+
+**Les demandes et le temps**
+- Pour vous, c'est quoi une « mauvaise demande » ?
+- Qui rappelle les clients aujourd'hui, et en combien de temps en général ?
+- Combien de devis pouvez-vous chiffrer par semaine sans que ça déborde ?
+- Les marchés publics : combien de dossiers par an êtes-vous prêts à monter ?
+
+**La preuve et la notoriété**
+- Avez-vous des photos de chantiers récents, idéalement avant / après ?
+- Pensez-vous à 5 ou 10 clients satisfaits qui accepteraient de laisser un avis Google ?
+- Une régie ou un architecte pourrait-il témoigner en quelques phrases ?
+- Pour les logos de vos références : avec qui avez-vous un contact direct pour demander l'accord ?
+- Avez-vous déjà été mentionnés par une commune, une école ou dans la presse locale ?
+- Êtes-vous membres d'une association professionnelle ?
+
+**Le projet**
+- Qui gère aujourd'hui votre fiche Google et votre nom de domaine ?
+- Quel budget mensuel vous semblerait raisonnable pour tester quelques mois ?
+- Comment saurez-vous, dans six mois, que le projet est réussi ?
+- Qui sera notre interlocuteur au quotidien pour les validations ?
+
+## Décisions à prendre ensemble (étape 12)
+
+Budget mensuel · nom de la 4e page (« cloisons isothermes » ou « isolantes ») · hébergement (PHP 8.1 + MariaDB) · logos des références · zone des particuliers · marchés publics. Détails et recommandations : `projet/donnees.js` et `HANDOFF.md` §8-9.
+
+FigJam abandonné (limite d'appels Figma) : https://www.figma.com/board/yF8CMRAXFzM8OYpkqpi0b7 est vide et peut être supprimé.
