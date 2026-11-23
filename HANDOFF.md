@@ -5,6 +5,10 @@ Mise à jour : 1er novembre 2026 (v4 : audit SEO, plan de mix d'acquisition, pla
 
 ---
 
+## v5 (23.11.2026)
+
+Mise à jour selon le document « Contenu site web » du client : nouveau menu, 4 métiers (acoustique, faux plafonds, cloisons, plâtrerie et peinture), héro plein cadre, normes, case de consentement. Détails : `docs/v5/README.md`.
+
 ## 1. Démarrage rapide
 
 ```bash
@@ -143,8 +147,9 @@ Statistiques : Umami sans cookie (suivi.js + data-suivi), activé en production 
 
 | Fichier | Usage |
 |---|---|
-| `livrables/andy-construct-v3-validation.zip` | Version de validation (mode preview, logos couleur) à décompresser dans `res/andy-construct-v3/` |
-| `livrables/andy-construct-v3-production.zip` | Version production telle qu'elle serait publiée aujourd'hui (rien de confirmé, noms à la place des logos non autorisés) |
+| `livrables/andy-construct-v5-validation.zip` | Version de validation v5 (mode preview) à décompresser dans `res/andy-construct-v5/` |
+| `livrables/andy-construct-v5-production.zip` | Version production v5 telle qu'elle serait publiée aujourd'hui (rien de confirmé) |
+| `livrables/andy-construct-local.zip` | Export complet pour travailler en local (lorem ipsum à la place des informations client manquantes) + `GUIDE-DES-PAGES.html` |
 | Zips v2 | retirés de `livrables/` ; récupérables au commit `a633851` |
 | `livrables/andy-construct-references-preview.pdf` | Plaquette avec logos, pour la séance de validation (ne pas diffuser) |
 | `livrables/suivi-demandes-et-kpi.xlsx` | Suivi des demandes tant que le CRM n'est pas en place |
@@ -169,7 +174,7 @@ Statistiques : Umami sans cookie (suivi.js + data-suivi), activé en production 
 
 **Immédiat**
 - [ ] Passer le dépôt GitHub en privé. Changer le mot de passe FTP (il a circulé dans la conversation).
-- [ ] Déployer la version de validation (`python3 deploy/deploy_ftp.py --subdir andy-construct-v3`, ou `livrables/andy-construct-v3-validation.zip` via le gestionnaire de fichiers dans `res/andy-construct-v3/`). Le port FTP 21 était bloqué depuis l'environnement cloud.
+- [ ] Déployer la version de validation (`python3 deploy/deploy_ftp.py --subdir andy-construct-v3`, ou `livrables/andy-construct-v5-validation.zip` via le gestionnaire de fichiers dans `res/andy-construct-v5/`). Le port FTP 21 était bloqué depuis l'environnement cloud.
 - [ ] Séance de validation avec le client (mode `verification` + plaquette preview) ; cocher `confirmations.json`.
 
 **Mise en place des outils** (`docs/v2/automatisation.md`)

@@ -83,6 +83,7 @@
     adresse: 'Indiquez l\'adresse à laquelle envoyer le guide (rue et numéro).',
     npaPoste: 'Indiquez le NPA, par exemple 1227.',
     localite: 'Indiquez la localité, par exemple Carouge.',
+    consentement: 'Cochez la case pour que nous puissions traiter votre demande.',
     reseau: 'Votre demande n\'a pas pu partir. Rien n\'est perdu : réessayez dans un instant, ou appelez-nous au ' + TEL + '.'
   };
   var val = function (f, n) { var el = f.elements[n]; if (!el) return ''; if (el.length !== undefined && !el.tagName) { var c = $$('[name="' + n + '"]:checked', f)[0]; return c ? c.value : ''; } return (el.value || '').trim(); };
@@ -130,6 +131,7 @@
       case 'npa': m = /^[1-9]\d{3}$/.test(v) ? '' : (v ? MSG.npa : MSG.npaPoste); break;
       case 'localite': m = v ? '' : MSG.localite; break;
       case 'fichiers': m = f._fichierErreur || ''; break;
+      case 'consentement': m = f.elements.consentement && f.elements.consentement.checked ? '' : MSG.consentement; break;
       default: return true;
     }
     montrerErreur(f, champ, m);
@@ -211,7 +213,7 @@
   if (df) (function (f) {
     f.noValidate = true;
     var etapes = $$('.dform__step', f), cur = 0;
-    var CHAMPS = [['travaux'], ['type_client', 'commune'], ['nom', 'telephone', 'email', 'message', 'fichiers']];
+    var CHAMPS = [['travaux'], ['type_client', 'commune'], ['nom', 'telephone', 'email', 'message', 'fichiers', 'consentement']];
     var recapErr = $('.dform__erreurs', f), annonce = $('[data-annonce]', f), recap = $('.dform__recap', f);
     var BROUILLON = 'ac_brouillon_devis';
     var travaux = function () { return $$('[name="travaux[]"]:checked', f).map(function (c) { return c.value; }); };

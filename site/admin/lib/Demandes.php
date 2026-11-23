@@ -60,7 +60,8 @@ final class Demandes
         'commune' => 'Commune', 'entreprise' => 'Entreprise', 'autre' => 'Autre',
     ];
     public const TRAVAUX = [
-        'placo' => 'Placo', 'peinture' => 'Peinture', 'isolation-acoustique' => 'Isolation acoustique',
+        'isolation-acoustique' => 'Acoustique', 'faux-plafonds' => 'Faux plafonds', 'cloisons' => 'Cloisons',
+        'platrerie-peinture' => 'Plâtrerie et peinture', 'placo' => 'Placo', 'peinture' => 'Peinture',
         'cloisons-isothermes' => 'Cloisons isolantes', 'ne-sait-pas' => 'À préciser', 'autre' => 'Hors métiers',
     ];
     public const SURFACES = ['moins-15' => 'Moins de 15 m²', '15-50' => '15 à 50 m²', '50-200' => '50 à 200 m²', 'plus-200' => 'Plus de 200 m²', 'ne-sait-pas' => 'Ne sait pas'];

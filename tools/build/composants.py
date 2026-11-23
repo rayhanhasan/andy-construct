@@ -206,7 +206,8 @@ def refs_pied():
 # Liste canonique moyenne (cro-v3 §2.3, règle 7) : pages services sans C23, contact, entreprise
 MOYENNE = ['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'alhambra', 'plan-les-ouates', 'collonge-bellerive']
 # Références à citer par service (proposées pour C23, cro-v3 §6.1) : présentées comme propres au service seulement si C23
-PAR_SERVICE = {'placo': ['ville-de-geneve', 'conservatoire-musique-geneve', 'energestion'],
+PAR_SERVICE = {'faux-plafonds': ['ville-de-geneve', 'conservatoire-musique-geneve', 'energestion'],
+               'cloisons': ['ville-de-geneve', 'conservatoire-musique-geneve', 'energestion'],
                'isolation-acoustique': ['conservatoire-musique-geneve', 'head-geneve', 'collonge-bellerive']}
 
 
@@ -342,7 +343,7 @@ def badges(cles, cls='', label='En bref'):
 
 
 # ---------------------------------------------------------------- chiffres clés (accueil, professionnels, entreprise)
-def chiffres(titre_id='chiffres-titre'):
+def chiffres(titre_id='chiffres-titre', h2=None, surtitre=None):
     """Bande anthracite (cro-v3 §2.2 H5) : valeurs finales dans le HTML (lues sans JavaScript, jamais « 0 »),
     comptées une fois à l'apparition."""
     items = [(ans_activite(), 'ans d\'activité'), (nb_refs(), 'références, publiques et privées'), (4, 'métiers intérieurs')]
@@ -351,11 +352,12 @@ def chiffres(titre_id='chiffres-titre'):
                   '<span class="visually-hidden">%d </span>%s</span></li>' % (n, n, n, l) for n, l in items)
     return '''    <section class="section section--dark on-dark chiffres" aria-labelledby="%s">
       <div class="container">
-        <h2 id="%s" class="visually-hidden">Andy Construct en chiffres</h2>
+        %s
         <ul class="chiffres__list" data-reveal="cells">%s</ul>
       </div>
     </section>
-''' % (titre_id, titre_id, lis)
+''' % (titre_id, ('<div class="chiffres__head"><p class="surtitre surtitre--clair">%s</p><h2 id="%s">%s</h2></div>' % (surtitre, titre_id, h2)) if h2
+       else '<h2 id="%s" class="visually-hidden">Andy Construct en chiffres</h2>' % titre_id, lis)
 
 
 # ---------------------------------------------------------------- images des pages v3 : vraies photos, illustrations signalées
@@ -388,6 +390,12 @@ def hero_image(kind, ident, alt=None):
     if kind == 'photo':
         import portfolio as pf
         b45, b169 = _srcset_crop(ident, '4x5') or _srcset_crop(ident, '16x9'), _srcset_crop(ident, '16x9')
+        if not b169:   # photo sans recadrage éditorial : fichiers d'origine (400, 800, 1600)
+            it = MANIFEST[ident]
+            b = it['base']
+            src = '%s-400.webp %dw, %s-800.webp %dw, %s-1600.webp %dw' % (b, it['largeur_400'], b, it['largeur_800'], b, it['largeur_1600'])
+            b45 = b45 or (src, b)
+            b169 = (src, b)
         html = ('<picture><source media="(min-width: 900px)" type="image/webp" srcset="%s" sizes="%s">'
                 '<source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="1600" height="900" alt="%s" fetchpriority="high"></picture>'
                 % (b45[0], sz_b, b169[0], sz_m, b169[1], e(alt or pf.alt(ident))))
@@ -547,10 +555,10 @@ def aa_pic(paire, etat, sizes, alt):
 
 
 # ---------------------------------------------------------------- formulaire de demande en 3 étapes (architecture §6)
-TRAVAUX = [('placo', 'Placo', 'Cloisons, doublages, faux-plafonds'),
-           ('peinture', 'Peinture', 'Murs et plafonds, à l\'intérieur'),
-           ('isolation-acoustique', 'Isolation acoustique', 'Contre le bruit ou l\'écho'),
-           ('cloisons-isothermes', None, 'Caves, garages, combles'),
+TRAVAUX = [('isolation-acoustique', 'Acoustique', 'Correction de l\'écho, isolation phonique'),
+           ('faux-plafonds', 'Faux plafonds', 'Tissu tendu, plâtre, fibre minérale, métal'),
+           ('cloisons', 'Cloisons et doublages', 'Plâtre, mobiles, vitrées, panneaux isothermes'),
+           ('platrerie-peinture', 'Plâtrerie et peinture', 'Enduits, lissages, peinture intérieure'),
            ('ne-sait-pas', 'Autre chose, ou je ne sais pas encore', 'Décrivez-le à l\'étape 3')]
 TYPE_CLIENT = [('proprietaire', 'Propriétaire (maison, appartement, PPE)'), ('locataire', 'Locataire'),
                ('regie', 'Régie, gérance ou coopérative'), ('architecte', 'Architecte, bureau d\'études ou entreprise générale'),
@@ -628,7 +636,6 @@ def form_devis(source, service=None):
     """Formulaire de devis en 3 étapes. Sans JavaScript : les 3 étapes l'une sous l'autre, un seul envoi."""
     cartes = ''
     for v, nom, ligne in TRAVAUX:
-        nom = nom or svc_nom('cloisons-isothermes')
         chk = ' checked' if service == v else ''
         cartes += ('<label class="choice choice--card" for="d-travaux-%s"><input type="checkbox" id="d-travaux-%s" name="travaux[]" value="%s"%s>'
                    '%s<span class="choice__text"><b>%s</b><span>%s</span></span></label>'
@@ -681,7 +688,7 @@ def form_devis(source, service=None):
             <p class="dform__sous">Si vous le souhaitez</p>
             %(msg)s
             <div class="field file-field" data-champ="fichiers">
-              <span class="label" id="d-fichiers-label">Photos ou plans%(fac)s</span>
+              <span class="label" id="d-fichiers-label">Plans ou photos%(fac)s</span>
               <p class="hint" id="d-fichiers-aide">JPG, PNG, HEIC ou PDF, 3 fichiers de 8 Mo au plus. Trop lourd ? Envoyez-les par e-mail après notre appel.</p>
               <input class="file-input" id="d-fichiers" name="fichiers[]" type="file" multiple accept="image/jpeg,image/png,image/heic,image/heif,.heic,application/pdf" aria-labelledby="d-fichiers-label" aria-describedby="d-fichiers-aide d-fichiers-etat d-fichiers-err">
               <div class="file-row js-only"><button type="button" class="btn btn--ghost file-btn" aria-describedby="d-fichiers-aide d-fichiers-etat" data-fichiers>Choisir des fichiers</button><span class="file-state" id="d-fichiers-etat" aria-live="polite">Aucun fichier choisi</span></div>
@@ -690,9 +697,9 @@ def form_devis(source, service=None):
             </div>
             <div class="field" data-champ="connu_par"><label for="d-connu">Comment nous avez-vous connus ?%(fac)s</label><select id="d-connu" name="connu_par" aria-describedby="d-connu-err"><option value="">Choisissez dans la liste</option>%(connu)s</select>%(err_c)s</div>
             %(reco)s
+            <div class="field field--consent" data-champ="consentement"><label class="choice choice--check" for="d-consent"><input type="checkbox" id="d-consent" name="consentement" value="1" required aria-describedby="d-consent-err"><span>J'accepte que mes données soient utilisées pour traiter ma demande.%(obl)s <a href="confidentialite.html">Protection des données</a></span></label>%(err_k)s</div>
             <div class="dform__actions"><button type="button" class="btn btn--ghost js-only" data-retour>Retour</button><button type="submit" class="btn" data-envoi>Envoyer ma demande</button></div>
             <p class="dform__rassure">%(rappel)s</p>
-            <p class="dform__info">En envoyant ce formulaire, vous nous transmettez vos coordonnées pour traiter votre demande. Elles ne servent à rien d'autre. <a href="confidentialite.html">Protection des données</a></p>
             %(rap)s
           </fieldset>''' % dict(
         civ=radios('d-civ', 'civilite', [('madame', 'Madame'), ('monsieur', 'Monsieur')], 'Civilité', FAC, cls='group--inline'),
@@ -707,7 +714,7 @@ def form_devis(source, service=None):
         msg=champ('d-msg', 'message', 'Votre projet en quelques mots', FAC, typ='textarea',
                   aide='Par exemple : logement habité ou vide, délai impératif, accès, étage. Professionnels : date de remise des offres.',
                   attrs=' maxlength="3000"'),
-        fac=FAC, err_f=erreur('d-fichiers'), err_c=erreur('d-connu'), connu=connu,
+        fac=FAC, obl=OBL, err_f=erreur('d-fichiers'), err_c=erreur('d-connu'), err_k=erreur('d-consent'), connu=connu,
         reco=champ('d-reco', 'recommande_par', 'Qui vous a recommandé Andy Construct ?', FAC, aide='Pour pouvoir remercier cette personne.',
                    attrs=' maxlength="100"', cls='js-cond'),
         rap=rappel_lien(3))

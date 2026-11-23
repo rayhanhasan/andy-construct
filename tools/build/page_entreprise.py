@@ -17,8 +17,7 @@ def build():
 
     actions = '%s<a class="btn btn--light" href="#methode">Notre méthode</a>' % devis_btn(p, 'entete_page')
     corps = hero_page('L\'entreprise', 'Andy Construct, entreprise de Carouge depuis 2007',
-                      T('C10 C09', 'Plâtrerie, peinture et isolation intérieure. Deux associés qui <b>suivent eux-mêmes</b> les chantiers.',
-                        'Plâtrerie, peinture et isolation intérieure, dirigée par <b>deux associés</b>.'),
+                      'L\'expertise de l\'aménagement intérieur. <b>L\'art de transformer vos espaces.</b>',
                       actions=actions, media=hero_html, badges=c.badges(['B1', 'B2', 'B3'], cls='badges--3'))
 
     # Frise réelle : FOSC 126/2007 (début le 01.06.2007 à Perly-Certoux), FOSC 44/2010 (Chêne-Bourg), FOSC du 02.05.2023 (Carouge)
@@ -26,18 +25,28 @@ def build():
         ('2007', '1<sup>er</sup> juin', 'Perly-Certoux', 'Début de l\'activité et inscription au <b>registre du commerce</b> de Genève.'),
         ('2010', 'Février', 'Chêne-Bourg', 'Le siège s\'installe à Chêne-Bourg ; le but social actuel est inscrit.'),
         ('2023', 'Mai', 'Carouge', 'Siège route des Acacias.' + T('C10', ' Caroline Chanton Bajrami rejoint Adnan Bajrami comme <b>associée</b>.', '')),
-        ('Aujourd\'hui', '', 'Suisse romande', '<a href="placo.html">Placo</a>, <a href="peinture.html">peinture</a>, <a href="isolation-acoustique.html">isolation acoustique</a> et '
-         '<a href="cloisons-isothermes.html">%s</a>.' % T('C16', 'cloisons isolantes', 'cloisons isothermes')),
+        ('Aujourd\'hui', '', 'Suisse romande', '<a href="isolation-acoustique.html">Acoustique</a>, <a href="faux-plafonds.html">faux plafonds</a>, '
+         '<a href="cloisons.html">cloisons</a>, <a href="platrerie-peinture.html">plâtrerie et peinture</a>.'),
     ]
     lis = ''.join('<li><p class="frise__date%s">%s</p><p class="frise__lieu">%s%s</p><p>%s</p></li>'
                   % ('' if a.isdigit() else ' frise__date--mot', a, ('%s · ' % m) if m else '', l, t) for a, m, l, t in frise)
     corps += '''    <section class="section" aria-labelledby="histoire-titre">
       <div class="container">
-        <div class="section-head">
-          <h2 id="histoire-titre">Notre histoire</h2>
-          <p class="lead">Née à <b>Perly-Certoux</b> en 2007, installée à <b>Carouge</b> depuis 2023 : une entreprise genevoise du second œuvre.</p>
+        <div class="recit">
+          <div class="recit__titre">
+            <p class="surtitre">Depuis 2007</p>
+            <h2 id="histoire-titre">Une histoire de savoir-faire et de passion</h2>
+          </div>
+          <div class="recit__texte">
+            <p class="lead">Fondée en 2007 sur la passion du métier et la volonté de proposer des prestations de qualité, Andy Construct s'est développée autour d'une vision claire : mettre le <b>savoir-faire</b>, la <b>précision</b> et l'<b>exigence</b> au service de chaque projet.</p>
+            <p>Depuis sa création, l'entreprise a construit son identité dans le second œuvre, avec une expertise reconnue en plâtrerie, peinture, faux plafonds, cloisons et aménagements intérieurs.</p>
+            <p>Au fil des années, Andy Construct a enrichi ses compétences et noué des collaborations solides avec les professionnels de la construction, les architectes et les entreprises générales.</p>
+            <p>Aujourd'hui, nous poursuivons la même ambition : des solutions techniques et esthétiques adaptées à chaque espace, avec la qualité d'exécution, la maîtrise technique et le sens du détail.</p>
+          </div>
         </div>
+        <ul class="valeurs" aria-label="Nos valeurs"><li>Le travail bien fait</li><li>Le respect des engagements</li><li>La confiance</li><li>La satisfaction de nos clients</li></ul>
         <ol class="frise" data-trait>%s</ol>
+        <p class="recit__fin">Andy Construct, c'est avant tout une équipe, une expérience et une passion commune : <b>l'art de transformer vos espaces.</b></p>
       </div>
     </section>
 ''' % lis

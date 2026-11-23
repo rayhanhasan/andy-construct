@@ -4,7 +4,7 @@ import os
 import ctx
 from ctx import e, T, V, definitif, marque, PROD
 from common import (page, page_head, ld_page, TEL, TEL_URI, MOB, tel_link, horaires, mail, mail_html, LEGAL, IDE, ZEFIX,
-                    svc_nom, svc_url, SERVICES, AUJOURDHUI, ASSETS)
+                    svc_nom, svc_url, SERVICES, NAV_DESC, AUJOURDHUI, ASSETS)
 import portfolio as pf
 
 MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
@@ -259,9 +259,7 @@ def page_404():
     p = dict(fichier='404.html', index=False, base=ctx.prod(), canonical=False, title='Page introuvable | Andy Construct',
              desc='Cette page n\'existe pas ou a été déplacée. Retrouvez nos prestations, nos réalisations et notre numéro de téléphone.')
     h = T('C03', ', du lundi au vendredi, de 7 h à 18 h', '')
-    liens = [('placo.html', 'Placo', 'Cloisons, doublages, faux-plafonds'), ('peinture.html', 'Peinture', 'Murs et plafonds, à l\'intérieur'),
-             ('isolation-acoustique.html', 'Isolation acoustique', 'Contre le bruit et l\'écho'),
-             ('cloisons-isothermes.html', svc_nom('cloisons-isothermes'), 'Caves, garages, combles'),
+    liens = [(svc_url(x), svc_nom(x, long=True), NAV_DESC[x]) for x in SERVICES] + [
              ('realisations.html', 'Réalisations', 'Nos chantiers, avant et après'), ('contact.html', 'Contact', 'Demande de devis en 3 étapes')]
     corps = '''    <section class="notfound" data-suivi-zone="404">
       <div class="page-head page-head--404">

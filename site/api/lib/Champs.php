@@ -15,17 +15,21 @@ final class Champs
     /** Anciens noms acceptés et convertis (compatibilité). */
     public const ALIAS_FORMULAIRES = ['aimant' => 'envoi_postal_guide'];
 
+    /** v5 : les quatre métiers du menu, puis les anciennes valeurs (demandes déjà reçues, liens anciens). */
     public const TRAVAUX = [
+        'isolation-acoustique' => 'Isolation acoustique et phonique',
+        'faux-plafonds' => 'Faux plafonds',
+        'cloisons' => 'Cloisons et doublages',
+        'platrerie-peinture' => 'Plâtrerie et peinture',
         'placo' => 'Placo',
         'peinture' => 'Peinture',
-        'isolation-acoustique' => 'Isolation acoustique',
         'cloisons-isothermes' => 'Cloisons isolantes',
         'ne-sait-pas' => 'Autre chose, ou je ne sais pas encore',
         'autre' => 'Autres travaux (hors de nos 4 métiers)',
     ];
 
-    /** Les quatre prestations (pour détecter « plusieurs prestations »). */
-    public const PRESTATIONS = ['placo', 'peinture', 'isolation-acoustique', 'cloisons-isothermes'];
+    /** Les prestations (pour détecter « plusieurs prestations »), anciennes valeurs comprises. */
+    public const PRESTATIONS = ['isolation-acoustique', 'faux-plafonds', 'cloisons', 'platrerie-peinture', 'placo', 'peinture', 'cloisons-isothermes'];
 
     public const TYPE_CLIENT = [
         'proprietaire' => 'Propriétaire (maison, appartement, PPE)',

@@ -72,7 +72,7 @@ return static function (App $app): string {
         return $h . '</div>';
     };
     $cases = '<div class="choix">';
-    foreach (['placo' => 'Placo', 'peinture' => 'Peinture', 'isolation-acoustique' => 'Isolation acoustique', 'cloisons-isothermes' => 'Cloisons isolantes', 'ne-sait-pas' => 'À préciser', 'autre' => 'Autre'] as $v => $l) {
+    foreach (['isolation-acoustique' => 'Acoustique', 'faux-plafonds' => 'Faux plafonds', 'cloisons' => 'Cloisons', 'platrerie-peinture' => 'Plâtrerie et peinture', 'ne-sait-pas' => 'À préciser', 'autre' => 'Autre'] as $v => $l) {
         $cases .= '<label><input type="checkbox" name="travaux[]" value="' . $v . '"' . (in_array($v, $valeurs['travaux'], true) ? ' checked' : '') . '><span>' . $e($l) . '</span></label>';
     }
     $cases .= '</div>';

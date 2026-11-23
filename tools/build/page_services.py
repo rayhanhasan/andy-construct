@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Pages services v3 (cro-v3 §6.1, DA « le trait de niveau ») : un gabarit, quatre jeux de textes.
+"""Pages services v5 (document « Contenu site web » du client, mis en page selon la DA « le trait de niveau ») : un gabarit, quatre jeux de textes.
 
 Ordre : en-tête premium (panneau anthracite + grande image) · bande de logos · damier « ce que nous posons » ·
 rangée « ce qu'il faut savoir » · bloc propre au service (guide, subventions) · mini-cas sur fond profond (vraies photos)
@@ -101,95 +101,278 @@ def cas_aa(paire, h2, titre, lieu, fait, lien, codes=None):
                 lien=lien, codes=codes)
 
 
+# ---------------------------------------------------------------- blocs v5 (document « Contenu site web » du client)
+import schemas as sch
+from icons import ICONS
+
+# Normes et prescriptions par service (tableau du document client ; SIA 256 et 257 vérifiées : faux-plafonds, peinture)
+NORMES = [
+    ('isolation-acoustique', 'Isolation acoustique et phonique', 'SIA 181 · SIA 242 · AEAI',
+     'Protection contre le bruit entre locaux, construction à sec, sécurité incendie des matériaux.'),
+    ('faux-plafonds', 'Faux plafonds', 'SIA 256 · SN EN 13964 · SIA 181 · AEAI',
+     'Conception et exécution des plafonds suspendus, performances phoniques, résistance au feu (EI 30, EI 60, EI 90).'),
+    ('cloisons', 'Cloisons et doublages', 'SIA 242 · SIA 181 · SIA 180 · AEAI',
+     'Construction à sec, isolation phonique et thermique, cloisons coupe-feu (EI 30, EI 60, EI 90).'),
+    ('cloisons.html#panneaux-sandwich', 'Panneaux sandwich isothermes', 'SN EN 14509 · SIA 180 · AEAI · OHyg',
+     'Panneaux certifiés, isolation thermique, âme isolante adaptée aux exigences incendie, hygiène des locaux alimentaires.'),
+    ('platrerie-peinture', 'Plâtrerie et peinture', 'SIA 242 · SIA 257 · SIA 118',
+     'Classes de qualité des enduits, préparation des supports et peinture, conditions générales des travaux.'),
+]
+
+
+def normes_table(seulement=None, titre_id='normes-titre', h2='Des solutions qui répondent aux normes suisses', cls=''):
+    """Tableau des normes (accueil : toutes les lignes ; page service : ses lignes, sans titre de colonne « Service » redondant)."""
+    lignes = [n for n in NORMES if not seulement or n[0].split('.')[0] in seulement]
+    trs = ''.join('<tr><th scope="row"><a href="%s">%s</a></th><td class="normes__codes">%s</td><td>%s</td></tr>'
+                  % (k if k.endswith('.html') or '#' in k else k + '.html', nom, codes, quoi) for k, nom, codes, quoi in lignes)
+    return '''    <section class="section normes%s" aria-labelledby="%s">
+      <div class="container">
+        <div class="section-head">
+          <p class="surtitre">Normes et conformité</p>
+          <h2 id="%s">%s</h2>
+          <p class="lead">Pour chacun de nos services, nous mettons en œuvre des systèmes certifiés, dans le respect des normes et prescriptions en vigueur.</p>
+        </div>
+        <div class="normes__wrap"><table class="normes__table">
+          <thead><tr><th scope="col">Service</th><th scope="col">Normes et prescriptions</th><th scope="col">Ce qu'elles encadrent</th></tr></thead>
+          <tbody>%s</tbody>
+        </table></div>
+        <p class="normes__pied">Les performances exigées sont définies pour chaque projet avec le maître d'ouvrage et ses mandataires.</p>
+      </div>
+    </section>
+''' % ((' ' + cls) if cls else '', titre_id, titre_id, h2, trs)
+
+
+def atouts(items, titre_id, h2, cls=''):
+    """Trois bénéfices côte à côte : pictogramme, titre, une phrase."""
+    lis = ''.join('<li class="atout"><span class="atout__ico">%s</span><div><h3>%s</h3><p>%s</p></div></li>' % (ICONS[i], t, x) for i, t, x in items)
+    return '''    <section class="section section--tight atouts-s%s" aria-labelledby="%s">
+      <div class="container">
+        <h2 id="%s" class="visually-hidden">%s</h2>
+        <ul class="atouts">%s</ul>
+      </div>
+    </section>
+''' % ((' ' + cls) if cls else '', titre_id, titre_id, h2, lis)
+
+
+def media_type(photo, schema):
+    """Vraie photo si publiable dans ce mode, sinon le schéma en coupe."""
+    if photo and pf.photo_ok(photo):
+        return '<span class="type__media type__media--photo">%s</span>' % c.pic(photo, '(min-width: 1100px) 400px, (min-width: 700px) 46vw, 100vw', pf.alt(photo))
+    return '<span class="type__media">%s</span>' % schema
+
+
+def types(p, items, titre_id, surtitre, h2, lead, cta, cls=''):
+    """Grille de solutions : chaque carte = image (photo ou schéma) + titre (+ « Notre spécialité ») + texte ; la dernière
+    carte est un appel à l'action sur fond anthracite. items : (ancre, titre, texte, photo, schéma, spécialité)."""
+    lis = ''
+    for ancre, titre, texte, photo, schema, spec in items:
+        lis += ('<li class="type%s" id="%s">%s<div class="type__txt"><h3>%s%s</h3><p>%s</p></div></li>'
+                % (' type--spec' if spec else '', ancre, media_type(photo, schema), titre,
+                   ' <span class="tag-spec">Notre spécialité</span>' if spec else '', texte))
+    ct, cx, cb = cta
+    n = len(items) + 1
+    large = (' type--cta-3' if n % 3 == 2 else '') + (' type--cta-2' if n % 2 == 1 else '')
+    lis += ('<li class="type type--cta%s"><div class="type__txt"><h3>%s</h3><p>%s</p>%s</div></li>'
+            % (large, ct, cx, devis_btn(p, 'carte_conseil', cls='btn btn--light', texte=cb)))
+    return '''    <section class="section%s" aria-labelledby="%s">
+      <div class="container">
+        <div class="section-head">
+          <p class="surtitre">%s</p>
+          <h2 id="%s">%s</h2>
+          %s
+        </div>
+        <ul class="types" data-reveal="cells">%s</ul>
+      </div>
+    </section>
+''' % ((' ' + cls) if cls else '', titre_id, surtitre, titre_id, h2, ('<p class="lead">%s</p>' % lead) if lead else '', lis)
+
+
+def bande(titre_id, surtitre, h2, paras, visuel, puces=None, action='', ancre=None):
+    """Bande « spécialité » sur fond anthracite : visuel à gauche (schéma et usages), texte à droite."""
+    puces_html = ('<ul class="bande__puces">%s</ul>' % ''.join('<li>%s</li>' % x for x in puces)) if puces else ''
+    return '''    <section class="section section--dark on-dark bande"%s aria-labelledby="%s">
+      <div class="container bande__grid">
+        <div class="bande__visuel">%s%s</div>
+        <div class="bande__txt">
+          <p class="surtitre surtitre--clair">%s</p>
+          <h2 id="%s">%s</h2>
+          %s
+          %s
+        </div>
+      </div>
+    </section>
+''' % ((' id="%s"' % ancre) if ancre else '', titre_id, visuel, puces_html, surtitre, titre_id, h2,
+       ''.join('<p%s>%s</p>' % (' class="lead"' if i == 0 else '', x) for i, x in enumerate(paras)), action)
+
+
+def intro(titre_id, h2, paras, img=''):
+    """Texte d'introduction (2 à 3 paragraphes) à côté d'une image."""
+    return c.feat(titre_id, h2, ''.join('<p>%s</p>' % x for x in paras), img) if img else '''    <section class="section section--tight" aria-labelledby="%s">
+      <div class="container intro-s"><h2 id="%s">%s</h2>%s</div>
+    </section>
+''' % (titre_id, titre_id, h2, ''.join('<p>%s</p>' % x for x in paras))
+
+
+def photo_ou(pid, repli_kind, repli_ident, sizes=SZ_FEAT):
+    if pf.photo_ok(pid):
+        return c.pic(pid, sizes, pf.alt(pid))
+    return img(repli_kind, repli_ident, sizes)
+
+
+BENEFICES = [('echo', 'Correction acoustique', 'Moins d\'écho et de résonance à l\'intérieur de la pièce.'),
+             ('phonique', 'Isolation phonique', 'Le bruit ne passe plus d\'un étage ou d\'une pièce à l\'autre.'),
+             ('feu', 'Coupe-feu', 'Des solutions conformes aux exigences de sécurité incendie.')]
+
+
 # ---------------------------------------------------------------- données des quatre pages
-def placo():
-    s = 'placo'
+def faux_plafonds():
+    s = 'faux-plafonds'
+    hero = 'plafond-tendu-ilots-lumineux-02' if pf.photo_ok('plafond-tendu-ilots-lumineux-02') else 'faux-plafond-placo-gorge-lumineuse-02'
     return dict(
-        service=s, crumb='Placo', title='Placo, cloisons et faux-plafonds à Genève | Andy Construct',
-        desc=V('C05', 'Cloisons, doublages et faux-plafonds en plaques de plâtre, posés puis peints. Logements, bureaux et bâtiments publics, à Genève et en Suisse romande.',
-               'Cloisons, doublages et faux-plafonds en plaques de plâtre, prêts à peindre. Logements, bureaux et bâtiments publics, à Genève et en Suisse romande.'),
-        h1='Placo : cloisons, doublages et faux-plafonds',
-        chapeau='Diviser une pièce, redresser un mur, abaisser un plafond : les <b>plaques de plâtre</b> le font sans maçonnerie.',
-        btn='Demander un devis pour du placo',
-        hero=('photo', 'faux-plafond-placo-gorge-lumineuse-02'),
-        faire_h2='Ce que nous posons en plaques de plâtre',
-        faire=[('cloisons', 'Cloisons', 'Une chambre, un bureau, une salle de réunion, montés en quelques jours. <b>Portes et renforts</b> prévus dès la pose.',
-                img('ill', 'chantier-cloisons-plaques-caissons')),
-               ('doublages', 'Doublages', 'Un parement devant un mur abîmé, qui cache les gaines et peut recevoir un isolant contre le '
-                '<a href="cloisons-isothermes.html"><b>froid</b></a> ou le <a href="isolation-acoustique.html"><b>bruit</b></a>.',
-                img('ill', 'placo-lissage-enduit-mur')),
-               ('faux-plafonds', 'Faux-plafonds', 'Il cache conduites et ventilation, reçoit <b>spots et gorges lumineuses</b>, et remplace un plafond abîmé.',
-                img('photo', 'plafond-placo-ilot-ovale-01')),
-               ('caissons', 'Caissons et habillages', 'Une poutre ou une gaine à cacher : un <b>caisson</b> ajusté, avec trappe de visite si besoin.',
-                img('aa', ('aa1', 'apres')))],
-        pro=T('C14', 'Professionnels : lots <b>CFC 271 et 283</b>, offres sur plans et descriptifs.',
-              'Professionnels : lots <b>CFC 271</b>, offres sur plans et descriptifs.'),
-        savoir=[T('C07', 'Poncer les joints fait une poussière fine : zone fermée, passages protégés, <b>nettoyage chaque soir</b>.',
-                  'Poncer les joints fait une poussière fine : la zone de travail est <b>fermée et protégée</b>.'),
-                'Câbles et gaines passent avant la fermeture : nous <b>coordonnons la pose</b> avec votre électricien.',
-                'Sur un grand mur éclairé de côté, les joints se voient : le <b>niveau de finition</b> se choisit à la visite.'],
-        savoir_img=img('ill', 'placo-chant-plaque-detail', SZ_FEAT),
-        cas=lambda p: cas_projet('projet-hall-gorge-lumineuse', 'Références en placo',
-                                 'Faux-plafond en plaques de plâtre aux <b>formes courbes</b>, éclairage et spots intégrés.',
-                                 lien_filtre('placo', 'Toutes les réalisations en placo', 'Toutes les réalisations'),
-                                 lies=['projet-cage-escalier-niches', 'projet-faux-plafond-dalle-isolee', 'projet-grande-salle-ossature']),
-        faq_titre='Questions fréquentes sur le placo',
-        faq=[prix_q('Combien coûte une cloison ou un faux-plafond en placo ?',
-                    'Le prix dépend de la surface, de la hauteur, de l\'isolant, des portes et des spots. Après la visite, vous recevez une offre écrite.'),
-             ('Combien de temps dure la pose ?', 'Pour une cloison ou le plafond d\'une pièce, comptez quelques jours, séchage des joints compris. Le délai figure dans l\'offre.', None),
-             ('Une cloison en placo isole-t-elle du bruit ?', 'Une cloison simple atténue les voix. Avec un isolant et deux plaques de chaque côté, elle isole nettement mieux. Voyez <a href="isolation-acoustique.html">l\'isolation acoustique</a>.', None),
-             ('Faut-il l\'accord de la régie ou de la copropriété ?', 'Locataire : oui, l\'accord écrit du bailleur. En PPE, une cloison dans votre lot est en général possible ; vérifiez le règlement si elle touche une partie commune.', None)],
-        h2_demande='Demander un devis pour du placo',
-        ld_desc='Cloisons, doublages, faux-plafonds et caissons en plaques de plâtre, posés puis peints, à Genève et en Suisse romande.',
-        service_type='Plâtrerie et faux-plafonds en plaques de plâtre',
+        service=s, crumb='Faux plafonds', title='Faux plafonds à Genève : tissu tendu, plâtre, métal | Andy Construct',
+        desc='Faux plafonds acoustiques, phoniques et coupe-feu : tissu tendu, plaque de plâtre, fibre minérale, métal, fibre de bois. Bureaux, restaurants, écoles, logements. Suisse romande.',
+        h1='Des plafonds qui transforment le confort de vos espaces',
+        chapeau='Le plafond structure l\'espace, améliore le <b>confort sonore</b> et participe à l\'identité de votre lieu.',
+        btn='Demander un devis pour un faux plafond',
+        hero=('photo', hero),
+        apres_refs=intro('fp-intro', 'Performance technique et rendu esthétique', [
+            'Nous concevons et posons des plafonds qui allient <b>performance technique</b> et <b>rendu esthétique</b>.',
+            'Nos plafonds réduisent la résonance dans une pièce et limitent la transmission du bruit entre les espaces : <b>bureaux, restaurants, salles de réunion, écoles ou logements</b>.'],
+            photo_ou('plafond-tendu-ilots-lumineux-01', 'photo', 'faux-plafond-placo-gorge-lumineuse-01'))
+        + atouts(BENEFICES, 'fp-atouts', 'Ce que nos plafonds apportent'),
+        blocs=lambda p: types(p, [
+            ('tissu-tendu', 'Tissu tendu', 'Une surface parfaitement lisse et sur mesure, posée à froid. En version acoustique, elle absorbe le son tout en restant élégante. Idéale pour les bureaux, restaurants et salles de réunion.',
+             'plafond-tendu-mat-01', sch.tissu_tendu(), True),
+            ('plaque-de-platre', 'Plaque de plâtre', 'Polyvalente, elle permet des plafonds lisses, des caissons, des jeux de niveaux et l\'éclairage intégré. Elle existe en versions phoniques et coupe-feu.',
+             'faux-plafond-placo-gorge-lumineuse-02', sch.plaque_platre(), False),
+            ('fibre-de-bois', 'Isolation en fibre de bois', 'Un isolant naturel posé au-dessus du faux plafond, invisible une fois les travaux terminés. Il renforce l\'isolation thermique et phonique, quelle que soit la finition choisie.',
+             None, sch.fibre_bois(), False),
+            ('fibre-minerale', 'Fibre minérale', 'Des dalles démontables qui gardent les réseaux techniques accessibles. Une solution efficace et économique pour les bureaux et les locaux professionnels.',
+             'plafond-dalles-couloir-01', sch.fibre_minerale(), False),
+            ('metallique', 'Métallique', 'Des bacs métalliques résistants, faciles d\'entretien, et acoustiques en version perforée. Pour les commerces, couloirs, cuisines professionnelles et espaces très fréquentés.',
+             'plafond-bacs-metalliques-cuisine-01', sch.metallique(), False)],
+            'fp-types', 'Nos plafonds', 'Cinq solutions, un plafond adapté à chaque usage', '',
+            ('Vous hésitez entre plusieurs solutions ?', 'Nous analysons votre espace et vous conseillons le plafond le plus adapté à votre usage, à vos contraintes et à votre budget.', 'Demander conseil')),
+        normes=['faux-plafonds'],
+        cas=lambda p: cas_projet('projet-ilots-tissu-tendu' if pf.proj_ok(pf.PROJ['projet-ilots-tissu-tendu']) else 'projet-hall-gorge-lumineuse',
+                                 'Références en faux plafonds',
+                                 'Îlots en <b>tissu tendu</b> suspendus, éclairage indirect et puits de lumière.' if pf.proj_ok(pf.PROJ['projet-ilots-tissu-tendu'])
+                                 else 'Faux plafond en plaques de plâtre aux <b>formes courbes</b>, éclairage et spots intégrés.',
+                                 lien_filtre('faux-plafonds', 'Toutes les réalisations en faux plafonds', 'Toutes les réalisations'),
+                                 lies=['projet-couronnes-lumineuses', 'projet-plafonds-metalliques', 'projet-hall-gorge-lumineuse']),
+        faq_titre='Questions fréquentes sur les faux plafonds',
+        faq=[('Quel faux plafond choisir pour réduire l\'écho ?', 'Un plafond absorbant : tissu tendu acoustique, plaques perforées ou dalles en fibre minérale. Nous le choisissons selon l\'usage de la pièce.', None),
+             ('Peut-on garder l\'accès aux réseaux techniques ?', 'Oui : les dalles en fibre minérale ou les bacs métalliques se démontent. En plaque de plâtre, nous prévoyons des trappes de visite.', None),
+             prix_q('Combien coûte un faux plafond ?', 'Le prix dépend de la surface, de la hauteur, du système choisi et des exigences acoustiques ou incendie. Après la visite, vous recevez une offre écrite.'),
+             ('Un faux plafond peut-il être coupe-feu ?', 'Oui. Plaques et systèmes certifiés existent en EI 30, EI 60 ou EI 90, selon les exigences du projet.', None)],
+        h2_demande='Demander un devis pour un faux plafond',
+        ld_desc='Faux plafonds acoustiques, phoniques et coupe-feu en tissu tendu, plaque de plâtre, fibre minérale, métal, avec isolant en fibre de bois, à Genève et en Suisse romande.',
+        service_type='Faux plafonds',
     )
 
 
-def peinture():
-    s = 'peinture'
+def cloisons():
+    s = 'cloisons'
+    hero = 'cloisons-modulaires-vitrees-01' if pf.photo_ok('cloisons-modulaires-vitrees-01') else 'chantier-ossature-puits-de-lumiere-02'
     return dict(
-        service=s, crumb='Peinture', title='Entreprise de peinture intérieure à Genève | Andy Construct',
-        desc='Peinture des murs et plafonds : appartements, fins de bail, cages d\'escalier, bureaux. Supports préparés, chantier protégé. Genève et Suisse romande.',
-        h1='Peinture intérieure : murs, plafonds, cages d\'escalier',
-        chapeau='Un appartement à rafraîchir, une fin de bail, une cage d\'escalier : nous <b>préparons les supports</b>, protégeons les lieux, puis peignons.',
-        btn='Demander un devis pour de la peinture',
-        # Aucune vraie photo de peinture à ce jour (shooting C40) : illustration signalée
-        hero=('ill', 'peinture-sejour-murs-blancs'),
-        faire_h2='Ce que nous peignons',
-        faire=[(None, 'Logements', 'Une pièce ou tout l\'appartement, habité ou vide. Trous et fissures rebouchés <b>avant</b> la peinture.',
-                img('ill', 'interieur-appartement-murs-blancs')),
-               (None, 'Fins de bail', T('C17', 'Remise en état entre deux locataires, prête pour l\'<b>état des lieux d\'entrée</b>.', ''),
-                img('ill', 'peinture-preparation-piece', fmt=None)),
-               (None, 'Cages d\'escalier', T('C20', 'Par étages, <b>passage libre</b> pour les habitants.', 'Par étages, dans les <b>parties communes</b>.'),
-                img('ill', 'peinture-rouleau-detail')),
-               (None, 'Bureaux et commerces', T('C19', '<b>Le soir ou le week-end</b>, pour ne pas fermer.', '<b>Zone par zone</b>, pour limiter la gêne.'),
-                img('ill', 'bureaux-plateau-vide'))],
-        pro='Professionnels : lot <b>CFC 285</b>, remises en état et parties communes, offres sur descriptif.',
-        savoir=[T('C06', 'La préparation figure <b>sur une ligne à part</b> de l\'offre : vous voyez ce que vous payez.',
-                  'La <b>préparation des supports</b> compte autant que la peinture.'),
-                'Une fissure revient si sa <b>cause</b> n\'est pas traitée : nous vous le disons à la visite.',
-                'Nous peignons <b>à l\'intérieur</b> seulement : pas de façades.'],
-        savoir_img=img('ill', 'peinture-rouleau-mur-blanc', SZ_FEAT),
-        # Mini-cas : la paire AA6 seulement si la prestation peinture est confirmée (C26) ; sinon masqué (règle v2)
-        cas=lambda p: cas_aa('aa6', 'Référence en peinture', 'Séjour : faux-plafond en périphérie et spots', 'Appartement',
-                             'Faux-plafond en périphérie avec spots, puis <b>peinture</b>.',
-                             '<a class="link-arrow" href="realisations.html#avant-apres">Tous les avant / après</a>', codes='C26') if definitif('C26') else None,
-        faq_titre='Questions fréquentes sur la peinture',
-        faq=[prix_q('Combien coûte la peinture d\'un appartement ?',
-                    'Le prix dépend de la surface des murs et des plafonds, de leur état, de la hauteur et des meubles à déplacer.'),
-             c.Q('C20', 'Peut-on rester chez soi pendant les travaux ?', 'Oui. Nous travaillons pièce par pièce, couvrons les meubles et gardons un passage libre.'),
-             c.Q('C17', 'Faut-il vider les pièces ?', 'Non. Retirez les objets fragiles et ce qui est accroché aux murs ; nous déplaçons et couvrons les meubles.',
-                 'Retirez au moins les objets fragiles et ce qui est accroché aux murs. Le reste se décide à la visite.'),
-             ('Peignez-vous aussi les façades ?', 'Non. Nous travaillons à l\'intérieur : murs, plafonds, cages d\'escalier et parties communes.', None)],
-        h2_demande='Demander un devis pour de la peinture',
-        ld_desc='Peinture intérieure des murs et plafonds : logements, fins de bail, cages d\'escalier et bureaux, à Genève et en Suisse romande.',
-        service_type='Peinture intérieure',
+        service=s, crumb='Cloisons', title='Cloisons et doublages à Genève : plâtre, vitrées, isothermes | Andy Construct',
+        desc='Cloisons en plaques de plâtre, mobiles, vitrées et aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes. Bureaux et bâtiments professionnels, Suisse romande.',
+        h1='Cloisons et doublages',
+        chapeau='Créer de nouveaux espaces, réorganiser des surfaces, améliorer les performances <b>thermiques et acoustiques</b> d\'un bâtiment.',
+        btn='Demander un devis pour des cloisons',
+        hero=('photo', hero),
+        apres_refs=intro('cl-intro', 'Des solutions adaptées à chaque projet', [
+            'Andy Construct conçoit et réalise des solutions de <b>cloisonnement</b> et de <b>doublage</b> adaptées aux exigences de chaque projet.',
+            'Qu\'il s\'agisse de créer de nouveaux espaces, de réorganiser des surfaces existantes ou d\'améliorer les performances d\'un bâtiment, nous proposons des solutions techniques et esthétiques adaptées aux <b>environnements professionnels</b>.']),
+        blocs=lambda p: types(p, [
+            ('plaques-de-platre', 'Cloisons en plaques de plâtre', 'Pour aménager et redistribuer les espaces intérieurs : des séparations fonctionnelles, en version acoustique, thermique ou coupe-feu selon les exigences du projet.',
+             None, sch.cloison_platre(), False),
+            ('mobiles', 'Cloisons mobiles et amovibles', 'Des solutions flexibles pour faire évoluer les espaces : moduler les volumes, créer des zones de travail indépendantes ou transformer rapidement la configuration des locaux.',
+             None, sch.cloison_mobile(), False),
+            ('vitrees', 'Parois vitrées', 'Luminosité, transparence et élégance : elles délimitent les bureaux et les salles de réunion tout en préservant une sensation d\'ouverture.',
+             'cloisons-modulaires-vitrees-02', sch.paroi_vitree(), False),
+            ('aluminium', 'Cloisons aluminium', 'Des systèmes pleins, vitrés ou mixtes. Leur modularité et leur finition soignée répondent aux exigences des bureaux, espaces commerciaux et bâtiments professionnels.',
+             None, sch.cloison_alu(), False),
+            ('doublages', 'Doublages thermiques et phoniques', 'Adaptés au confort du bâtiment : ils limitent les déperditions thermiques, améliorent le confort acoustique et contribuent à la performance globale des espaces.',
+             None, sch.doublage(), False)],
+            'cl-types', 'Nos solutions de cloisonnement', 'Créer, moduler, isoler', '',
+            ('Quelle solution pour votre projet ?', 'Nous étudions vos contraintes et vous orientons vers le système le plus adapté.', 'Nous contacter'))
+        + bande('sandwich-titre', 'Notre spécialité', 'Panneaux sandwich isothermes', [
+            'Andy Construct développe un savoir-faire particulier dans la mise en œuvre de <b>panneaux sandwich isothermes</b>.',
+            'Ces panneaux sont une solution performante pour les parois et les plafonds qui demandent une isolation thermique et une finition adaptée aux contraintes des environnements professionnels.',
+            'Nous accompagnons chaque projet dans le choix des solutions et leur mise en œuvre, en tenant compte des contraintes techniques, des dimensions et de l\'utilisation des locaux.'],
+            sch.sandwich(), puces=['Locaux techniques', 'Espaces de stockage', 'Zones de préparation', 'Environnements à température maîtrisée'],
+            ancre='panneaux-sandwich'),
+        normes=['cloisons'],
+        cas=lambda p: cas_projet('projet-cloisons-vitrees', 'Référence en cloisons', 'Cloisons <b>modulaires vitrées</b> : des bureaux séparés qui gardent la lumière.',
+                                 lien_filtre('cloisons', 'Toutes les réalisations en cloisons', 'Toutes les réalisations'), lies=[])
+                        if pf.proj_ok(pf.PROJ['projet-cloisons-vitrees']) else
+                        cas_aa('aa7', 'Référence en cloisons', 'Paroi cintrée : de l\'ossature au couloir fini', '',
+                               'Ossature métallique cintrée, puis <b>plaques et finitions</b>.', lien_filtre('cloisons', 'Toutes les réalisations', 'Toutes les réalisations')),
+        faq_titre='Questions fréquentes sur les cloisons',
+        faq=[('Une cloison en plaques de plâtre isole-t-elle du bruit ?', 'Une cloison simple atténue les voix. Avec un isolant et des plaques doublées, elle isole nettement mieux. Voyez <a href="isolation-acoustique.html">l\'acoustique</a>.', None),
+             ('Peut-on déplacer une cloison mobile soi-même ?', 'Les cloisons mobiles se manœuvrent sans outils. Les cloisons amovibles se démontent et se remontent ailleurs : nous nous en chargeons.', None),
+             ('Les panneaux sandwich conviennent-ils aux locaux alimentaires ?', 'Oui, avec des panneaux certifiés adaptés aux exigences d\'hygiène et d\'incendie du local, choisis avec vous.', None),
+             prix_q('Combien coûte une cloison ?', 'Le prix dépend du système, de la surface, de la hauteur, des portes et vitrages, et des exigences acoustiques ou incendie.')],
+        h2_demande='Demander un devis pour des cloisons',
+        ld_desc='Cloisons en plaques de plâtre, mobiles, vitrées et aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes, à Genève et en Suisse romande.',
+        service_type='Cloisons et doublages', alternate='Panneaux sandwich isothermes',
+    )
+
+
+def platrerie_peinture():
+    s = 'platrerie-peinture'
+    return dict(
+        service=s, crumb='Plâtrerie & peinture', title='Plâtrerie et peinture intérieure à Genève | Andy Construct',
+        desc='Plâtrerie, enduits et lissages, peinture intérieure et conseil couleur : du support brut à la dernière couche. Construction, rénovation, transformation. Suisse romande.',
+        h1='Plâtrerie et peinture',
+        chapeau='Du support brut à la dernière couche de peinture : des <b>surfaces impeccables</b> pour vos projets neufs et vos rénovations.',
+        btn='Demander un devis pour de la plâtrerie ou de la peinture',
+        hero=('photo', 'habillage-placo-niches-arrondies-01'),
+        apres_refs=intro('pp-intro', 'Le savoir-faire qui fait la différence', [
+            'Nous réalisons des travaux de plâtrerie et de peinture dans le cadre de projets de <b>construction</b>, de <b>rénovation</b> et de <b>transformation</b> des espaces professionnels.',
+            'Ce sont les finitions qui donnent à un espace son caractère et révèlent la qualité de tout le travail réalisé en amont.']),
+        blocs=lambda p: types(p, [
+            ('platrerie', 'Plâtrerie', 'Pose de plaques de plâtre, traitement des joints et des angles, réparation des murs et plafonds. Des supports droits et sains, prêts à recevoir la finition.',
+             None, sch.platrerie(), False),
+            ('enduits', 'Enduits et lissages', 'Ils effacent les défauts et donnent une surface parfaitement plane : l\'étape clé pour une peinture sans imperfections, même en lumière rasante.',
+             None, sch.enduit(), False),
+            ('peinture', 'Peinture intérieure', 'Murs, plafonds, portes et boiseries : des peintures de qualité, adaptées à l\'usage de chaque pièce, pour un rendu homogène et durable.',
+             None, sch.peinture(), False),
+            ('finitions', 'Finitions et conseil couleur', 'Mat, satiné ou brillant : nous vous conseillons sur les teintes et les finitions selon la lumière, l\'usage et l\'entretien souhaité.',
+             None, sch.finitions(), False)],
+            'pp-types', 'Plâtrerie et peinture', 'De la préparation à la dernière couche', '',
+            ('Un projet de rénovation ?', 'Nous venons voir les supports et vous proposons la préparation et la finition adaptées.', 'Demander un devis'))
+        + '''    <section class="section section--tight" aria-labelledby="prepa-titre">
+      <div class="container prepa">
+        <h2 id="prepa-titre">La préparation fait le résultat</h2>
+        <ol class="prepa__etapes"><li>Analyse des supports</li><li>Choix des techniques adaptées</li><li>Préparation minutieuse</li><li>Exécution dans les règles de l'art</li></ol>
+        <p class="prepa__but">Notre objectif : des surfaces <b>régulières</b>, des finitions <b>homogènes</b> et un résultat <b>durable</b>.</p>
+      </div>
+    </section>
+'''
+        + bande('espaces-titre', 'Création d\'espaces', 'Redessinez vos espaces en plaques de plâtre', [
+            'Un bureau supplémentaire, une salle de réunion, une chambre ou un rangement : grâce aux cloisons en plaques de plâtre, nous créons de nouveaux espaces <b>rapidement, proprement</b> et avec la finition de votre choix. Elles peuvent aussi être phoniques, thermiques ou coupe-feu.',
+            'Besoin de plus de lumière ou de modularité ? Découvrez aussi nos cloisons mobiles, parois vitrées, cloisons aluminium et panneaux sandwich isothermes.'],
+            sch.plan_espaces(), action='<a class="btn btn--light" href="cloisons.html">Voir nos solutions de cloisons</a>'),
+        normes=['platrerie-peinture'],
+        cas=lambda p: cas_aa('aa1', 'Référence en plâtrerie', 'Caisson en plaques de plâtre sous une verrière', '',
+                             'Caisson ajusté en plaques de plâtre, joints traités, <b>prêt à peindre</b>.',
+                             lien_filtre('platrerie-peinture', 'Toutes les réalisations', 'Toutes les réalisations')),
+        faq_titre='Questions fréquentes sur la plâtrerie et la peinture',
+        faq=[('Pourquoi la préparation est-elle si importante ?', 'Une peinture révèle chaque défaut du support. Enduits et ponçage donnent une surface plane : le rendu reste net, même en lumière rasante.', None),
+             ('Quelle finition choisir : mat, satiné ou brillant ?', 'Le mat cache les défauts, le satiné se lave facilement, le brillant résiste le mieux. Nous vous conseillons selon la pièce.', None),
+             prix_q('Combien coûtent des travaux de peinture ?', 'Le prix dépend de la surface des murs et des plafonds, de leur état, de la hauteur et des finitions choisies.'),
+             ('Peignez-vous aussi les façades ?', 'Non. Nous travaillons à l\'intérieur : murs, plafonds, portes, boiseries et parties communes.', None)],
+        h2_demande='Demander un devis pour de la plâtrerie ou de la peinture',
+        ld_desc='Plâtrerie, enduits et lissages, peinture intérieure, finitions et conseil couleur, à Genève et en Suisse romande.',
+        service_type='Plâtrerie et peinture intérieure',
     )
 
 
 def acoustique():
     s = 'isolation-acoustique'
-    reelle = pf.photo_ok('panneaux-acoustiques-muraux-01')          # C18 en production
+    reelle = pf.photo_ok('panneaux-acoustiques-muraux-01')
     salle = pf.photo_ok('cadre-acoustique-salle-de-reunion-01')
     guide = doc('guide-bruit')
     specifique = ''
@@ -202,104 +385,52 @@ def acoustique():
                             '<p><a class="btn" href="%s" %s>Télécharger le guide (%s)</a></p>%s'
                             % (guide[2], guide[0], suivi_doc('guide-bruit'), guide[1], c.form_guide_poste('guide-reduire-le-bruit')),
                             '<span class="couv">%s</span>' % couv, inverse=True, cls='feat--doc')
-    return dict(
-        service=s, crumb='Isolation acoustique', title='Isolation phonique et acoustique à Genève | Andy Construct',
-        desc='Vous entendez vos voisins ? Doublages, faux-plafonds et cloisons acoustiques, correction de l\'écho dans les salles. Genève et Suisse romande.',
-        h1='Isolation phonique et acoustique : moins de bruit chez vous',
-        chapeau='Voisins, télévision, pas à l\'étage, voix en réunion : nous isolons <b>murs et plafonds</b> pour que le bruit passe moins.',
-        btn='Demander un devis pour une isolation acoustique',
-        hero=('photo', 'panneaux-acoustiques-muraux-01') if reelle else ('ill', 'acoustique-couloir-panneaux-plafond'),
-        avant='''    <section class="section section--tight duo-mots" aria-labelledby="isoler-titre">
+    duo = '''    <section class="section section--tight duo-mots" aria-labelledby="isoler-titre">
       <div class="container">
         <h2 id="isoler-titre" class="visually-hidden">Isoler ou corriger : deux problèmes différents</h2>
         <div class="duo-mots__grid">
-          <div><p class="duo-mots__mot">Isoler</p><p>Empêcher le bruit de <b>passer d'un local à l'autre</b> : voisin, étage, pièce d'à côté.</p></div>
-          <div><p class="duo-mots__mot">Corriger</p><p>Réduire <b>l'écho dans la pièce</b> : salle de réunion, réfectoire, salle communale.</p></div>
+          <div><p class="duo-mots__mot">Corriger</p><p>Réduire <b>l'écho dans la pièce</b> : salle de réunion, restaurant, réfectoire, salle communale.</p></div>
+          <div><p class="duo-mots__mot">Isoler</p><p>Empêcher le bruit de <b>passer d'un local à l'autre</b> : étage, bureau voisin, pièce d'à côté.</p></div>
         </div>
         <p class="duo-mots__pied">À la visite, nous commençons par identifier ce que vous entendez.</p>
       </div>
     </section>
-''',
-        faire_h2='Ce que nous posons contre le bruit',
-        faire=[(None, 'Doublage acoustique', 'Ossature indépendante, laine minérale et plaques : contre les <b>voix et la télévision</b> du voisin.',
-                img('ill', 'placo-lissage-enduit-mur')),
-               (None, 'Faux-plafond acoustique', 'Suspendu par des attaches qui <b>amortissent les vibrations</b>, avec un isolant : moins de voix venant d\'en haut.',
-                img('ill', 'isolation-ossature-metallique-plafond')),
-               (None, 'Cloison acoustique', 'Deux ossatures séparées et des plaques doublées, pour une chambre, un bureau ou un cabinet <b>confidentiel</b>.',
-                img('ill', 'chantier-cloisons-plaques-caissons')),
-               ('correction', 'Correction des salles', T('C18', 'Plafonds perforés et panneaux qui <b>absorbent l\'écho</b> : salles de réunion, salles communales, classes.', ''),
-                img('ill', 'acoustique-panneaux-muraux'))],
-        pro=T('C14', 'Professionnels : lots <b>CFC 271 et 283</b>.', 'Professionnels : lot <b>CFC 271</b>.'),
-        savoir=['Les <b>bruits de pas</b> se traitent le mieux à la source, dans le sol du voisin.',
-                'Le bruit passe aussi <b>par les côtés</b> : prises, gaines, portes, murs voisins.',
-                'Personne ne peut promettre un résultat <b>en décibels</b> sans mesure.' + T('C15', ' Une exigence SIA 181 est fixée par le projet.', '')],
-        savoir_img=img('ill', 'acoustique-couloir-panneaux-plafond' if reelle else 'plafond-retombees-courbes-bureaux', SZ_FEAT),
+'''
+    return dict(
+        service=s, crumb='Acoustique', title='Isolation acoustique et phonique à Genève | Andy Construct',
+        desc='Notre spécialité : correction acoustique et isolation phonique. Îlots et baffles acoustiques, tissu tendu, cadres, plafonds et cloisons phoniques. Suisse romande.',
+        h1='Isolation acoustique et phonique',
+        chapeau='Notre spécialité : <b>moins d\'écho</b> dans vos salles, <b>moins de bruit</b> entre vos espaces.',
+        btn='Demander un devis pour une isolation acoustique',
+        hero=('photo', 'panneaux-acoustiques-muraux-01') if reelle else ('ill', 'acoustique-couloir-panneaux-plafond'),
+        apres_refs=atouts(BENEFICES, 'ac-atouts', 'Ce que nous traitons') + duo,
+        blocs=lambda p: types(p, [
+            ('ilots', 'Îlots acoustiques', 'Suspendus au plafond ou fixés au mur, ils absorbent le son là où il rebondit, sans toucher au plafond existant.',
+             'plafond-tendu-ilots-lumineux-03', sch.tissu_tendu(), False),
+            ('tissu-tendu', 'Tissu tendu acoustique', 'Une toile lisse et sur mesure qui absorbe le son tout en restant élégante : bureaux, restaurants, salles de réunion.',
+             'plafond-tendu-mat-01', sch.tissu_tendu(), True),
+            ('correction', 'Cadres et baffles acoustiques', 'Des panneaux muraux, imprimés ou unis, et des baffles verticaux qui réduisent la réverbération des grandes salles.',
+             'cadre-acoustique-salle-de-reunion-01' if salle else None, sch.metallique(), False),
+            ('plafonds-cloisons', 'Plafonds et cloisons phoniques', 'Faux plafonds sur suspentes antivibratiles, cloisons à ossatures séparées et plaques doublées : le bruit ne passe plus.',
+             None, sch.cloison_platre(), False),
+            ('doublages', 'Doublages acoustiques', 'Ossature indépendante, laine minérale et plaques : contre les voix et les bruits du local voisin.',
+             None, sch.doublage(), False)],
+            'ac-types', 'Nos solutions acoustiques', 'Corriger l\'écho, isoler du bruit', '',
+            ('Un problème de bruit ?', 'Nous venons écouter votre espace et vous proposons la solution la plus efficace pour votre usage et votre budget.', 'Demander conseil')),
         specifique=specifique,
+        normes=['isolation-acoustique'],
         cas=lambda p: cas_projet('projet-salle-de-reunion', 'Référence en acoustique',
                                  'Un grand <b>panneau mural absorbant</b> réduit l\'écho de la salle.',
-                                 lien_filtre('isolation-acoustique', 'Toutes les réalisations en acoustique', 'Toutes les réalisations')) if salle else None,
-        faq_titre='Questions fréquentes sur le bruit',
-        faq=[('Comment réduire le bruit des voisins du dessus ?', 'Pour les voix, un faux-plafond acoustique sur attaches antivibratiles. Pour les pas, il faut agir sur le sol du voisin.', None),
+                                 lien_filtre('isolation-acoustique', 'Toutes les réalisations en acoustique', 'Toutes les réalisations'),
+                                 lies=['projet-ilots-tissu-tendu', 'projet-correction-acoustique']) if salle else None,
+        faq_titre='Questions fréquentes sur l\'acoustique',
+        faq=[('Quelle différence entre correction acoustique et isolation phonique ?', 'La correction réduit l\'écho dans une pièce. L\'isolation empêche le bruit de passer d\'un local à l\'autre. Les deux se traitent différemment.', None),
              ('Les panneaux en mousse isolent-ils du bruit ?', 'Non. Ils réduisent un peu l\'écho, sans empêcher le bruit de passer.', None),
              prix_q('Combien coûte une isolation phonique ?', 'Le prix dépend de la surface, du type de travaux et des points faibles à traiter.'),
-             c.Q('C18', 'Combien de place perd-on ?', 'Un doublage acoustique prend en général 7 à 10 cm. Nous mesurons avant de proposer.',
-                 'Quelques centimètres. Nous mesurons avant de proposer.')],
+             ('Peut-on promettre un résultat en décibels ?', 'Pas sans mesure. Les exigences (SIA 181) sont fixées par le projet ; nous choisissons les systèmes en conséquence.', None)],
         h2_demande='Demander un devis pour une isolation acoustique',
-        ld_desc='Isolation phonique des murs et plafonds (doublages, faux-plafonds et cloisons acoustiques) et correction de l\'écho des salles, à Genève et en Suisse romande.',
-        service_type='Isolation acoustique',
-    )
-
-
-def isolantes():
-    s = 'cloisons-isothermes'
-    sing = T('C16', 'une cloison isolante', 'une cloison isotherme')
-    return dict(
-        service=s, crumb=svc_nom(s), title=V('C16', 'Cloisons isolantes, cave et garage à Genève | Andy Construct', 'Cloisons isothermes, cave et garage à Genève | Andy Construct'),
-        desc='Cloisons isolantes (isothermes) entre pièces chauffées et caves, garages ou combles, en plaques de plâtre. Genève et Suisse romande.',
-        h1='Cloisons isothermes et isolantes : caves, garages et combles',
-        chapeau='Une chambre au-dessus du garage, un bureau contre une cave, des combles : %s garde la chaleur <b>côté chauffé</b>.'
-                % T('C16', 'la cloison isolante', 'la cloison isotherme'),
-        precision=T('C16', 'Nous ne posons pas de chambres froides.', ''),
-        btn='Demander un devis pour ' + sing,
-        hero=('photo', 'chantier-ossature-puits-de-lumiere-02'),
-        faire_h2='Ce que nous posons pour garder la chaleur',
-        faire=[(None, T('C16', 'Cloison isolante', 'Cloison isotherme'), 'Entre une pièce chauffée et un garage, une cave ou un atelier : ossature, <b>isolant thermique</b>, plaques.',
-                img('ill', 'isolation-ossature-metallique-plafond')),
-               (None, 'Doublage d\'un mur froid', 'Un mur contre la terre ou l\'extérieur reste froid ? Un doublage isolant, <b>côté pièce</b>, améliore le confort.',
-                img('ill', 'placo-lissage-enduit-mur')),
-               (None, 'Plafond de cave ou de garage', 'Le sol du dessus est froid ? Un isolant <b>sous la dalle</b>, fermé par des plaques si le local le demande.',
-                img('photo', 'chantier-suspentes-ossature-01')),
-               (None, 'Combles et rampants', T('C16', 'Isolant entre ou sous les chevrons, puis plaques : les combles deviennent une <b>pièce habitable</b>.', ''),
-                img('ill', 'combles-amenages-fenetres-de-toit'))],
-        pro='Professionnels : caves, parkings et locaux techniques d\'immeubles, sur plans.',
-        savoir=['Sur un mur enterré, on vérifie <b>l\'humidité</b> d\'abord : un isolant sur un mur mouillé crée des problèmes.',
-                'Le <b>pare-vapeur</b> se pose du côté chauffé ; mal placé, il fait condenser l\'humidité.',
-                'Entre garage et logement, des exigences de <b>protection incendie</b> peuvent s\'appliquer.' + T('C15', ' Nous choisissons les plaques en conséquence.', '')],
-        savoir_img=img('ill', 'ambiance-plans-blancs-lumiere', SZ_FEAT),
-        specifique='''    <section class="section section--tight" aria-labelledby="subv-titre">
-      <div class="container">
-        <div class="encadre encadre--large">
-          <h2 id="subv-titre">Des subventions sont-elles possibles ?</h2>
-          <p>Certaines isolations thermiques sont subventionnables : la demande se dépose <b>avant</b> les travaux, auprès du service de l'énergie du canton%s</p>
-        </div>
-      </div>
-    </section>
-''' % T('C43', ' ; nous fournissons les informations techniques.', '.'),
-        cas=lambda p: dict(cas_aa('aa3', 'Référence en isolation', 'Combles : isolation et rampant fini sous une fenêtre de toit', '',
-                                  'Isolation des combles et <b>rampant fini</b> autour d\'une fenêtre de toit.',
-                                  lien_filtre('cloisons-isothermes', 'Toutes les réalisations', 'Toutes les réalisations'), codes='C26'),
-                           lies=[]),   # la grande salle (puits de lumière) est déjà la photo de l'en-tête
-        faq_titre='Questions fréquentes sur l\'isolation intérieure',
-        faq=[c.Q('C16', 'Qu\'est-ce qu\'une cloison isotherme ?',
-                 'Une cloison isolante, entre une pièce chauffée et un local qui ne l\'est pas. Ce n\'est pas une chambre froide.',
-                 'Une cloison isolante, entre une pièce chauffée et un local qui ne l\'est pas.'),
-             c.Q('C16', 'Faut-il une autorisation pour aménager des combles ?', 'Parfois une autorisation de construire, selon le canton et la commune : renseignez-vous avant.'),
-             ('Quelle épaisseur d\'isolant faut-il ?', 'Elle dépend des températures et des exigences du canton ; nous la proposons dans l\'offre.', None),
-             prix_q('Combien coûte une cloison isolante ?', 'Le prix dépend de la surface, de l\'épaisseur d\'isolant, des portes et de la finition.')],
-        h2_demande='Demander un devis pour ' + sing,
-        ld_desc='Cloisons et doublages isolants (isothermes) entre pièces chauffées et caves, garages ou combles, en plaques de plâtre, à Genève et en Suisse romande.',
-        service_type=V('C16', 'Cloisons isolantes et isolation intérieure', 'Cloisons isothermes et isolation intérieure'),
-        alternate=V('C16', 'Cloisons isothermes', 'Cloisons isolantes'),
+        ld_desc='Correction acoustique et isolation phonique : îlots et baffles acoustiques, tissu tendu, cadres, plafonds et cloisons phoniques, doublages, à Genève et en Suisse romande.',
+        service_type='Isolation acoustique et phonique',
     )
 
 
@@ -345,17 +476,10 @@ def rendre(d):
     corps = hero_page(d['crumb'], d['h1'], d['chapeau'], actions=actions, media=hero_html, extra=precision,
                       badges=c.badges(['|B11|B4', '|B6|B3', 'B1'], cls='badges--3'))
     corps += c.bande_refs(service=s)
-    corps += d.get('avant', '')
-    corps += '''    <section class="section" aria-labelledby="faire-titre">
-      <div class="container">
-        <div class="section-head"><h2 id="faire-titre">%s</h2></div>
-        %s
-        %s
-      </div>
-    </section>
-''' % (d['faire_h2'], c.damier(d['faire']), pro_ligne(d['pro']))
-    corps += c.feat('savoir-titre', 'Ce qu\'il faut savoir avant de commencer', c.points(d['savoir']), d['savoir_img'], cls='section--mist')
+    corps += d.get('apres_refs', '')
+    corps += d['blocs'](p)
     corps += d.get('specifique', '')
+    corps += normes_table(seulement=d['normes'], titre_id='normes-titre', h2='Normes et prescriptions', cls='normes--page section--mist')
     corps += cas(p, d['cas'](p))
     corps += methode_courte()
     corps += '''    <section class="section faq" aria-labelledby="faq-titre">
@@ -370,5 +494,5 @@ def rendre(d):
 
 
 def build():
-    for f in (placo, peinture, acoustique, isolantes):
+    for f in (acoustique, faux_plafonds, cloisons, platrerie_peinture):
         rendre(f())

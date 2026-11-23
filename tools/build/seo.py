@@ -39,8 +39,7 @@ def llms():
     hotel = V('C22', 'Everness Hotel & Resort, Chavannes-de-Bogis', 'hôtel à Chavannes-de-Bogis')
     methode = V('C06 C07', 'visite sur place, offre écrite détaillée poste par poste en CHF, chantier protégé et nettoyé, réception des finitions avec le client.',
                 'visite sur place, offre écrite, chantier protégé, réception des finitions avec le client.')
-    ne_fait_pas = V('C16', 'façades, carrelage, chambres froides', 'façades, carrelage')
-    isol = V('C16', 'les cloisons isolantes, aussi appelées cloisons isothermes', 'les cloisons isothermes')
+    ne_fait_pas = 'façades, carrelage'
     lignes_docs = []
     for cle, titre in (('references', 'Dossier de références (PDF)'), ('guide-bruit', 'Guide : réduire le bruit chez soi (PDF)'),
                        ('checklist', 'Liste de contrôle : travaux en immeuble habité (PDF)')):
@@ -51,7 +50,7 @@ def llms():
     heures = V('C03', '- Horaires : du lundi au vendredi, 7 h – 18 h\n', '')
     txt = '''# Andy Construct
 
-> Andy Construct est une entreprise de plâtrerie, de peinture et d'isolation intérieure basée à Carouge (Genève), active depuis 2007. Elle pose des cloisons, des doublages et des faux-plafonds en plaques de plâtre (placo), réalise la peinture intérieure, l'isolation acoustique (isolation phonique et correction de l'écho) et %(isol)s (isolation entre pièces chauffées et caves, garages ou combles). Elle travaille pour des particuliers, des régies et gérances, des architectes, des communes, des institutions et des entreprises, dans toute la Suisse romande.
+> Andy Construct est une entreprise d'aménagement intérieur (second œuvre) basée à Carouge (Genève), active depuis 2007. Sa spécialité est l'isolation acoustique et phonique (correction de l'écho, îlots et baffles acoustiques, tissu tendu, cloisons et plafonds phoniques). Elle pose des faux plafonds (tissu tendu, plaque de plâtre, fibre minérale, métal, isolant en fibre de bois), des cloisons (plaques de plâtre, cloisons mobiles, parois vitrées, cloisons aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes) et réalise la plâtrerie et la peinture intérieure. Elle travaille pour des entreprises générales, des architectes, des régies, des communes, des institutions et des particuliers, dans toute la Suisse romande.
 
 Informations clés :
 
@@ -68,10 +67,10 @@ Informations clés :
 
 Prestations (4) :
 
-- Placo : cloisons, doublages, faux-plafonds, caissons en plaques de plâtre
-- Peinture intérieure : logements, fins de bail, cages d'escalier, bureaux
-- Isolation acoustique : doublages et faux-plafonds acoustiques, cloisons acoustiques, correction acoustique des salles
-- %(nom_isol)s : cloisons et doublages isolants, isolation de plafonds de caves et de garages
+- Isolation acoustique et phonique (spécialité) : correction acoustique, isolation phonique, îlots et baffles, tissu tendu, cloisons et plafonds phoniques
+- Faux plafonds : tissu tendu, plaque de plâtre, fibre minérale, métal, isolant en fibre de bois ; versions phoniques et coupe-feu
+- Cloisons et doublages : plaques de plâtre, cloisons mobiles et amovibles, parois vitrées, cloisons aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes
+- Plâtrerie et peinture : plâtrerie, enduits et lissages, peinture intérieure, finitions et conseil couleur
 
 Méthode : %(methode)s
 
@@ -80,10 +79,10 @@ Maîtres d'ouvrage qui ont confié des travaux à l'entreprise (liste publiée p
 ## Pages principales
 
 - [Accueil](%(p)s): présentation, prestations, méthode, questions fréquentes
-- [Placo](%(p)splaco.html): cloisons, doublages, faux-plafonds et caissons en plaques de plâtre ; prix et délais ; accord de la régie ou de la PPE
-- [Peinture](%(p)speinture.html): peinture intérieure des logements, fins de bail, cages d'escalier et bureaux
-- [Isolation acoustique](%(p)sisolation-acoustique.html): bruit des voisins, différence entre isoler et corriger, doublage et faux-plafond acoustiques, correction de l'écho
-- [%(nom_isol)s](%(p)scloisons-isothermes.html): cloisons isothermes, isolation de caves, garages et combles, subventions
+- [Acoustique](%(p)sisolation-acoustique.html): isolation acoustique et phonique, correction de l'écho, îlots, baffles et tissu tendu acoustiques
+- [Faux plafonds](%(p)sfaux-plafonds.html): tissu tendu, plaque de plâtre, fibre de bois, fibre minérale, métal ; correction acoustique, isolation phonique, coupe-feu
+- [Cloisons](%(p)scloisons.html): cloisons en plaques de plâtre, mobiles, vitrées, aluminium, doublages, panneaux sandwich isothermes
+- [Plâtrerie et peinture](%(p)splatrerie-peinture.html): plâtrerie, enduits et lissages, peinture intérieure, finitions
 - [Réalisations](%(p)srealisations.html): projets photographiés, avant / après
 - [Professionnels](%(p)sprofessionnels.html): régies, architectes, communes ; méthode en immeuble habité ; lots CFC ; documents ; liste complète des références
 - [L'entreprise](%(p)sentreprise.html): histoire depuis 2007, méthode, engagements, identité vérifiable
@@ -93,8 +92,8 @@ Maîtres d'ouvrage qui ont confié des travaux à l'entreprise (liste publiée p
 
 - [Mentions légales](%(p)smentions-legales.html)
 - [Protection des données](%(p)sconfidentialite.html)
-''' % dict(isol=isol, mob=V('C30', 'sur les chantiers', 'mobile'), mail=mail(), heures=heures, ne_fait_pas=ne_fait_pas,
-           nom_isol=V('C16', 'Cloisons isolantes (isothermes)', 'Cloisons isothermes'), methode=methode, omc=omc, hotel=hotel,
+''' % dict(mob=V('C30', 'sur les chantiers', 'mobile'), mail=mail(), heures=heures, ne_fait_pas=ne_fait_pas,
+           methode=methode, omc=omc, hotel=hotel,
            p=PROD, docs=docs)
     ecrire('llms.txt', txt)
 
@@ -106,21 +105,29 @@ def csp_hash():
 # Anciennes adresses (site Joomla, architecture §1.4) : avec ou sans « index.php/ »
 REDIRECTIONS = [
     (r'presentation', 'entreprise.html'),
-    (r'produits/plafonds/plafonds-en-(placoplatre|tissu-tendu-a-froid|fibre-de-bois|fibre-minerale|bac-metallique)', 'placo.html#faux-plafonds'),
+    (r'produits/plafonds/plafonds-en-placoplatre', 'faux-plafonds.html#plaque-de-platre'),
+    (r'produits/plafonds/plafonds-en-tissu-tendu-a-froid', 'faux-plafonds.html#tissu-tendu'),
+    (r'produits/plafonds/plafonds-en-fibre-de-bois', 'faux-plafonds.html#fibre-de-bois'),
+    (r'produits/plafonds/plafonds-en-fibre-minerale', 'faux-plafonds.html#fibre-minerale'),
+    (r'produits/plafonds/plafonds-en-bac-metallique', 'faux-plafonds.html#metallique'),
     (r'produits/plafonds/plafonds-phoniques-et-acoustiques', 'isolation-acoustique.html'),
     (r'produits/cadres-acoustiques', 'isolation-acoustique.html#correction'),
-    (r'produits/cloisons/cloisons-(legeres-en-placoplatre|mobiles-en-aluminium)', 'placo.html#cloisons'),
-    (r'produits/cloisons/isolation-thermique-ou-phonique', 'cloisons-isothermes.html'),
+    (r'produits/cloisons/cloisons-legeres-en-placoplatre', 'cloisons.html#plaques-de-platre'),
+    (r'produits/cloisons/cloisons-mobiles-en-aluminium', 'cloisons.html#aluminium'),
+    (r'produits/cloisons/isolation-thermique-ou-phonique', 'cloisons.html#doublages'),
     (r'realisations/photos-travaux-2014-2016', 'realisations.html'),
     (r'realisations/photos-travaux-avant-apres', 'realisations.html#avant-apres'),
     (r'realisations/references', 'professionnels.html#references'),
     (r'contact', 'contact.html'),
 ]
+# Pages de la v3 renommées en v5 (menu du document client)
+RENOMMEES = [('placo', 'cloisons.html'), ('peinture', 'platrerie-peinture.html'), ('cloisons-isothermes', 'cloisons.html#panneaux-sandwich')]
 
 
 def htaccess():
     base = 'https://www.andyconstruct.ch/' if ctx.prod() else '/'
     regles = ''.join('RewriteRule ^(index\\.php/)?%s/?$ %s%s [R=301,L,NE]\n' % (motif, base, cible) for motif, cible in REDIRECTIONS)
+    regles += ''.join('RewriteRule ^%s\\.html$ %s%s [R=301,L,NE]\n' % (ancien, base, cible) for ancien, cible in RENOMMEES)
     umami = ctx.CONFIG.get('umami_src', '') if ctx.CONFIG.get('umami_id') else ''
     origine_umami = ''
     if umami:

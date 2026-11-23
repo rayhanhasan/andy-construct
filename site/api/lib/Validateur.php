@@ -33,8 +33,9 @@ final class Validateur
     ];
 
     /**
-     * Aucune case de consentement n'est exigée (décision D2 : mention d'information
-     * sous le bouton, nLPD art. 19). Un champ « accord » envoyé est ignoré.
+     * La case « J'accepte que mes données soient utilisées pour traiter ma demande »
+     * (v5, demande du client) est exigée par le formulaire du site ; l'API ne la rend pas
+     * obligatoire (saisie interne, n8n, anciens formulaires). Un champ « accord » est ignoré.
      *
      * @param array<string, mixed> $guidesActifs slug => configuration (guides envoyables par la poste)
      */

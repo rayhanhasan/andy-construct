@@ -59,22 +59,26 @@ def nap(cls='nap'):
                ('<br>' + h) if h else ''))
 
 
-# ---------------------------------------------------------------- services
+# ---------------------------------------------------------------- services (v5 : document « Contenu site web » du client)
 def nom_isolantes():
-    return V('C16', 'Cloisons isolantes', 'Cloisons isothermes')
+    return 'Panneaux sandwich isothermes'
 
 
-SERVICES = ['placo', 'peinture', 'isolation-acoustique', 'cloisons-isothermes']
+# Ordre du menu : la spécialité (acoustique) d'abord.
+SERVICES = ['isolation-acoustique', 'faux-plafonds', 'cloisons', 'platrerie-peinture']
+
+NOMS = {'isolation-acoustique': 'Acoustique', 'faux-plafonds': 'Faux plafonds', 'cloisons': 'Cloisons',
+        'platrerie-peinture': 'Plâtrerie & peinture'}
+NOMS_LONGS = {'isolation-acoustique': 'Isolation acoustique et phonique', 'faux-plafonds': 'Faux plafonds',
+              'cloisons': 'Cloisons et doublages', 'platrerie-peinture': 'Plâtrerie et peinture'}
 
 
-def svc_nom(s, html=True):
-    if s == 'cloisons-isothermes':
-        return T('C16', 'Cloisons isolantes', 'Cloisons isothermes') if html else nom_isolantes()
-    return {'placo': 'Placo', 'peinture': 'Peinture', 'isolation-acoustique': 'Isolation acoustique'}[s]
+def svc_nom(s, html=True, long=False):
+    return (NOMS_LONGS if long else NOMS)[s]
 
 
-NAV_DESC = {'placo': 'Cloisons, doublages, faux-plafonds', 'peinture': 'Murs et plafonds, à l\'intérieur',
-            'isolation-acoustique': 'Contre le bruit et l\'écho', 'cloisons-isothermes': 'Caves, garages, combles'}
+NAV_DESC = {'isolation-acoustique': 'Correction acoustique, isolation phonique', 'faux-plafonds': 'Tissu tendu, plâtre, minéral, métal',
+            'cloisons': 'Plâtre, mobiles, vitrées, panneaux isothermes', 'platrerie-peinture': 'Enduits, lissages, peinture intérieure'}
 
 
 def svc_url(s):
@@ -248,8 +252,10 @@ def legende_html(codes):
 ICON_PHONE = ('<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75">'
               '<path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 6 6l1.5-2 4.5 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5a2 2 0 0 1 2-2z"/></svg>')
 
-NAV = [('realisations.html', 'Réalisations'), ('professionnels.html', 'Professionnels'),
-       ('entreprise.html', "L'entreprise"), ('contact.html', 'Contact')]
+# Menu du document client : L'entreprise · les quatre métiers · Réalisations (Professionnels et Contact : pied de page et menu mobile)
+NAV_AVANT = [('entreprise.html', "L'entreprise")]
+NAV = [('realisations.html', 'Réalisations')]
+NAV_MOBILE = [('professionnels.html', 'Professionnels'), ('contact.html', 'Contact')]
 
 
 def devis_href(p):
@@ -275,19 +281,15 @@ def devis_btn(p, emplacement, cls='btn', texte=None, service=None):
 
 def header(p):
     actif = p['fichier']
-    svc_items = ''.join(
-        '<li><a href="%s"%s><b>%s</b><span>%s</span></a></li>' % (
-            svc_url(s), ' aria-current="page"' if actif == svc_url(s) else '', svc_nom(s), NAV_DESC[s])
-        for s in SERVICES)
-    svc_actif = ' is-current' if actif in [svc_url(s) for s in SERVICES] else ''
-    items = ''.join('<li><a href="%s"%s>%s</a></li>' % (h, ' aria-current="page"' if h == actif else '', l) for h, l in NAV)
+    li = lambda h, l, cls='': '<li%s><a href="%s"%s>%s</a></li>' % ((' class="%s"' % cls) if cls else '', h, ' aria-current="page"' if h == actif else '', l)
+    items = (''.join(li(h, l) for h, l in NAV_AVANT) + ''.join(li(svc_url(s), svc_nom(s)) for s in SERVICES)
+             + ''.join(li(h, l) for h, l in NAV) + ''.join(li(h, l, 'nav-mobile') for h, l in NAV_MOBILE))
     # Une ligne sur la grille : logo (col. 1-2) · navigation (dès la col. 3) · téléphone et bouton (à droite). Pas d'horaires ici.
     return '''  <header class="site-header" data-suivi-zone="entete">
     <div class="container site-header__inner">
       <a class="brand" href="index.html"><img src="assets/img/brand/logo-andy-construct-352.png" width="352" height="128" alt="Andy Construct, page d'accueil"></a>
       <nav class="site-nav" id="menu-principal" aria-label="Navigation principale">
         <ul class="nav-list">
-          <li class="nav-svc"><details class="nav-drop%(svc_actif)s"><summary>Prestations</summary><ul class="nav-drop__panel">%(svc_items)s</ul></details></li>
           %(items)s
           <li class="nav-extra"><a class="btn btn--ghost" href="%(tel_uri)s" data-suivi-numero="fixe" data-suivi-emplacement="menu">%(icon)s Appeler le %(tel)s</a>%(devis)s%(badges)s</li>
         </ul>
@@ -299,7 +301,7 @@ def header(p):
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span class="nav-toggle__icon" aria-hidden="true"><span></span></span><span class="nav-toggle__label">Menu</span></button>
     </div>
   </header>
-''' % dict(svc_items=svc_items, svc_actif=svc_actif, items=items, tel_uri=TEL_URI, tel=TEL, icon=ICON_PHONE,
+''' % dict(items=items, tel_uri=TEL_URI, tel=TEL, icon=ICON_PHONE,
            badges=__import__('composants').badges(['B1', 'B3'], cls='badges--clair badges--menu'),
            devis='' if p.get('sans_devis') else devis_btn(p, 'menu'),
            cta='' if p.get('sans_devis') else devis_btn(p, 'entete', cls='btn btn--sm header-cta'))
@@ -324,7 +326,7 @@ def footer(p):
     <div class="container footer-top">
       <div class="footer-brand">
         <img src="assets/img/brand/logo-andy-construct-blanc-380.png" width="380" height="138" alt="Andy Construct" loading="lazy">
-        <p>Placo, peinture, isolation acoustique et %(isol)s. Entreprise de Carouge, inscrite au registre du commerce depuis 2007. Toute la Suisse romande.</p>
+        <p>L'expertise de l'aménagement intérieur : acoustique, faux plafonds, cloisons, plâtrerie et peinture. Entreprise de Carouge depuis 2007, active dans toute la Suisse romande.</p>
       </div>
       <div>
         <h2>Nous joindre</h2>

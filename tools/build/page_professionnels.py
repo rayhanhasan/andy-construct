@@ -117,7 +117,7 @@ def build():
 ''' % ''.join('<li class="metier"><h3>%s</h3><p>%s</p>%s</li>' % x for x in metiers)
 
     # 5. Lots CFC et normes
-    lots = [('271', 'placo.html', 'Plâtrerie'), ('283', 'placo.html#faux-plafonds', marque('C14', 'Faux-plafonds')), ('285', 'peinture.html', 'Peinture intérieure')]
+    lots = [('271', 'platrerie-peinture.html', 'Plâtrerie'), ('283', 'faux-plafonds.html', marque('C14', 'Faux plafonds')), ('285', 'platrerie-peinture.html#peinture', 'Peinture intérieure')]
     if not definitif('C14'):
         lots = [x for x in lots if x[0] != '283']
     lis = ''.join('<li><span class="cfc__n">CFC %s</span><a href="%s">%s</a></li>' % x for x in lots)

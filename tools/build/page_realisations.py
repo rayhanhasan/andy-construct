@@ -139,7 +139,7 @@ def build():
 ''' % dict(boutons=boutons, n=compte('tous'), cartes=cartes, aa_une=aa_une, aa_duo=aa_duo, aa_plus=aa_plus, n_autres=len(autres))
     corps += c.temoignages()
 
-    if not ctx.prod():
+    if not ctx.prod() and pf.RETIREES:
         # Photos hors offre : visibles en validation seulement, pour que le client tranche (architecture §8.4)
         items = ''
         for pid in pf.RETIREES:

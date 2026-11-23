@@ -7,7 +7,8 @@
     "proprietaire": 15, "": 10, "locataire": 5
   },
   "service": {
-    "plusieurs": 15, "isolation-acoustique": 15, "placo": 15, "cloisons-isothermes": 12,
+    "plusieurs": 15, "isolation-acoustique": 15, "faux-plafonds": 15, "cloisons": 15, "platrerie-peinture": 10,
+    "placo": 15, "cloisons-isothermes": 12,
     "peinture": 10, "ne-sait-pas": 10, "": 10, "autre": null
   },
   "surface": {

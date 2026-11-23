@@ -9,22 +9,22 @@ PAGES = [
         'C’est la première page vue : bouche-à-oreille, carte Google, nom tapé dans Google.',
         'Le visiteur décide ici s’il reste : promesse et téléphone en haut, logos des références juste dessous.',
         'Elle répond dans l’ordre aux questions du visiteur : qui, confiance, métiers, preuves, déroulé, devis.']),
-    ('placo.html', 'Placo', 'Capter « faux plafond Genève », « cloison placo ».', [
-        'Une page par métier : chaque métier est une recherche Google différente, une page dédiée se classe mieux.',
-        'Page d’arrivée des annonces Google : le visiteur trouve exactement ce qu’il a cherché.',
-        'Le formulaire arrive pré-coché sur « placo » : une étape de moins.']),
-    ('peinture.html', 'Peinture', 'Capter les régies et les fins de bail.', [
-        'Volume régulier : remises en état entre deux locataires, cages d’escalier.',
-        'Le métier le plus concurrencé : la page doit rassurer sur la propreté et le délai.',
-        'Il manque des photos de peinture : c’est la page la plus faible en preuve.']),
-    ('isolation-acoustique.html', 'Isolation acoustique', 'Le métier qui vous différencie.', [
-        'Peu d’artisans genevois le mettent en avant, alors que vous l’avez fait pour des bâtiments publics.',
-        'Deux publics : salles et bureaux (correction de l’écho), particuliers gênés par le bruit.',
-        'Recherches très ciblées (« bruit voisin du dessus ») : demandes déjà motivées.']),
-    ('cloisons-isothermes.html', 'Cloisons isothermes', 'Prendre une niche presque sans concurrence.', [
-        'Isoler une cave, un garage ou des combles : peu de pages en Suisse romande en parlent.',
-        'Le nom reste à décider (« isothermes » ou « isolantes ») : il change les recherches captées.',
-        'Complète les autres métiers : souvent vendue avec du placo.']),
+    ('isolation-acoustique.html', 'Acoustique', 'La spécialité : la page qui vous distingue.', [
+        'Peu d\u2019entreprises romandes la mettent en avant, alors que vous l\u2019avez fait pour des bâtiments publics.',
+        'Deux problèmes distincts, expliqués simplement : corriger l\u2019écho, isoler du bruit.',
+        'Îlots, tissu tendu, cadres et baffles : des solutions concrètes, avec photos.']),
+    ('faux-plafonds.html', 'Faux plafonds', 'Capter « faux plafond Genève », « plafond acoustique ».', [
+        'Une page dédiée se classe mieux qu\u2019une ligne noyée dans une page générale.',
+        'Cinq solutions illustrées (tissu tendu en tête) : le visiteur se reconnaît et choisit.',
+        'Les anciennes adresses du site (tissu tendu, fibre minérale, métal…) redirigent ici, chacune vers sa carte.']),
+    ('cloisons.html', 'Cloisons', 'Vendre l\u2019aménagement des bureaux et les panneaux isothermes.', [
+        'Plâtre, mobiles, vitrées, aluminium, doublages : toute l\u2019offre de cloisonnement sur une page.',
+        'Les panneaux sandwich isothermes ont leur bande « spécialité » : marché professionnel peu concurrencé.',
+        'Normes affichées (SIA, AEAI, OHyg) : rassure architectes et entreprises générales.']),
+    ('platrerie-peinture.html', 'Plâtrerie & peinture', 'Montrer la qualité des finitions.', [
+        'La préparation des supports, expliquée en quatre étapes : c\u2019est elle qui fait le résultat.',
+        'Quatre cartes illustrées : plâtrerie, enduits, peinture, conseil couleur.',
+        'La bande « Création d\u2019espaces » renvoie vers les cloisons : une page en nourrit une autre.']),
     ('realisations.html', 'Réalisations', 'Prouver, avec des chantiers nommés.', [
         'Répond à la question n° 1 du client : « vous l’avez déjà fait ? ».',
         'Une photo avec un lieu et un type de travaux vaut plus qu’une promesse.',
