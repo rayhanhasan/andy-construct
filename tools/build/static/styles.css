@@ -1145,3 +1145,58 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
 .svc--spec .svc__link:hover .svc__titre { color: var(--white); }
 @media (min-width: 700px) and (max-width: 1099.98px) { .type--cta-2 { grid-column: 1 / -1; } }
 @media (min-width: 1100px) { .type--cta-3 { grid-column: span 2; } }
+
+/* 31. Interactions (survol) : retenues, un seul geste par élément, jamais sur écran tactile ni en mouvement réduit */
+.hero__fond .ill__tag { left: auto; right: 12px; top: 12px; bottom: auto; z-index: 2; font-size: .875rem; }
+.hero__fond picture { display: block; width: 100%; height: 100%; transform: translate3d(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px), 0) scale(1.04); transition: transform .9s var(--ease-pose); }
+.type, .svcs--v5 .svc, .atout, .prepa__etapes li { position: relative; }
+.type::after, .svcs--v5 .svc::after { content: ""; position: absolute; left: -1px; right: -1px; bottom: -1px; height: 3px; background: var(--red); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--ease-pose); }
+.schema * { transform-box: fill-box; transform-origin: center; transition: transform .6s var(--ease-pose), opacity .6s var(--ease-pose), stroke-dashoffset .9s var(--ease-pose); }
+.sch-trait, .sch-choix { transform-origin: left center; }
+.sch-lumiere { opacity: .35; }
+.sch-murs { stroke-dasharray: 1; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .anim .bande__visuel:not(.is-in) .sch-murs { stroke-dashoffset: 1; }
+  .anim .bande__visuel.is-in .sch-murs { animation: trace 1.4s var(--ease-laser) .3s both; }
+}
+@keyframes trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pulse { 40% { transform: scale(1.14); } }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .btn { transition: background-color var(--t), border-color var(--t), color var(--t), transform var(--d) var(--ease-pose), box-shadow var(--d) var(--ease-pose); }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -12px rgb(232 0 15 / .65); }
+  .btn--ghost:hover, .btn--light:hover { box-shadow: 0 10px 22px -14px rgb(29 31 34 / .5); }
+  .type, .svcs--v5 .svc, .atout, .lieu, .lie, .prepa__etapes li, .valeurs li, .bande__puces li { transition: transform .45s var(--ease-pose), box-shadow .45s var(--ease-pose), border-color .3s, background-color .3s, color .3s; }
+  .type:hover, .svcs--v5 .svc:hover, .atout:hover { transform: translateY(-6px); box-shadow: 0 26px 48px -30px rgb(29 31 34 / .45); border-color: var(--ink); }
+  .type:hover::after, .svcs--v5 .svc:hover::after { transform: scaleX(1); }
+  .type--cta:hover { transform: none; box-shadow: none; }
+  .type--cta::after { display: none; }
+  .type__media img, .lieu__media img, .lie__media img { transition: transform .8s var(--ease-pose); }
+  .type:hover .type__media img, .lieu:hover .lieu__media img, .lie:hover .lie__media img { transform: scale(1.05); }
+  .lieu:hover, .lie:hover { transform: translateY(-4px); }
+  .atout:hover .atout__ico svg { animation: pulse .9s var(--ease-pose); }
+  .type:hover .sch-onde { transform: scale(.55, .2); opacity: .35; }
+  .type:hover .sch-lumiere { opacity: 1; stroke-dashoffset: -16; }
+  .type:hover .sch-dalle { transform: translateY(-14px); }
+  .type:hover .sch-trait { transform: scaleX(.15); }
+  .type:hover .sch-glisse { transform: translateX(46px); }
+  .type:hover .sch-reflet { transform: translateX(14px); opacity: .5; }
+  .type:hover .sch-outil { transform: translateX(-118px); }
+  .type:hover .sch-rouleau { transform: translateY(34px); }
+  .type:hover .sch-choix { transform: translateX(-192px); }
+  .logo-cell { transition: background-color .3s; }
+  .logo-cell img, .logo-cell .wordmark { transition: transform .45s var(--ease-pose); }
+  .logo-cell:hover { background: var(--mist); }
+  .logo-cell:hover img, .logo-cell:hover .wordmark { transform: scale(1.07); }
+  .normes__table tbody tr { transition: background-color .25s; }
+  .normes__table tbody tr:hover { background: var(--mist); box-shadow: inset 3px 0 0 var(--red); }
+  .bande__puces li:hover { background: var(--red); color: var(--white); transform: translateX(4px); }
+  .valeurs li:hover { background: var(--ink); color: var(--white); }
+  .prepa__etapes li:hover { transform: translateY(-4px); border-top-color: var(--red); }
+  .duo-mots__grid > div { transition: transform .45s var(--ease-pose); }
+  .duo-mots__grid > div:hover { transform: translateY(-4px); }
+  /* Projecteur qui suit la souris sur les cartes sombres (variables --mx, --my posées par main.js) */
+  .svc--spec, .type--cta, .chiffres { position: relative; overflow: hidden; isolation: isolate; }
+  .svc--spec::before, .type--cta::before, .chiffres::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .4s;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / .10), transparent 60%); }
+  .svc--spec:hover::before, .type--cta:hover::before, .chiffres:hover::before { opacity: 1; }
+}

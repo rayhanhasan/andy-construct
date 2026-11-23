@@ -672,4 +672,25 @@
       });
     }
   }
+
+  /* v5 : interactions retenues. Projecteur sur les cartes sombres ; légère profondeur du héro qui suit la souris.
+     Seulement avec une souris, et jamais en mouvement réduit. */
+  if (w.matchMedia && w.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
+    d.querySelectorAll('.svc--spec, .type--cta, .chiffres').forEach(function (el) {
+      el.addEventListener('pointermove', function (e) {
+        var r = el.getBoundingClientRect();
+        el.style.setProperty('--mx', (e.clientX - r.left) + 'px'); el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+    var hp = d.querySelector('.hero--plein'), raf = 0;
+    if (hp) hp.addEventListener('pointermove', function (e) {
+      if (raf) return;
+      raf = w.requestAnimationFrame(function () {
+        var r = hp.getBoundingClientRect();
+        hp.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5).toFixed(3));
+        hp.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5).toFixed(3));
+        raf = 0;
+      });
+    });
+  }
 })(window, document);

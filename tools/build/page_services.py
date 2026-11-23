@@ -192,7 +192,7 @@ def bande(titre_id, surtitre, h2, paras, visuel, puces=None, action='', ancre=No
     puces_html = ('<ul class="bande__puces">%s</ul>' % ''.join('<li>%s</li>' % x for x in puces)) if puces else ''
     return '''    <section class="section section--dark on-dark bande"%s aria-labelledby="%s">
       <div class="container bande__grid">
-        <div class="bande__visuel">%s%s</div>
+        <div class="bande__visuel" data-reveal>%s%s</div>
         <div class="bande__txt">
           <p class="surtitre surtitre--clair">%s</p>
           <h2 id="%s">%s</h2>
@@ -227,7 +227,7 @@ BENEFICES = [('echo', 'Correction acoustique', 'Moins d\'écho et de résonance 
 # ---------------------------------------------------------------- données des quatre pages
 def faux_plafonds():
     s = 'faux-plafonds'
-    hero = 'plafond-tendu-ilots-lumineux-02' if pf.photo_ok('plafond-tendu-ilots-lumineux-02') else 'faux-plafond-placo-gorge-lumineuse-02'
+    hero = 'faux-plafond-placo-gorge-lumineuse-02'
     return dict(
         service=s, crumb='Faux plafonds', title='Faux plafonds à Genève : tissu tendu, plâtre, métal | Andy Construct',
         desc='Faux plafonds acoustiques, phoniques et coupe-feu : tissu tendu, plaque de plâtre, fibre minérale, métal, fibre de bois. Bureaux, restaurants, écoles, logements. Suisse romande.',
@@ -238,7 +238,7 @@ def faux_plafonds():
         apres_refs=intro('fp-intro', 'Performance technique et rendu esthétique', [
             'Nous concevons et posons des plafonds qui allient <b>performance technique</b> et <b>rendu esthétique</b>.',
             'Nos plafonds réduisent la résonance dans une pièce et limitent la transmission du bruit entre les espaces : <b>bureaux, restaurants, salles de réunion, écoles ou logements</b>.'],
-            photo_ou('plafond-tendu-ilots-lumineux-01', 'photo', 'faux-plafond-placo-gorge-lumineuse-01'))
+            img('ill', 'plafond-retombees-courbes-bureaux', SZ_FEAT))
         + atouts(BENEFICES, 'fp-atouts', 'Ce que nos plafonds apportent'),
         blocs=lambda p: types(p, [
             ('tissu-tendu', 'Tissu tendu', 'Une surface parfaitement lisse et sur mesure, posée à froid. En version acoustique, elle absorbe le son tout en restant élégante. Idéale pour les bureaux, restaurants et salles de réunion.',
@@ -273,7 +273,7 @@ def faux_plafonds():
 
 def cloisons():
     s = 'cloisons'
-    hero = 'cloisons-modulaires-vitrees-01' if pf.photo_ok('cloisons-modulaires-vitrees-01') else 'chantier-ossature-puits-de-lumiere-02'
+    hero = 'chantier-ossature-puits-de-lumiere-02'
     return dict(
         service=s, crumb='Cloisons', title='Cloisons et doublages à Genève : plâtre, vitrées, isothermes | Andy Construct',
         desc='Cloisons en plaques de plâtre, mobiles, vitrées et aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes. Bureaux et bâtiments professionnels, Suisse romande.',

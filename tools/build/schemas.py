@@ -50,7 +50,7 @@ def tissu_tendu():
     return _svg('Coupe : tissu tendu fixé sur un profilé périphérique, surface lisse',
                 _dalle() + '<rect x="40" y="96" width="320" height="10" rx="2" fill="%s" stroke="%s" stroke-width="2"/>' % (PLATRE, INK)
                 + '<rect x="30" y="86" width="14" height="30" fill="%s"/><rect x="356" y="86" width="14" height="30" fill="%s"/>' % (INK, INK)
-                + _onde(150, 250, 150, amp=7, pas=20, couleur=ROUGE)
+                + '<g class="sch-onde">' + _onde(150, 250, 150, amp=7, pas=20, couleur=ROUGE) + '</g>'
                 + _txt(200, 186, 'Le son est absorbé', 'middle') + _txt(200, 82, 'Toile tendue', 'middle', fill=INK))
 
 
@@ -60,7 +60,7 @@ def plaque_platre():
                 + '<rect x="40" y="92" width="320" height="8" fill="%s"/>' % ACIER
                 + '<rect x="40" y="100" width="320" height="14" fill="%s" stroke="%s" stroke-width="2"/>' % (PLATRE, INK)
                 + '<rect x="150" y="114" width="100" height="6" fill="%s"/>' % ROUGE
-                + '<path d="M170 122l-18 50M230 122l18 50" stroke="%s" stroke-width="1.5" stroke-dasharray="3 5"/>' % ACIER
+                + '<path class="sch-lumiere" d="M170 122l-18 50M230 122l18 50" stroke="%s" stroke-width="2" stroke-dasharray="3 5"/>' % ROUGE
                 + _txt(200, 200, 'Plafond lisse, spots et gorges intégrés', 'middle'))
 
 
@@ -78,11 +78,11 @@ def fibre_minerale():
     for i, x in enumerate(range(30, 370, 68)):
         for j, y in enumerate((60, 128)):
             fill = '#F3D9DA' if (i, j) == (2, 0) else PLATRE
-            cases += '<rect x="%d" y="%d" width="64" height="64" fill="%s"/>' % (x + 2, y + 2, fill)
+            cases += '<rect%s x="%d" y="%d" width="64" height="64" fill="%s"/>' % (' class="sch-dalle"' if (i, j) == (2, 0) else '', x + 2, y + 2, fill)
             cases += ''.join('<circle cx="%d" cy="%d" r="1.6" fill="%s"/>' % (x + 12 + k * 14 % 48, y + 14 + (k * 23) % 44, ACIER) for k in range(6))
     return _svg('Vue de dessous : dalles démontables en fibre minérale sur ossature apparente',
                 '<rect x="30" y="60" width="340" height="136" fill="%s"/>' % GRIS + cases
-                + '<path d="M168 60h68v68h-68z" fill="none" stroke="%s" stroke-width="3"/>' % ROUGE
+                + '<path class="sch-dalle" d="M168 60h68v68h-68z" fill="none" stroke="%s" stroke-width="3"/>' % ROUGE
                 + _txt(200, 42, 'Une dalle se retire : réseaux accessibles', 'middle'))
 
 
@@ -91,7 +91,7 @@ def metallique():
     for x, y in ((40, 54), (210, 54), (40, 140), (210, 140)):
         bac += '<rect x="%d" y="%d" width="150" height="74" fill="%s"/>' % (x, y, '#D6D9DC')
         bac += ''.join('<circle cx="%d" cy="%d" r="1.5" fill="%s"/>' % (x + 8 + i * 9, y + 8 + j * 9, GRIS) for i in range(16) for j in range(7))
-    return _svg('Vue de dessous : bacs métalliques perforés', bac + '<path d="M40 50h320" stroke="%s" stroke-width="4"/>' % ROUGE)
+    return _svg('Vue de dessous : bacs métalliques perforés', bac + '<path class="sch-trait" d="M40 50h320" stroke="%s" stroke-width="4"/>' % ROUGE)
 
 
 # ---------------------------------------------------------------- cloisons
@@ -112,7 +112,7 @@ def cloison_platre():
 def cloison_mobile():
     return _svg('Cloison mobile : panneaux suspendus à un rail, qui coulissent',
                 '<rect x="40" y="30" width="320" height="10" fill="%s"/>' % GRIS
-                + ''.join('<rect x="%d" y="44" width="62" height="160" fill="%s" stroke="%s" stroke-width="2"/>' % (x, PLATRE, ACIER) for x in (52, 118, 184))
+                + '<g class="sch-glisse">' + ''.join('<rect x="%d" y="44" width="62" height="160" fill="%s" stroke="%s" stroke-width="2"/>' % (x, PLATRE, ACIER) for x in (52, 118, 184)) + '</g>'
                 + '<path d="M282 124h60M330 112l12 12-12 12" fill="none" stroke="%s" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' % ROUGE)
 
 
@@ -120,7 +120,7 @@ def paroi_vitree():
     return _svg('Paroi vitrée : cadre fin et grands vitrages',
                 '<rect x="40" y="40" width="320" height="160" fill="#D5E1E4" stroke="%s" stroke-width="6"/>' % GRIS
                 + '<path d="M146 40v160M254 40v160" stroke="%s" stroke-width="6"/>' % GRIS
-                + ''.join('<path d="M%d 62l34 34" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>' % x for x in (66, 172, 280))
+                + '<g class="sch-reflet">' + ''.join('<path d="M%d 62l34 34" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>' % x for x in (66, 172, 280)) + '</g>'
                 + '<path d="M40 204h320" stroke="%s" stroke-width="3"/>' % ROUGE)
 
 
@@ -149,7 +149,7 @@ def sandwich():
                 + '<rect x="50" y="74" width="300" height="84" fill="%s"/>' % ISOL
                 + _onde(60, 340, 100, amp=6, pas=20, couleur='#C9B36B', ep=2) + _onde(60, 340, 132, amp=6, pas=20, couleur='#C9B36B', ep=2)
                 + '<rect x="50" y="158" width="300" height="12" fill="%s"/>' % GRIS
-                + '<path d="M50 176h300" stroke="%s" stroke-width="3"/>' % ROUGE
+                + '<path class="sch-trait" d="M50 176h300" stroke="%s" stroke-width="3"/>' % ROUGE
                 + _txt(200, 204, 'Tôle · âme isolante · tôle', 'middle', fill=INK))
 
 
@@ -165,28 +165,28 @@ def platrerie():
 def enduit():
     return _svg('Enduit et lissage : la surface devient parfaitement plane',
                 '<rect x="40" y="40" width="320" height="160" fill="%s"/><rect x="220" y="40" width="140" height="160" fill="#D9D5CE"/>' % PLATRE
-                + '<path d="M196 92h70l-10 24h-50z" fill="%s"/><rect x="220" y="116" width="22" height="34" rx="3" fill="%s"/>' % (GRIS, INK)
-                + '<path d="M40 200h180" stroke="%s" stroke-width="3"/>' % ROUGE)
+                + '<g class="sch-outil"><path d="M196 92h70l-10 24h-50z" fill="%s"/><rect x="220" y="116" width="22" height="34" rx="3" fill="%s"/></g>' % (GRIS, INK)
+                + '<path class="sch-trait" d="M40 200h180" stroke="%s" stroke-width="3"/>' % ROUGE)
 
 
 def peinture():
     return _svg('Peinture intérieure au rouleau',
                 '<rect x="40" y="40" width="320" height="160" fill="%s"/><rect x="40" y="40" width="200" height="160" fill="%s"/>' % (PLATRE, INK)
-                + '<rect x="222" y="70" width="70" height="26" rx="6" fill="%s"/><path d="M257 96v30" stroke="%s" stroke-width="5"/>' % (ROUGE, GRIS)
-                + '<rect x="249" y="126" width="16" height="44" rx="3" fill="%s"/>' % GRIS)
+                + '<g class="sch-rouleau"><rect x="222" y="70" width="70" height="26" rx="6" fill="%s"/><path d="M257 96v30" stroke="%s" stroke-width="5"/>' % (ROUGE, GRIS)
+                + '<rect x="249" y="126" width="16" height="44" rx="3" fill="%s"/></g>' % GRIS)
 
 
 def finitions():
     return _svg('Trois finitions : mat, satiné, brillant',
                 '<rect x="64" y="40" width="80" height="120" rx="4" fill="#CFCBC4"/><rect x="160" y="40" width="80" height="120" rx="4" fill="%s"/>' % GRIS
                 + '<rect x="256" y="40" width="80" height="120" rx="4" fill="%s"/><path d="M176 56h30M272 56h44M272 68h26" stroke="#8C9198" stroke-width="5" stroke-linecap="round"/>' % INK
-                + '<path d="M256 168h80" stroke="%s" stroke-width="3"/>' % ROUGE
+                + '<path class="sch-choix" d="M256 168h80" stroke="%s" stroke-width="3"/>' % ROUGE
                 + _txt(104, 190, 'Mat', 'middle') + _txt(200, 190, 'Satiné', 'middle') + _txt(296, 190, 'Brillant', 'middle'))
 
 
 def plan_espaces():
     return _svg('Plan : un bureau, une salle de réunion et un rangement créés par des cloisons',
                 '<rect x="30" y="20" width="340" height="200" fill="%s" stroke="%s" stroke-width="6"/>' % (PLATRE, INK)
-                + '<path d="M150 20v120M150 170v50M150 112h90M270 112h100" stroke="%s" stroke-width="7"/>' % ROUGE
+                + '<path class="sch-murs" pathLength="1" d="M150 20v120M150 170v50M150 112h90M270 112h100" stroke="%s" stroke-width="7"/>' % ROUGE
                 + _txt(90, 124, 'Bureau', 'middle', size=15, fill=INK) + _txt(260, 72, 'Salle de réunion', 'middle', size=15, fill=INK)
                 + _txt(260, 172, 'Rangement', 'middle', size=15, fill=INK), vb='0 0 400 240')

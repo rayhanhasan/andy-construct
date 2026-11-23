@@ -10,21 +10,19 @@ import portfolio as pf
 from icons import ICONS
 
 # v5 : héro plein cadre. La photo couvre toute la largeur ; le texte se pose dessus, à gauche, sur un dégradé anthracite.
-# Photo : les îlots en tissu tendu (spécialité) quand ils sont publiables, sinon le faux-plafond à gorge lumineuse.
-def _hero_id():
-    return 'plafond-tendu-ilots-lumineux-01' if pf.photo_ok('plafond-tendu-ilots-lumineux-01') else 'faux-plafond-placo-gorge-lumineuse-01'
+# Image : plafond blanc à retombées courbes au-dessus d'un plateau vitré (illustration sous licence, mention « Illustration »).
+# Les photos de chantier du client sont trop sombres ou trop petites pour un plein cadre ; elles restent dans les pages.
+HERO_ILL = 'plafond-retombees-courbes-bureaux'
+SIZES_HERO = '100vw'
 
 
 def _hero_src():
-    pid = _hero_id()
-    it = c.MANIFEST[pid]
-    b = it['base']
-    tailles = [(w, it.get('largeur_%d' % w)) for w in (800, 1600, 2400)]
-    srcset = ', '.join('%s-%d.webp %dw' % (b, w, lw) for w, lw in tailles if lw and os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, w))))
-    return pid, b, srcset, it['largeur_1600'], it['hauteur_1600']
-
-
-SIZES_HERO = '100vw'
+    import illustrations
+    it = illustrations.trouver(ident=HERO_ILL)
+    b = 'assets/img/illustrations/' + HERO_ILL
+    larg = [w for w in (800, 1600, 2400) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, w)))]
+    srcset = ', '.join('%s-%d.webp %dw' % (b, w, w) for w in larg)
+    return it, b, srcset, it.get('largeur') or 2400, it.get('hauteur') or 1600
 
 
 def hero_preload():
@@ -33,9 +31,9 @@ def hero_preload():
 
 
 def hero_pic():
-    pid, b, srcset, w, h = _hero_src()
+    it, b, srcset, w, h = _hero_src()
     return ('<picture><source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="%d" height="%d" alt="%s" fetchpriority="high"></picture>'
-            % (srcset, SIZES_HERO, b, w, h, e(pf.alt(pid))))
+            '<span class="ill__tag">Illustration</span>' % (srcset, SIZES_HERO, b, w, h, e(it.get('alt') or '')))
 
 
 def business():
@@ -166,8 +164,8 @@ EXPERTISE = [
     ('faux-plafonds', 'Faux plafonds', 'Plafonds techniques et décoratifs pour l\'isolation acoustique et phonique : tissu tendu, plaque de plâtre, fibre minérale ou métal, isolant en fibre de bois.', False),
     ('platrerie-peinture', 'Plâtrerie et peinture', 'Plâtrerie, enduits, lissages et peinture intérieure pour des finitions nettes et durables.', False),
 ]
-PHOTO_SVC = {'isolation-acoustique': ['plafond-tendu-ilots-lumineux-03', 'panneaux-acoustiques-muraux-01'],
-             'cloisons': ['cloisons-modulaires-vitrees-01', 'chantier-ossature-puits-de-lumiere-02'],
+PHOTO_SVC = {'isolation-acoustique': ['panneaux-acoustiques-muraux-01', 'plafond-tendu-ilots-lumineux-03'],
+             'cloisons': [],
              'faux-plafonds': ['faux-plafond-placo-gorge-lumineuse-02'],
              'platrerie-peinture': ['habillage-placo-niches-arrondies-01']}
 
@@ -176,6 +174,9 @@ def svc_media(s):
     pid = next((x for x in PHOTO_SVC[s] if pf.photo_ok(x)), None)
     if pid:
         return c.pic_crop(pid, '16x9', SIZES_SVC, pf.alt(pid))
+    ill = {'cloisons': 'chantier-cloisons-plaques-caissons'}.get(s)
+    if ill:
+        return c.media('ill', ill, SIZES_SVC)
     return '<span class="svc__picto">%s</span>' % ICONS[s]
 
 
