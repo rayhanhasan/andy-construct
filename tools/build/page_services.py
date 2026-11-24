@@ -242,7 +242,7 @@ def faux_plafonds():
         + atouts(BENEFICES, 'fp-atouts', 'Ce que nos plafonds apportent'),
         blocs=lambda p: types(p, [
             ('tissu-tendu', 'Tissu tendu', 'Une surface parfaitement lisse et sur mesure, posée à froid. En version acoustique, elle absorbe le son tout en restant élégante. Idéale pour les bureaux, restaurants et salles de réunion.',
-             'plafond-tendu-mat-01', sch.tissu_tendu(), True),
+             'plafond-tendu-ilots-lumineux-01', sch.tissu_tendu(), True),
             ('plaque-de-platre', 'Plaque de plâtre', 'Polyvalente, elle permet des plafonds lisses, des caissons, des jeux de niveaux et l\'éclairage intégré. Elle existe en versions phoniques et coupe-feu.',
              'faux-plafond-placo-gorge-lumineuse-02', sch.plaque_platre(), False),
             ('fibre-de-bois', 'Isolation en fibre de bois', 'Un isolant naturel posé au-dessus du faux plafond, invisible une fois les travaux terminés. Il renforce l\'isolation thermique et phonique, quelle que soit la finition choisie.',
@@ -408,7 +408,7 @@ def acoustique():
             ('ilots', 'Îlots acoustiques', 'Suspendus au plafond ou fixés au mur, ils absorbent le son là où il rebondit, sans toucher au plafond existant.',
              'plafond-tendu-ilots-lumineux-03', sch.tissu_tendu(), False),
             ('tissu-tendu', 'Tissu tendu acoustique', 'Une toile lisse et sur mesure qui absorbe le son tout en restant élégante : bureaux, restaurants, salles de réunion.',
-             'plafond-tendu-mat-01', sch.tissu_tendu(), True),
+             'plafond-tendu-ilots-lumineux-02', sch.tissu_tendu(), True),
             ('correction', 'Cadres et baffles acoustiques', 'Des panneaux muraux, imprimés ou unis, et des baffles verticaux qui réduisent la réverbération des grandes salles.',
              'cadre-acoustique-salle-de-reunion-01' if salle else None, sch.metallique(), False),
             ('plafonds-cloisons', 'Plafonds et cloisons phoniques', 'Faux plafonds sur suspentes antivibratiles, cloisons à ossatures séparées et plaques doublées : le bruit ne passe plus.',

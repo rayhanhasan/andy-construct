@@ -58,8 +58,8 @@ def visionneuse():
 
 def build():
     hero_html, preload = c.hero_image('photo', 'habillage-placo-niches-arrondies-01')
-    p = dict(fichier='realisations.html', title='Réalisations : placo, peinture, isolation | Andy Construct', preload=preload,
-             desc='Chantiers de placo, de peinture et d\'isolation photographiés par notre équipe : halls, salles, logements, bureaux. Avant / après et références.')
+    p = dict(fichier='realisations.html', title='Réalisations : acoustique, faux plafonds, cloisons | Andy Construct', preload=preload,
+             desc='Nos chantiers en images : faux plafonds en tissu tendu et en plâtre, acoustique, cloisons, plâtrerie. Halls, salles, bureaux, logements. Avant / après et références.')
     projets = [x for x in pf.PROJETS if pf.proj_ok(x)]
     paires = pf.PAIRES
 

@@ -39,3 +39,17 @@ Le document client (textes, ressources, maquettes indicatives) a été intégré
 2. **Normes** : reprises du document (SIA 256 et 257 existent bien : faux-plafonds, peinture). À confirmer qu'elles correspondent aux systèmes posés.
 3. **Photos de l'ancien site** (tissu tendu, métal, cloisons vitrées) : lieux et accords (C25) pour les publier en production.
 4. **Case de consentement** : demandée par le client ; elle remplace la décision D2 (mention seule).
+
+## Revue critique (24.11.2026)
+
+Corrigé :
+- Bandeau « Version de validation » supprimé de la version de test (seul le mode interne `verification` le garde, avec sa légende des points à confirmer).
+- Titre du héro aligné sur le nouveau menu : « Acoustique, plafonds, cloisons : la rigueur des chantiers publics » (même promesse).
+- Professionnels : en-tête sur l'ancienne offre (« plâtrerie, faux-plafonds et peinture ») remplacé ; entreprises générales ajoutées aux cibles ; tableau des normes à la place d'une phrase.
+- Réalisations et Professionnels : titres et descriptions Google encore sur « placo, peinture » mis à jour.
+- Logos répétés jusqu'à trois fois par page : retirés du pied de page (chaque page garde sa bande de références).
+- Carte « Tissu tendu » (la spécialité) : photo terne d'une pièce vide remplacée par les îlots lumineux.
+
+Vérifié : 13 pages en bureau et en mobile, aucun débordement horizontal, aucune erreur de chargement, liens et ancres internes valides, aucune vraie violation d'accessibilité (les alertes restantes sont du texte capté pendant son apparition animée).
+
+Reste à décider avec le client : accords des logos (OMC, UBS, Piaget…), lieux et accords des photos de l'ancien site (C25), confirmation des normes, informations encore en attente (délais, horaires, prix : voir `a-remplir.json` de l'export local).

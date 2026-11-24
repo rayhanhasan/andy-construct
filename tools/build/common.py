@@ -223,7 +223,7 @@ def head(p):
 
 # ---------------------------------------------------------------- bandeau de validation (preview, verification)
 def bandeau():
-    if ctx.prod():
+    if ctx.MODE != 'verification':   # v5 : plus de bandeau sur la version de test (demande du client)
         return ''
     if ctx.MODE == 'verification':
         txt = 'Version de validation. Les passages soulignés en pointillé attendent votre confirmation.'
@@ -361,7 +361,7 @@ def footer(p):
   </footer>%(callbar)s
 ''' % dict(isol=V('C16', 'cloisons isolantes', 'cloisons isothermes'), nap=nap(), maps=MAPS, pdf=pdf,
            svc=''.join('<li><a href="%s">%s</a></li>' % (svc_url(s), svc_nom(s)) for s in SERVICES),
-           refs=composants.refs_pied(), badges=composants.badges(['B1', 'B2', 'B3', 'B7'], cls='badges--pied'), annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
+           refs='', badges=composants.badges(['B1', 'B2', 'B3', 'B7'], cls='badges--pied'), annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
 
 
 # ---------------------------------------------------------------- en-tête de page secondaire (composant page-head)

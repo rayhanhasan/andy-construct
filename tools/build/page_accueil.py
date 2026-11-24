@@ -107,8 +107,8 @@ def _drapeau(nom):
 
 
 # Un masque par mot (les lignes se forment naturellement à toutes les largeurs ; la ponctuation reste avec son mot)
-TITRES = {'a': ['Placo,', 'peinture,', 'acoustique :', 'la', 'rigueur', 'des', 'chantiers', 'publics'],
-          'b': ['Du', 'Conservatoire', 'à', 'votre', 'salon :', 'placo,', 'acoustique,', 'peinture']}
+TITRES = {'a': ['Acoustique,', 'plafonds,', 'cloisons :', 'la', 'rigueur', 'des', 'chantiers', 'publics'],
+          'b': ['Du', 'Conservatoire', 'à', 'votre', 'salon :', 'acoustique,', 'plafonds,', 'cloisons']}
 
 
 def hero_titre():

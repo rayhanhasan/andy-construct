@@ -18,8 +18,8 @@ def build():
     ref, check, avis = doc('references'), doc('checklist'), doc('avis-locataires')
     hero_html, preload = c.hero_image('photo', 'plafond-placo-ilot-ovale-01')
     p = dict(fichier='professionnels.html', formulaire=True, preload=preload,
-             title='Régies et architectes : plâtrerie, peinture | Andy Construct',
-             desc='Plâtrerie, faux-plafonds et peinture pour régies, architectes et communes : immeubles habités, offres sur plans, dossier de références en PDF.')
+             title='Entreprises générales, architectes, régies | Andy Construct',
+             desc='Acoustique, faux plafonds, cloisons, plâtrerie et peinture pour entreprises générales, architectes, régies et communes : offres sur plans, normes SIA, références.')
     m = mail()
     mailto = lambda sujet: 'mailto:%s?subject=%s' % (m, sujet.replace(' ', '%20'))
 
@@ -34,7 +34,7 @@ def build():
     actions = '<a class="btn" href="#soumission" data-suivi="devis_clic" data-suivi-emplacement="entete_page">Envoyer un dossier de soumission</a>'
     if ref:
         actions += '<a class="btn btn--light" href="%s" %s>Dossier de références (%s)</a>' % (ref[0], suivi_doc('references'), ref[1])
-    corps = hero_page('Professionnels', 'Régies, architectes, communes : plâtrerie, faux-plafonds et peinture',
+    corps = hero_page('Professionnels', 'Entreprises générales, architectes, régies : un partenaire du second œuvre',
                       T('C20', 'Immeubles habités, bureaux et bâtiments publics, <b>depuis 2007</b>. Offres sur plans et descriptifs.',
                         'Bureaux, logements et bâtiments publics, <b>depuis 2007</b>. Offres sur plans et descriptifs.'),
                       actions=actions, media=hero_html,
@@ -100,7 +100,7 @@ def build():
     metiers = [
         ('Régies et gérances', T('C20', 'Remises en état, cages d\'escalier, plafonds après dégât d\'eau. <b>Parties communes protégées</b>, date convenue tenue.',
                                  'Remises en état, cages d\'escalier, plafonds après dégât d\'eau. <b>Parties communes protégées</b>.'), act_regie),
-        ('Architectes et bureaux d\'études', T('C14', 'Lots <b>CFC 271, 283 et 285</b>. Offres complètes sur descriptif, variantes à part, questions posées avant de chiffrer.',
+        ('Architectes, bureaux d\'études et entreprises générales', T('C14', 'Lots <b>CFC 271, 283 et 285</b>. Offres complètes sur descriptif, variantes à part, questions posées avant de chiffrer.',
                                               'Lots de <b>plâtrerie et de peinture</b>. Offres complètes sur descriptif, variantes chiffrées à part.'),
          '<a class="link-arrow" href="#soumission">Envoyer un dossier</a>'),
         ('Communes et institutions', 'La Ville de Genève, <span class="nowrap">Plan-les-Ouates</span> et <span class="nowrap">Collonge-Bellerive</span> nous ont confié des travaux.'
@@ -121,16 +121,13 @@ def build():
     if not definitif('C14'):
         lots = [x for x in lots if x[0] != '283']
     lis = ''.join('<li><span class="cfc__n">CFC %s</span><a href="%s">%s</a></li>' % x for x in lots)
-    normes = T('C15', 'Performances acoustiques, thermiques et incendie : celles du projet (<b>SIA 181, SIA 180, AEAI</b>), précisées dans l\'offre.',
-               'Les performances visées sont celles du projet, précisées dans l\'offre.')
     corps += '''    <section class="section" aria-labelledby="lots-titre">
       <div class="container">
         <div class="section-head"><h2 id="lots-titre">Lots CFC</h2></div>
         <ul class="cfc">%s</ul>
-        <p class="cfc__normes">%s</p>
       </div>
     </section>
-''' % (lis, normes)
+''' % lis + __import__('page_services').normes_table(titre_id='normes-pro-titre', cls='section--mist')
 
     # 6. Méthode en site occupé (6 points), illustrée d'une vraie photo : escalier protégé pendant les travaux
     points = [('C20', 'Avis aux locataires et horaires convenus, affichés quelques jours avant.'),
