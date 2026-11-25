@@ -49,6 +49,9 @@ Version : %s
 2. Copier les fichiers
    Envoyer le contenu du dossier andy-construct/ à la racine du site (souvent public_html/),
    fichiers cachés compris (.htaccess). Les liens sont relatifs : un sous-dossier convient pour un test.
+   Domaine provisoire : les deux versions fonctionnent sans redirection. Seul le domaine andyconstruct.ch
+   est renvoyé vers https://www.andyconstruct.ch. Pour un domaine provisoire public, préférer la version test
+   (non indexée), pour que Google ne référence pas l'adresse provisoire.
 
 3. Configurer les formulaires
    Copier api/config.example.php en api/config.php et remplir les valeurs « À REMPLIR » :

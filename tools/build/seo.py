@@ -125,7 +125,7 @@ RENOMMEES = [('placo', 'cloisons.html'), ('peinture', 'platrerie-peinture.html')
 
 
 def htaccess():
-    base = 'https://www.andyconstruct.ch/' if ctx.prod() else '/'
+    base = '/'   # redirections relatives : le site fonctionne aussi sur un domaine provisoire
     regles = ''.join('RewriteRule ^(index\\.php/)?%s/?$ %s%s [R=301,L,NE]\n' % (motif, base, cible) for motif, cible in REDIRECTIONS)
     regles += ''.join('RewriteRule ^%s\\.html$ %s%s [R=301,L,NE]\n' % (ancien, base, cible) for ancien, cible in RENOMMEES)
     umami = ctx.CONFIG.get('umami_src', '') if ctx.CONFIG.get('umami_id') else ''
@@ -139,11 +139,13 @@ def htaccess():
            % (csp_hash(), origine_umami, origine_umami))
     hote = ('''# 2) Accueil : une seule adresse « / » (le lien direct vers /index.html est redirigé ; DirectoryIndex n'est pas concerné)
 RewriteCond %{THE_REQUEST} \\s/index\\.html[\\s?]
-RewriteRule ^index\\.html$ https://www.andyconstruct.ch/ [R=301,L]
+RewriteRule ^index\\.html$ / [R=301,L]
 
-# 3) Une seule adresse : https://www.andyconstruct.ch (en une seule redirection)
+# 3) Domaine andyconstruct.ch : tout passe par https://www.andyconstruct.ch (en une seule redirection).
+#    Un autre domaine (adresse provisoire, recette) n'est pas redirigé.
+RewriteCond %{HTTP_HOST} ^(www\\.)?andyconstruct\\.ch$ [NC]
 RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} !^www\\.andyconstruct\\.ch$ [NC]
+RewriteCond %{HTTP_HOST} !^www\\. [NC]
 RewriteRule ^(.*)$ https://www.andyconstruct.ch/$1 [R=301,L]
 ''' if ctx.prod() else '''# 2) Adresse unique https://www.andyconstruct.ch : active seulement en production
 # RewriteCond %{HTTPS} off [OR]
