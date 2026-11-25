@@ -136,8 +136,8 @@ def main():
     a.add_argument('--travail', default=os.path.join(ROOT, '.export-hebergement'))
     r = a.parse_args()
     os.makedirs(r.out, exist_ok=True)
-    paquet('preview', os.path.join(r.out, 'andy-construct-site-test.zip'), r.travail)
-    paquet('production', os.path.join(r.out, 'andy-construct-site-production.zip'), r.travail)
+    # Une seule version, complète (logos, photos, textes) et non indexée tant que le site est en recette
+    paquet('preview', os.path.join(r.out, 'andy-construct-site.zip'), r.travail)
     shutil.rmtree(r.travail, ignore_errors=True)
 
 

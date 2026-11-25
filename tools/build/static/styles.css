@@ -1202,8 +1202,8 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
 }
 
 /* 32. Retouches : pied de page aligné, en-têtes sans trait rouge */
-.site-footer .footer-refs { padding-block: 32px; }
-.site-footer .badges--pied { margin: 0; padding: 0; border-top: 0; }
+.site-footer .footer-refs { padding-block: clamp(40px, 5vw, 64px) 32px; }
+.site-footer .badges--pied { margin: 32px 0 0; padding: 24px 0 0; border-top: 1px solid var(--steel-a); }
 .footer-bottom ul { margin: 0; }
 .hero .laser, .page-head .laser { visibility: hidden; animation: none; }
 .lieu--logo .lieu__logo { display: flex; align-items: center; justify-content: center; min-height: 150px; padding: 24px; background: var(--white); color: var(--ink); }
