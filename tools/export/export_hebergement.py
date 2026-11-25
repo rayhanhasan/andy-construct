@@ -15,7 +15,7 @@ import argparse, os, re, shutil, subprocess, sys, zipfile
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(ICI))
-TEXTE = ('.php', '.css', '.js', '.json', '.html', '.txt', '.xml', '.htaccess', '.webmanifest')
+TEXTE = ('.php', '.css', '.js', '.json', '.html', '.txt', '.xml', '.htaccess', '.webmanifest', '.md', '.svg')
 EXCLUS_DOSSIERS = ('api/tests', 'admin/tests', 'api/stockage', 'admin/outils/demo.php')
 EXCLUS_FICHIERS = {'api/config.php', 'llms.txt'}
 
@@ -37,6 +37,8 @@ REMPLACEMENTS = [
     (r'docs/v\d[\w./-]*(?: ?§[\d.]+(?: a §[\d.]+)?)?', ''),
 ]
 CONTROLES = ['docs/v', 'tools/build', 'décision D', 'copy deck', 'cro-v3', 'Claude', 'Anthropic', 'ChatGPT', 'OpenAI']
+# Contrôle strict, sans tenir compte des majuscules, sur tous les fichiers texte (bibliothèques tierces comprises)
+TRACES = re.compile(r'claude|anthropic|chatgpt|openai|midjourney|copilot|intelligence artificielle|eager-heisenberg', re.I)
 
 
 INSTALLATION = """ANDY CONSTRUCT - MISE EN LIGNE DU SITE
@@ -108,6 +110,7 @@ def paquet(mode, sortie, travail):
                     continue
                 if f.endswith(TEXTE) or f == '.htaccess':
                     t = open(chemin, encoding='utf-8').read()
+                    restes += ['%s : %s' % (rel, m.group(0)) for m in TRACES.finditer(t)]
                     if '/vendor/' not in '/' + rel:
                         t = nettoyer(t)
                         restes += ['%s : %s' % (rel, m) for m in CONTROLES if m in t]

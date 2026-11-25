@@ -146,10 +146,12 @@ def build():
                         c.media('photo', photo, '(min-width: 1440px) 660px, (min-width: 1000px) 46vw, 100vw', fmt='4x5'),
                         inverse=True, legende=pf.legende(photo), cls='feat--haut')
 
-    # 7. Collectivités : cartes typographiques (aucune photo rattachée à ces lieux ; nature et année des travaux : C22)
-    salles = ''.join('<li class="lieu lieu--typo"><span class="lieu__type">Collectivité</span><span class="lieu__nom">%s</span>'
-                     '<span class="laser laser--court" aria-hidden="true"></span><span class="lieu__commune">%s</span></li>'
-                     % (c.insec(e(c.nom_ref(rid))), commune) for rid, commune in (('plan-les-ouates', 'Plan-les-Ouates'), ('collonge-bellerive', 'Collonge-Bellerive')))
+    # 7. Collectivités : armoiries de la commune (aucune photo rattachée à ces lieux ; nature et année des travaux : C22)
+    def salle(rid, commune):
+        logo = ('<span class="lieu__logo">%s</span>' % c.logo_img(rid, alt='')) if c.logo_affiche(rid) else ''
+        return ('<li class="lieu lieu--logo">%s<span class="lieu__body"><span class="lieu__type">Collectivité</span>'
+                '<span class="lieu__nom">%s</span><span class="lieu__commune">%s</span></span></li>' % (logo, c.insec(e(c.nom_ref(rid))), commune))
+    salles = ''.join(salle(rid, commune) for rid, commune in (('plan-les-ouates', 'Plan-les-Ouates'), ('collonge-bellerive', 'Collonge-Bellerive')))
     corps += '''    <section class="section section--dark on-dark" aria-labelledby="public-titre" data-trait>
       <div class="container cas-public">
         <div>

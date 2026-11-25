@@ -1200,3 +1200,15 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
     background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / .10), transparent 60%); }
   .svc--spec:hover::before, .type--cta:hover::before, .chiffres:hover::before { opacity: 1; }
 }
+
+/* 32. Retouches : pied de page aligné, en-têtes sans trait rouge */
+.site-footer .footer-refs { padding-block: 32px; }
+.site-footer .badges--pied { margin: 0; padding: 0; border-top: 0; }
+.footer-bottom ul { margin: 0; }
+.hero .laser, .page-head .laser { visibility: hidden; animation: none; }
+.lieu--logo .lieu__logo { display: flex; align-items: center; justify-content: center; min-height: 150px; padding: 24px; background: var(--white); color: var(--ink); }
+.lieu--logo .lieu__logo img { width: auto; max-width: 80%; max-height: 84px; }
+.lieu--logo .lieu__nom { margin: 4px 0 6px; padding: 0; }
+.lieu--logo .lieu__logo img { height: 72px; max-height: none; }
+.feat .laser--feat { width: 48px; margin-left: 0; animation: none; transform: none; }
+.hero--plein .laser { display: none; }

@@ -10,7 +10,8 @@ from carte import carte_svg
 
 def build():
     # Les horaires (C03) ne figurent dans la meta qu'une fois confirmés, comme dans la page (audit SEO v4)
-    p = dict(fichier='contact.html', formulaire=True, title='Contact et demande de devis, Genève | Andy Construct',
+    hero_html, preload = c.hero_image('photo', 'faux-plafond-placo-gorge-lumineuse-01')
+    p = dict(fichier='contact.html', formulaire=True, preload=preload, title='Contact et demande de devis, Genève | Andy Construct',
              desc='Demandez un devis en trois étapes ou appelez le +41 22 771 20 15%s. Route des Acacias 48, Carouge. Toute la Suisse romande.'
                   % V('C03', ', du lundi au vendredi', ''))
     p['ld'] = [ld_page('contact.html', p['title'], 'Contact', typ='ContactPage', extra={'about': {'@id': PROD + '#entreprise'}})]
@@ -21,7 +22,7 @@ def build():
     note = '<p class="hero__note">%s%s</p>' % (h + '. ' if h else '', '%s : %s' % (mob_label(), tel_link(numero='mobile', emplacement='entete_page')))
     corps = hero_page('Contact', 'Contact et demande de devis',
                       'Appelez-nous, laissez votre numéro, ou décrivez vos travaux en <b>trois étapes</b>.',
-                      actions=actions, extra='', badges=note, cls='hero--contact')
+                      actions=actions, media=hero_html, extra='', badges=note, cls='hero--contact')
 
     rdv = T('C29', ' Sur rendez-vous.', '')
     aside = '''<div class="contact__aside">

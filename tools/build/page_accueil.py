@@ -188,28 +188,37 @@ def carte_service(s, titre, phrase, spec):
 
 # ---------------------------------------------------------------- H4 · projets de référence : lieux nommés et avant / après
 LIEUX = [
-    # (id de référence, type, commune, photo rattachée (C25) ou None, ancre réalisations)
-    ('conservatoire-musique-geneve', 'École de musique', 'Genève', None, None),
+    # (id de référence ou None, type, commune, photo, ancre réalisations)
+    # Chaque carte montre un vrai chantier photographié. Le nom du lieu n'apparaît que si le rattachement est confirmé (C25) ;
+    # sinon la carte reprend le titre du projet (aucune photo n'est attribuée à un lieu sans confirmation).
     ('alhambra', 'Salle de spectacle', 'Genève', 'chantier-salle-de-spectacle-01', 'projet-salle-de-spectacle'),
     ('plan-les-ouates', 'Collectivité', 'Plan-les-Ouates', 'chantier-ossature-puits-de-lumiere-02', 'projet-grande-salle-ossature'),
-    ('head-geneve', 'Haute école d\'art et de design', 'Genève', None, None),
+    (None, None, None, 'plafond-tendu-ilots-lumineux-01', 'projet-ilots-tissu-tendu'),
+    (None, None, None, 'cloisons-modulaires-vitrees-01', 'projet-cloisons-vitrees'),
+    (None, None, None, 'plafond-couronnes-lumineuses-01', 'projet-couronnes-lumineuses'),
+    # Secours : chantiers publiés dans toutes les versions
+    (None, None, None, 'plafond-placo-ilot-ovale-01', 'projet-ilot-ovale'),
+    (None, None, None, 'faux-plafond-placo-gorge-lumineuse-01', 'projet-hall-gorge-lumineuse'),
+    (None, None, None, 'chantier-suspentes-ossature-01', 'projet-faux-plafond-dalle-isolee'),
 ]
 
 
+def lieu_ok(x):
+    return pf.photo_ok(x[3]) and x[4] in pf.PROJ
+
+
 def carte_lieu(rid, typ, commune, photo, ancre, grand=False):
-    nom = c.nom_ref(rid) if rid != 'alhambra' else 'Salle de l\'Alhambra'
-    a_photo = photo and definitif('C25') and pf.photo_ok(photo) and (not ancre or ancre in pf.PROJ)
-    if a_photo:
-        media = c.pic_crop(photo, '16x9' if grand else '4x5', '(min-width: 1100px) %s, 100vw' % ('720px' if grand else '300px'), pf.alt(photo))
-        corps = ('<span class="lieu__media">%s</span><span class="lieu__body"><span class="lieu__type">%s</span>'
-                 '<span class="lieu__nom">%s</span><span class="lieu__commune">%s</span></span>' % (media, typ, c.insec(e(nom)), commune))
-        inner = marque('C25', corps) if ctx.MODE == 'verification' else corps
-        href = 'realisations.html#' + ancre if ancre else None
-        el = ('<a class="lieu__link" href="%s">%s</a>' % (href, inner)) if href else inner
-        return '<li class="lieu lieu--photo%s">%s</li>' % (' hcard--grand' if grand else '', el)
-    return ('<li class="lieu lieu--typo"><span class="lieu__type">%s</span><span class="lieu__nom">%s</span>'
-            '<span class="laser laser--court" aria-hidden="true"></span><span class="lieu__commune">%s</span></li>'
-            % (typ, c.insec(e(nom)), commune))
+    projet = pf.PROJ[ancre]
+    if rid and definitif('C25'):
+        nom = c.nom_ref(rid) if rid != 'alhambra' else 'Salle de l\'Alhambra'
+        texte = '<span class="lieu__type">%s</span><span class="lieu__nom">%s</span><span class="lieu__commune">%s</span>' % (typ, c.insec(e(nom)), commune)
+    else:
+        texte = '<span class="lieu__type">%s</span><span class="lieu__nom">%s</span>' % (pf._txt(projet['lieu']), e(projet['titre']))
+    media = c.pic_crop(photo, '16x9' if grand else '4x5', '(min-width: 1100px) %s, 100vw' % ('720px' if grand else '300px'), pf.alt(photo))
+    corps = '<span class="lieu__media">%s</span><span class="lieu__body">%s</span>' % (media, texte)
+    inner = marque('C25', corps) if ctx.MODE == 'verification' and rid else corps
+    return '<li class="lieu lieu--photo%s"><a class="lieu__link" href="realisations.html#%s">%s</a></li>' % (
+        ' hcard--grand' if grand else '', ancre, inner)
 
 
 def carte_avant_apres(grand):
@@ -227,18 +236,14 @@ def carte_avant_apres(grand):
 
 
 def projets():
-    """La grande carte revient au premier lieu qui a une vraie photo rattachée (C25), sinon à l'avant / après."""
-    grand = next((x for x in LIEUX if x[3] and definitif('C25') and pf.photo_ok(x[3])), None)
-    cartes = []
-    if grand:
-        cartes.append(carte_lieu(*grand, grand=True))
-    else:
-        cartes.append(carte_avant_apres(True))
-    for x in LIEUX:
-        if x is not grand:
-            cartes.append(carte_lieu(*x))
-    if grand:
-        cartes.append(carte_avant_apres(False))
+    """Grande carte : le premier chantier photographié ; puis l'avant / après et trois autres chantiers (toujours avec photo)."""
+    lieux = [x for x in LIEUX if lieu_ok(x)]
+    if not lieux:
+        return carte_avant_apres(True)
+    cartes = [carte_lieu(*lieux[0], grand=True)]
+    cartes += [carte_lieu(*x) for x in lieux[1:3]]
+    cartes.append(carte_avant_apres(False))
+    cartes += [carte_lieu(*x) for x in lieux[3:4]]
     return ''.join(cartes)
 
 
