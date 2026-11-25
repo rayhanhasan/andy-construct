@@ -135,7 +135,7 @@ def htaccess():
         u = urlsplit(umami)
         origine_umami = ' %s://%s' % (u.scheme, u.netloc)
     csp = ("default-src 'self'; script-src 'self' %s%s; style-src 'self'; img-src 'self' data:; font-src 'self'; "
-           "connect-src 'self'%s; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+           "connect-src 'self'%s; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
            % (csp_hash(), origine_umami, origine_umami))
     hote = ('''# 2) Accueil : une seule adresse « / » (le lien direct vers /index.html est redirigé ; DirectoryIndex n'est pas concerné)
 RewriteCond %{THE_REQUEST} \\s/index\\.html[\\s?]
