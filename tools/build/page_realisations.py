@@ -16,6 +16,13 @@ SLOTS = {'une': ('16x9', '(min-width: 1100px) 860px, 100vw'), 'l': ('16x9', '(mi
 RANGEES = [['l', 'p'], ['m', 'm', 'm'], ['p', 'l'], ['h', 'h']]
 
 
+def definition(x, fmt):
+    """Largeur utile (px) de la première photo d'un projet dans ce recadrage (ou de la photo entière)."""
+    pid = pf.proj_photos(x)[0]
+    r = c.RECADRAGES.get(pid, {}).get(fmt)
+    return max(r['largeurs']) if r else c.MANIFEST[pid].get('largeur_1600', 0)
+
+
 def composer(projets):
     """Le premier projet est mis à la une ; les suivants remplissent des rangées alternées (grande + portrait,
     trois moyennes, portrait + grande, deux demi) sans laisser de projet seul. Un emplacement portrait reçoit
@@ -36,6 +43,8 @@ def composer(projets):
         for slot in choix:
             if slot == 'p':
                 i = next((i for i, x in enumerate(reste) if c.RECADRAGES.get(pf.proj_photos(x)[0], {}).get('4x5')), 0)
+            elif slot in ('l', 'h'):     # grands emplacements : une photo assez définie pour rester nette
+                i = next((i for i, x in enumerate(reste) if definition(x, '16x9') >= 1000), 0)
             else:
                 i = 0
             x = reste.pop(i)
@@ -57,7 +66,7 @@ def visionneuse():
 
 
 def build():
-    hero_html, preload = c.hero_image('photo', 'habillage-placo-niches-arrondies-01')
+    hero_html, preload = c.hero_image('photo', 'piscine-plafond-tendu-lumineux-01')
     p = dict(fichier='realisations.html', title='Réalisations : acoustique, faux plafonds, cloisons | Andy Construct', preload=preload,
              desc='Nos chantiers en images : faux plafonds en tissu tendu et en plâtre, acoustique, cloisons, plâtrerie. Halls, salles, bureaux, logements. Avant / après et références.')
     projets = [x for x in pf.PROJETS if pf.proj_ok(x)]

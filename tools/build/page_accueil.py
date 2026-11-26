@@ -9,31 +9,43 @@ import composants as c
 import portfolio as pf
 from icons import ICONS
 
-# v5 : héro plein cadre. La photo couvre toute la largeur ; le texte se pose dessus, à gauche, sur un dégradé anthracite.
-# Image : plafond blanc à retombées courbes au-dessus d'un plateau vitré (illustration sous licence, mention « Illustration »).
-# Les photos de chantier du client sont trop sombres ou trop petites pour un plein cadre ; elles restent dans les pages.
-HERO_ILL = 'plafond-retombees-courbes-bureaux'
-SIZES_HERO = '100vw'
+# v6 : en-tête au format des pages (texte à gauche, photo à droite) ; la photo est un diaporama des chantiers du client
+DIAPOS = [
+    # (photo, lieu, ouvrage, projet)
+    ('salon-ovales-tissu-tendu-01', 'Salon', 'Îlots ovales en tissu tendu', 'projet-salon-ovales'),
+    ('piscine-plafond-tendu-lumineux-01', 'Piscine intérieure', 'Plafond tendu et cercles lumineux', 'projet-piscine-plafond-tendu'),
+    ('tissu-tendu-cadres-espace-vitre-01', 'Salle vitrée', 'Tissu tendu et cadres lumineux', 'projet-tissu-tendu-cadres'),
+    ('restaurant-traitement-acoustique-01', 'Restaurant', 'Plafond traité en acoustique', 'projet-restaurant-acoustique'),
+]
+SZ_DIAPO = '(min-width: 1440px) 600px, 42vw'
 
 
-def _hero_src():
-    import illustrations
-    it = illustrations.trouver(ident=HERO_ILL)
-    b = 'assets/img/illustrations/' + HERO_ILL
-    larg = [w for w in (800, 1600, 2400) if os.path.exists(os.path.join(ctx.SITE, '%s-%d.webp' % (b, w)))]
-    srcset = ', '.join('%s-%d.webp %dw' % (b, w, w) for w in larg)
-    return it, b, srcset, it.get('largeur') or 2400, it.get('hauteur') or 1600
+def diapo_pic(pid, premiere):
+    b45, b169 = c._srcset_crop(pid, '4x5'), c._srcset_crop(pid, '16x9')
+    charge = 'fetchpriority="high"' if premiere else 'fetchpriority="low"'   # pas de chargement différé : la photo suivante est prête au fondu
+    return ('<picture><source media="(min-width: 900px)" type="image/webp" srcset="%s" sizes="%s">'
+            '<source type="image/webp" srcset="%s" sizes="100vw"><img src="%s-800.jpg" width="1600" height="900" alt="%s" %s decoding="async"></picture>'
+            % (b45[0], SZ_DIAPO, b169[0], b169[1], e(pf.alt(pid)), charge))
+
+
+def diaporama():
+    vues, pts = '', ''
+    n = len(DIAPOS)
+    for i, (pid, lieu, ouvrage, projet) in enumerate(DIAPOS):
+        on = i == 0
+        vues += ('<li class="diapo__vue%s" aria-roledescription="diapositive" aria-label="%d sur %d : %s"%s>%s'
+                 '<a class="diapo__legende" href="realisations.html#%s"%s><span class="diapo__lieu">%s</span><span class="diapo__titre">%s</span></a></li>'
+                 % (' is-on' if on else '', i + 1, n, e(lieu + ', ' + ouvrage), '' if on else ' aria-hidden="true"', diapo_pic(pid, on),
+                    projet, '' if on else ' tabindex="-1"', e(lieu), e(ouvrage)))
+        pts += ('<button type="button" class="diapo__pt%s" aria-label="Photo %d : %s"%s><span class="diapo__barre"></span></button>'
+                % (' is-on' if on else '', i + 1, e(lieu), ' aria-current="true"' if on else ''))
+    return ('<div class="diapo" data-diapo aria-roledescription="carrousel" aria-label="Nos chantiers en photos">'
+            '<ul class="diapo__vues">%s</ul><div class="diapo__nav">%s</div>'
+            '<p class="diapo__compte" aria-hidden="true"><span data-diapo-n>01</span> / %02d</p></div>' % (vues, pts, n))
 
 
 def hero_preload():
-    _, _, srcset, _, _ = _hero_src()
-    return '  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="%s">\n' % (srcset, SIZES_HERO)
-
-
-def hero_pic():
-    it, b, srcset, w, h = _hero_src()
-    return ('<picture><source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="%d" height="%d" alt="%s" fetchpriority="high"></picture>'
-            '<span class="ill__tag">Illustration</span>' % (srcset, SIZES_HERO, b, w, h, e(it.get('alt') or '')))
+    return c.hero_image('photo', DIAPOS[0][0])[1]
 
 
 def business():
@@ -45,7 +57,7 @@ def business():
         'description': "Entreprise d'aménagement intérieur de Carouge (Genève), active depuis 2007 : isolation acoustique et phonique (spécialité), "
                        "faux plafonds, cloisons et doublages, panneaux sandwich isothermes, plâtrerie et peinture, dans toute la Suisse romande.",
         'url': PROD, 'logo': PROD + 'assets/img/brand/logo-andy-construct.png',
-        'image': [img('faux-plafond-placo-gorge-lumineuse-01'), img('faux-plafond-placo-gorge-lumineuse-02'), img('chantier-suspentes-ossature-01')],
+        'image': [img('salon-ovales-tissu-tendu-01'), img('piscine-plafond-tendu-lumineux-01'), img('restaurant-traitement-acoustique-01')],
         'telephone': TEL, 'email': mail(), 'foundingDate': '2007',
         'foundingLocation': {'@type': 'Place', 'name': 'Perly-Certoux'},
         'identifier': {'@type': 'PropertyValue', 'propertyID': 'IDE', 'value': IDE},
@@ -118,40 +130,24 @@ def hero_titre():
     return ''.join('<span data-flag="hero-titre" data-variant="%s">%s</span>' % (v, titre_lignes(TITRES[v])) for v in ('a', 'b'))
 
 
-VIDEO = 'assets/video/hero-lissage-enduit'
-
-
-def hero_media():
-    """Photo réelle (témoin). Variante B du drapeau « hero-media » (inactif, visible en recette par ?flag=hero-media:b) :
-    vidéo d'illustration sous licence, chargée par main.js seulement sur ordinateur, sans mouvement réduit ni économie de
-    données ; son affiche est le LCP ; mention « Illustration » et bouton pause."""
-    photo = hero_pic()
-    if not _drapeau('hero-media'):
-        return photo
-    return ('<span class="hero__var" data-flag="hero-media" data-variant="a">%s</span>'
-            '<span class="hero__var hero__video" data-flag="hero-media" data-variant="b" data-video="%s">'
-            '<img src="%s-poster.webp" width="1280" height="720" alt="" loading="lazy" decoding="async">'
-            '<span class="ill__tag">Illustration</span>'
-            '<button type="button" class="hero__pause" aria-pressed="false" hidden>Mettre la vidéo en pause</button></span>'
-            % (photo, VIDEO, VIDEO))
-
-
 def hero(p):
-    """Héro v5 (mêmes informations, nouvelle disposition) : photo plein cadre, voile anthracite à gauche, slogan au-dessus
-    du titre, boutons, puis une barre de garanties posée en bas de l'image. Mobile : texte sur la photo, garanties dessous."""
+    """Héro v6 : même gabarit que les autres pages (panneau anthracite, image à droite jusqu'au bord), mêmes informations ;
+    l'image est un diaporama des chantiers photographiés par l'entreprise (fondu, zoom lent, vignettes, glisser au doigt)."""
     texte = ('Régies, architectes, communes ou particuliers : nous venons voir, puis remettons une <b>offre écrite</b>%s.'
              % T('C06', ' détaillée', ''))
-    return '''    <section class="hero hero--plein" aria-labelledby="titre-page" data-suivi-zone="heros">
-      <div class="hero__fond">%s</div>
-      <div class="container hero__contenu">
-        <p class="hero__slogan"><span class="laser laser--court" aria-hidden="true"></span>L'expertise de l'aménagement intérieur</p>
-        <h1 id="titre-page" class="hero__titre">%s</h1>
-        <p class="hero__text">%s</p>
-        <div class="hero__actions" data-cta-principal>%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>
+    return '''    <section class="hero hero--page hero--accueil" aria-labelledby="titre-page" data-suivi-zone="heros">
+      <div class="container hero__grid">
+        <div class="hero__panel">
+          <p class="hero__slogan">L'expertise de l'aménagement intérieur</p>
+          <h1 id="titre-page" class="hero__titre">%s</h1>
+          <p class="hero__text">%s</p>
+          <div class="hero__actions" data-cta-principal>%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe">Appeler le %s</a></div>
+          <div class="hero__media">%s</div>
+          %s
+        </div>
       </div>
-      <div class="hero__barre"><div class="container">%s</div></div>
     </section>
-''' % (hero_media(), hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, c.badges(['B1', 'B2', 'B3', '|B13|B6|B7|B8']))
+''' % (hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, diaporama(), c.badges(['B1', 'B2', 'B3'], cls='badges--3'))
 
 
 # ---------------------------------------------------------------- H3 · prestations : 4 cartes illustrées (image 4:3)
@@ -164,10 +160,10 @@ EXPERTISE = [
     ('faux-plafonds', 'Faux plafonds', 'Plafonds techniques et décoratifs pour l\'isolation acoustique et phonique : tissu tendu, plaque de plâtre, fibre minérale ou métal, isolant en fibre de bois.', False),
     ('platrerie-peinture', 'Plâtrerie et peinture', 'Plâtrerie, enduits, lissages et peinture intérieure pour des finitions nettes et durables.', False),
 ]
-PHOTO_SVC = {'isolation-acoustique': ['panneaux-acoustiques-muraux-01', 'plafond-tendu-ilots-lumineux-03'],
-             'cloisons': [],
-             'faux-plafonds': ['faux-plafond-placo-gorge-lumineuse-02'],
-             'platrerie-peinture': ['habillage-placo-niches-arrondies-01']}
+PHOTO_SVC = {'isolation-acoustique': ['baffles-acoustiques-eclairage-indirect-01'],
+             'cloisons': ['piece-combles-platrerie-peinture-01'],
+             'faux-plafonds': ['couloir-plafond-ligne-lumineuse-01'],
+             'platrerie-peinture': ['combles-amenages-charpente-01']}
 
 
 def svc_media(s):
@@ -191,11 +187,14 @@ LIEUX = [
     # (id de référence ou None, type, commune, photo, ancre réalisations)
     # Chaque carte montre un vrai chantier photographié. Le nom du lieu n'apparaît que si le rattachement est confirmé (C25) ;
     # sinon la carte reprend le titre du projet (aucune photo n'est attribuée à un lieu sans confirmation).
+    # v6 : chantiers photographiés par l'entreprise
+    (None, None, None, 'restaurant-traitement-acoustique-01', 'projet-restaurant-acoustique'),
+    (None, None, None, 'salle-de-reunion-cadres-acoustiques-01', 'projet-salle-reunion-cadres'),
+    (None, None, None, 'panneaux-acoustiques-sous-charpente-01', 'projet-panneaux-suspendus'),
+    (None, None, None, 'piece-combles-platrerie-peinture-01', 'projet-combles-platrerie'),
     ('alhambra', 'Salle de spectacle', 'Genève', 'chantier-salle-de-spectacle-01', 'projet-salle-de-spectacle'),
     ('plan-les-ouates', 'Collectivité', 'Plan-les-Ouates', 'chantier-ossature-puits-de-lumiere-02', 'projet-grande-salle-ossature'),
     (None, None, None, 'plafond-tendu-ilots-lumineux-01', 'projet-ilots-tissu-tendu'),
-    (None, None, None, 'cloisons-modulaires-vitrees-01', 'projet-cloisons-vitrees'),
-    (None, None, None, 'plafond-couronnes-lumineuses-01', 'projet-couronnes-lumineuses'),
     # Secours : chantiers publiés dans toutes les versions
     (None, None, None, 'plafond-placo-ilot-ovale-01', 'projet-ilot-ovale'),
     (None, None, None, 'faux-plafond-placo-gorge-lumineuse-01', 'projet-hall-gorge-lumineuse'),
@@ -254,7 +253,7 @@ def methode():
               ('Chantier protégé', T('C07', 'Sols et meubles couverts, <b>nettoyage chaque soir</b>.', 'Lieux protégés pendant les travaux.')),
               ('Réception', 'Le tour des finitions, <b>ensemble</b>.')]
     eng = T('C06', '<b>Aucun supplément</b> sans votre accord écrit et chiffré.', '')
-    photo = 'habillage-placo-niches-arrondies-01'
+    photo = 'tracage-laser-plafond-01'
     return '''    <section class="section" aria-labelledby="methode-titre">
       <div class="container methode">
         <figure class="methode__photo">%s<figcaption>%s</figcaption></figure>
@@ -326,6 +325,6 @@ def build():
            devis2=devis_btn(p, 'realisations', cls='btn', texte='Un projet semblable ? Demander un devis'), pdf=lien_pdf,
            avis=(('    <section class="section section--tight"><div class="container">%s</div></section>\n' % c.avis_ligne()) if c.avis_ligne() else ''),
            temoignages=c.temoignages(), tel_uri=TEL_URI, tel=TEL, faq=faq_html)
-    # H9 : rappel des références (bande défilante) juste avant la demande, puis le bloc de demande (sans ligne de références)
-    corps += c.bande_logos(cls='defile--avant-demande') + c.bloc_demande(p, refs=False, source='accueil')
+    # v6 : plus de bande de logos avant la demande (doublon avec le pied de page)
+    corps += c.bloc_demande(p, refs=False, source='accueil')
     page(p, corps)

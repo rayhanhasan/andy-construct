@@ -227,7 +227,7 @@ BENEFICES = [('echo', 'Correction acoustique', 'Moins d\'écho et de résonance 
 # ---------------------------------------------------------------- données des quatre pages
 def faux_plafonds():
     s = 'faux-plafonds'
-    hero = 'faux-plafond-placo-gorge-lumineuse-02'
+    hero = 'piscine-plafond-tendu-lumineux-01'
     return dict(
         service=s, crumb='Faux plafonds', title='Faux plafonds à Genève : tissu tendu, plâtre, métal | Andy Construct',
         desc='Faux plafonds acoustiques, phoniques et coupe-feu : tissu tendu, plaque de plâtre, fibre minérale, métal, fibre de bois. Bureaux, restaurants, écoles, logements. Suisse romande.',
@@ -238,13 +238,13 @@ def faux_plafonds():
         apres_refs=intro('fp-intro', 'Performance technique et rendu esthétique', [
             'Nous concevons et posons des plafonds qui allient <b>performance technique</b> et <b>rendu esthétique</b>.',
             'Nos plafonds réduisent la résonance dans une pièce et limitent la transmission du bruit entre les espaces : <b>bureaux, restaurants, salles de réunion, écoles ou logements</b>.'],
-            img('ill', 'plafond-retombees-courbes-bureaux', SZ_FEAT))
+            img('photo', 'combles-amenages-charpente-01', SZ_FEAT, fmt='4x5'))
         + atouts(BENEFICES, 'fp-atouts', 'Ce que nos plafonds apportent'),
         blocs=lambda p: types(p, [
             ('tissu-tendu', 'Tissu tendu', 'Une surface parfaitement lisse et sur mesure, posée à froid. En version acoustique, elle absorbe le son tout en restant élégante. Idéale pour les bureaux, restaurants et salles de réunion.',
-             'plafond-tendu-ilots-lumineux-01', sch.tissu_tendu(), True),
+             'tissu-tendu-cadres-espace-vitre-01', sch.tissu_tendu(), True),
             ('plaque-de-platre', 'Plaque de plâtre', 'Polyvalente, elle permet des plafonds lisses, des caissons, des jeux de niveaux et l\'éclairage intégré. Elle existe en versions phoniques et coupe-feu.',
-             'faux-plafond-placo-gorge-lumineuse-02', sch.plaque_platre(), False),
+             'couloir-plafond-ligne-lumineuse-01', sch.plaque_platre(), False),
             ('fibre-de-bois', 'Isolation en fibre de bois', 'Un isolant naturel posé au-dessus du faux plafond, invisible une fois les travaux terminés. Il renforce l\'isolation thermique et phonique, quelle que soit la finition choisie.',
              None, sch.fibre_bois(), False),
             ('fibre-minerale', 'Fibre minérale', 'Des dalles démontables qui gardent les réseaux techniques accessibles. Une solution efficace et économique pour les bureaux et les locaux professionnels.',
@@ -254,12 +254,10 @@ def faux_plafonds():
             'fp-types', 'Nos plafonds', 'Cinq solutions, un plafond adapté à chaque usage', '',
             ('Vous hésitez entre plusieurs solutions ?', 'Nous analysons votre espace et vous conseillons le plafond le plus adapté à votre usage, à vos contraintes et à votre budget.', 'Demander conseil')),
         normes=['faux-plafonds'],
-        cas=lambda p: cas_projet('projet-ilots-tissu-tendu' if pf.proj_ok(pf.PROJ['projet-ilots-tissu-tendu']) else 'projet-hall-gorge-lumineuse',
-                                 'Références en faux plafonds',
-                                 'Îlots en <b>tissu tendu</b> suspendus, éclairage indirect et puits de lumière.' if pf.proj_ok(pf.PROJ['projet-ilots-tissu-tendu'])
-                                 else 'Faux plafond en plaques de plâtre aux <b>formes courbes</b>, éclairage et spots intégrés.',
+        cas=lambda p: cas_projet('projet-salon-ovales', 'Références en faux plafonds',
+                                 'Îlots ovales en <b>tissu tendu</b>, bordés d\'un éclairage indirect.',
                                  lien_filtre('faux-plafonds', 'Toutes les réalisations en faux plafonds', 'Toutes les réalisations'),
-                                 lies=['projet-couronnes-lumineuses', 'projet-plafonds-metalliques', 'projet-hall-gorge-lumineuse']),
+                                 lies=['projet-ilots-tissu-tendu', 'projet-couronnes-lumineuses', 'projet-plafonds-metalliques']),
         faq_titre='Questions fréquentes sur les faux plafonds',
         faq=[('Quel faux plafond choisir pour réduire l\'écho ?', 'Un plafond absorbant : tissu tendu acoustique, plaques perforées ou dalles en fibre minérale. Nous le choisissons selon l\'usage de la pièce.', None),
              ('Peut-on garder l\'accès aux réseaux techniques ?', 'Oui : les dalles en fibre minérale ou les bacs métalliques se démontent. En plaque de plâtre, nous prévoyons des trappes de visite.', None),
@@ -273,7 +271,7 @@ def faux_plafonds():
 
 def cloisons():
     s = 'cloisons'
-    hero = 'chantier-ossature-puits-de-lumiere-02'
+    hero = 'piece-combles-platrerie-peinture-01'
     return dict(
         service=s, crumb='Cloisons', title='Cloisons et doublages à Genève : plâtre, vitrées, isothermes | Andy Construct',
         desc='Cloisons en plaques de plâtre, mobiles, vitrées et aluminium, doublages thermiques et phoniques, panneaux sandwich isothermes. Bureaux et bâtiments professionnels, Suisse romande.',
@@ -286,7 +284,7 @@ def cloisons():
             'Qu\'il s\'agisse de créer de nouveaux espaces, de réorganiser des surfaces existantes ou d\'améliorer les performances d\'un bâtiment, nous proposons des solutions techniques et esthétiques adaptées aux <b>environnements professionnels</b>.']),
         blocs=lambda p: types(p, [
             ('plaques-de-platre', 'Cloisons en plaques de plâtre', 'Pour aménager et redistribuer les espaces intérieurs : des séparations fonctionnelles, en version acoustique, thermique ou coupe-feu selon les exigences du projet.',
-             None, sch.cloison_platre(), False),
+             'couloir-plafond-ligne-lumineuse-01', sch.cloison_platre(), False),
             ('mobiles', 'Cloisons mobiles et amovibles', 'Des solutions flexibles pour faire évoluer les espaces : moduler les volumes, créer des zones de travail indépendantes ou transformer rapidement la configuration des locaux.',
              None, sch.cloison_mobile(), False),
             ('vitrees', 'Parois vitrées', 'Luminosité, transparence et élégance : elles délimitent les bureaux et les salles de réunion tout en préservant une sensation d\'ouverture.',
@@ -294,7 +292,7 @@ def cloisons():
             ('aluminium', 'Cloisons aluminium', 'Des systèmes pleins, vitrés ou mixtes. Leur modularité et leur finition soignée répondent aux exigences des bureaux, espaces commerciaux et bâtiments professionnels.',
              None, sch.cloison_alu(), False),
             ('doublages', 'Doublages thermiques et phoniques', 'Adaptés au confort du bâtiment : ils limitent les déperditions thermiques, améliorent le confort acoustique et contribuent à la performance globale des espaces.',
-             None, sch.doublage(), False)],
+             'combles-amenages-charpente-01', sch.doublage(), False)],
             'cl-types', 'Nos solutions de cloisonnement', 'Créer, moduler, isoler', '',
             ('Quelle solution pour votre projet ?', 'Nous étudions vos contraintes et vous orientons vers le système le plus adapté.', 'Nous contacter'))
         + bande('sandwich-titre', 'Notre spécialité', 'Panneaux sandwich isothermes', [
@@ -328,13 +326,13 @@ def platrerie_peinture():
         h1='Plâtrerie et peinture',
         chapeau='Du support brut à la dernière couche de peinture : des <b>surfaces impeccables</b> pour vos projets neufs et vos rénovations.',
         btn='Demander un devis pour de la plâtrerie ou de la peinture',
-        hero=('photo', 'habillage-placo-niches-arrondies-01'),
+        hero=('photo', 'combles-amenages-charpente-01'),
         apres_refs=intro('pp-intro', 'Le savoir-faire qui fait la différence', [
             'Nous réalisons des travaux de plâtrerie et de peinture dans le cadre de projets de <b>construction</b>, de <b>rénovation</b> et de <b>transformation</b> des espaces professionnels.',
             'Ce sont les finitions qui donnent à un espace son caractère et révèlent la qualité de tout le travail réalisé en amont.']),
         blocs=lambda p: types(p, [
             ('platrerie', 'Plâtrerie', 'Pose de plaques de plâtre, traitement des joints et des angles, réparation des murs et plafonds. Des supports droits et sains, prêts à recevoir la finition.',
-             None, sch.platrerie(), False),
+             'couloir-plafond-ligne-lumineuse-01', sch.platrerie(), False),
             ('enduits', 'Enduits et lissages', 'Ils effacent les défauts et donnent une surface parfaitement plane : l\'étape clé pour une peinture sans imperfections, même en lumière rasante.',
              None, sch.enduit(), False),
             ('peinture', 'Peinture intérieure', 'Murs, plafonds, portes et boiseries : des peintures de qualité, adaptées à l\'usage de chaque pièce, pour un rendu homogène et durable.',
@@ -356,9 +354,10 @@ def platrerie_peinture():
             'Besoin de plus de lumière ou de modularité ? Découvrez aussi nos cloisons mobiles, parois vitrées, cloisons aluminium et panneaux sandwich isothermes.'],
             sch.plan_espaces(), action='<a class="btn btn--light" href="cloisons.html">Voir nos solutions de cloisons</a>'),
         normes=['platrerie-peinture'],
-        cas=lambda p: cas_aa('aa1', 'Référence en plâtrerie', 'Caisson en plaques de plâtre sous une verrière', '',
-                             'Caisson ajusté en plaques de plâtre, joints traités, <b>prêt à peindre</b>.',
-                             lien_filtre('platrerie-peinture', 'Toutes les réalisations', 'Toutes les réalisations')),
+        cas=lambda p: cas_projet('projet-combles-platrerie', 'Référence en plâtrerie',
+                                 'Rampants et doublages en plaques de plâtre, <b>angles nets</b>, jusqu\'à la peinture.',
+                                 lien_filtre('platrerie-peinture', 'Toutes les réalisations en plâtrerie', 'Toutes les réalisations'),
+                                 lies=['projet-cage-escalier-niches', 'projet-hall-gorge-lumineuse']),
         faq_titre='Questions fréquentes sur la plâtrerie et la peinture',
         faq=[('Pourquoi la préparation est-elle si importante ?', 'Une peinture révèle chaque défaut du support. Enduits et ponçage donnent une surface plane : le rendu reste net, même en lumière rasante.', None),
              ('Quelle finition choisir : mat, satiné ou brillant ?', 'Le mat cache les défauts, le satiné se lave facilement, le brillant résiste le mieux. Nous vous conseillons selon la pièce.', None),
@@ -402,27 +401,27 @@ def acoustique():
         h1='Isolation acoustique et phonique',
         chapeau='Notre spécialité : <b>moins d\'écho</b> dans vos salles, <b>moins de bruit</b> entre vos espaces.',
         btn='Demander un devis pour une isolation acoustique',
-        hero=('photo', 'panneaux-acoustiques-muraux-01') if reelle else ('ill', 'acoustique-couloir-panneaux-plafond'),
+        hero=('photo', 'salle-de-reunion-cadres-acoustiques-01'),
         apres_refs=atouts(BENEFICES, 'ac-atouts', 'Ce que nous traitons') + duo,
         blocs=lambda p: types(p, [
             ('ilots', 'Îlots acoustiques', 'Suspendus au plafond ou fixés au mur, ils absorbent le son là où il rebondit, sans toucher au plafond existant.',
-             'plafond-tendu-ilots-lumineux-03', sch.tissu_tendu(), False),
+             'panneaux-acoustiques-sous-charpente-01', sch.tissu_tendu(), False),
             ('tissu-tendu', 'Tissu tendu acoustique', 'Une toile lisse et sur mesure qui absorbe le son tout en restant élégante : bureaux, restaurants, salles de réunion.',
-             'plafond-tendu-ilots-lumineux-02', sch.tissu_tendu(), True),
+             'salon-ovales-tissu-tendu-01', sch.tissu_tendu(), True),
             ('correction', 'Cadres et baffles acoustiques', 'Des panneaux muraux, imprimés ou unis, et des baffles verticaux qui réduisent la réverbération des grandes salles.',
-             'cadre-acoustique-salle-de-reunion-01' if salle else None, sch.metallique(), False),
+             'baffles-acoustiques-eclairage-indirect-01', sch.metallique(), False),
             ('plafonds-cloisons', 'Plafonds et cloisons phoniques', 'Faux plafonds sur suspentes antivibratiles, cloisons à ossatures séparées et plaques doublées : le bruit ne passe plus.',
-             None, sch.cloison_platre(), False),
+             'restaurant-traitement-acoustique-01', sch.cloison_platre(), False),
             ('doublages', 'Doublages acoustiques', 'Ossature indépendante, laine minérale et plaques : contre les voix et les bruits du local voisin.',
              None, sch.doublage(), False)],
             'ac-types', 'Nos solutions acoustiques', 'Corriger l\'écho, isoler du bruit', '',
             ('Un problème de bruit ?', 'Nous venons écouter votre espace et vous proposons la solution la plus efficace pour votre usage et votre budget.', 'Demander conseil')),
         specifique=specifique,
         normes=['isolation-acoustique'],
-        cas=lambda p: cas_projet('projet-salle-de-reunion', 'Référence en acoustique',
-                                 'Un grand <b>panneau mural absorbant</b> réduit l\'écho de la salle.',
+        cas=lambda p: cas_projet('projet-restaurant-acoustique', 'Référence en acoustique',
+                                 'Un plafond voûté <b>traité en acoustique</b> : la salle pleine reste calme.',
                                  lien_filtre('isolation-acoustique', 'Toutes les réalisations en acoustique', 'Toutes les réalisations'),
-                                 lies=['projet-ilots-tissu-tendu', 'projet-correction-acoustique']) if salle else None,
+                                 lies=['projet-ilots-tissu-tendu', 'projet-correction-acoustique', 'projet-salle-de-reunion']),
         faq_titre='Questions fréquentes sur l\'acoustique',
         faq=[('Quelle différence entre correction acoustique et isolation phonique ?', 'La correction réduit l\'écho dans une pièce. L\'isolation empêche le bruit de passer d\'un local à l\'autre. Les deux se traitent différemment.', None),
              ('Les panneaux en mousse isolent-ils du bruit ?', 'Non. Ils réduisent un peu l\'écho, sans empêcher le bruit de passer.', None),

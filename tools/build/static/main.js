@@ -576,25 +576,6 @@
     }, { threshold: [0, 0.1, 0.2, 0.3, 0.5] }).observe(dem);
   }
 
-  /* 10. Bande des logos : défilement continu (~40 px/s) si le mouvement est permis ; pause au survol et au bouton */
-  $$('[data-mq]').forEach(function (mq) {
-    var sec = mq.closest('.defile'), btn = sec && $('[data-mq-pause]', sec), tr = $('.mq__track', mq);
-    if (!bouge || !tr) { if (btn) btn.hidden = true; return; }
-    var rail = d.createElement('div'), copie = tr.cloneNode(true);
-    rail.className = 'mq__rail';
-    copie.setAttribute('aria-hidden', 'true');
-    $$('img', copie).forEach(function (i) { i.alt = ''; });
-    mq.insertBefore(rail, tr); rail.appendChild(tr); rail.appendChild(copie);
-    mq.classList.add('is-on');
-    mq.style.setProperty('--mq-d', Math.max(40, Math.round(tr.scrollWidth / 40)) + 's');
-    on(btn, 'click', function () {
-      var p = btn.getAttribute('aria-pressed') !== 'true';
-      btn.setAttribute('aria-pressed', p ? 'true' : 'false');
-      btn.textContent = p ? 'Reprendre le défilement' : 'Mettre en pause';
-      mq.classList.toggle('is-paused', p);
-    });
-  });
-
   /* 11. Tests A/B (drapeaux.js, cro-v3 §5.4) : variantes structurelles, puis mesure dédoublonnée par visiteur */
   var ab = w.acAB, lsLire = function (k) { try { return JSON.parse(w.localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
   var lsEcrire = function (k, v) { try { w.localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -653,27 +634,7 @@
     }
   }
 
-  /* 12. Héro, variante « hero-media » B (recette) : vidéo d'illustration, ordinateur seulement, jamais en mouvement réduit
-     ni en économie de données ; l'affiche reste visible sinon. Bouton pause accessible. */
-  var hv = $('.hero__video[data-video]');
-  if (hv && w.getComputedStyle(hv).display !== 'none') {
-    var cx = navigator.connection || {};
-    if (bouge && w.matchMedia('(min-width: 900px)').matches && !cx.saveData && !/(^|-)2g$/.test(cx.effectiveType || '')) {
-      var v = d.createElement('video'), base = hv.getAttribute('data-video'), bp = $('.hero__pause', hv);
-      v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
-      v.poster = base + '-poster.webp'; v.preload = 'auto';
-      [['webm', 'video/webm'], ['mp4', 'video/mp4']].forEach(function (x) { var so = d.createElement('source'); so.src = base + '-720.' + x[0]; so.type = x[1]; v.appendChild(so); });
-      hv.insertBefore(v, hv.firstChild);
-      bp.hidden = false;
-      on(bp, 'click', function () {
-        var pause = !v.paused; if (pause) v.pause(); else v.play();
-        bp.setAttribute('aria-pressed', pause ? 'true' : 'false');
-        bp.textContent = pause ? 'Relancer la vidéo' : 'Mettre la vidéo en pause';
-      });
-    }
-  }
-
-  /* v5 : interactions retenues. Projecteur sur les cartes sombres ; légère profondeur du héro qui suit la souris.
+  /* v5 : interactions retenues. Projecteur sur les cartes sombres.
      Seulement avec une souris, et jamais en mouvement réduit. */
   if (w.matchMedia && w.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
     d.querySelectorAll('.svc--spec, .type--cta, .chiffres').forEach(function (el) {
@@ -682,15 +643,81 @@
         el.style.setProperty('--mx', (e.clientX - r.left) + 'px'); el.style.setProperty('--my', (e.clientY - r.top) + 'px');
       });
     });
-    var hp = d.querySelector('.hero--plein'), raf = 0;
-    if (hp) hp.addEventListener('pointermove', function (e) {
-      if (raf) return;
-      raf = w.requestAnimationFrame(function () {
-        var r = hp.getBoundingClientRect();
-        hp.style.setProperty('--px', ((e.clientX - r.left) / r.width - .5).toFixed(3));
-        hp.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5).toFixed(3));
-        raf = 0;
+    /* v6 : cartes en légère profondeur (inclinaison de 5° au plus, suit la souris) */
+    d.querySelectorAll('.lieu, .svcs--v5 .svc, .type:not(.type--cta), .hcard').forEach(function (el) {
+      var rf = 0;
+      el.classList.add('est-incline');
+      el.addEventListener('pointermove', function (e) {
+        if (rf) return;
+        rf = w.requestAnimationFrame(function () {
+          var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+          el.style.setProperty('--ry', ((x - .5) * 6).toFixed(2) + 'deg');
+          el.style.setProperty('--rx', ((.5 - y) * 5).toFixed(2) + 'deg');
+          rf = 0;
+        });
       });
+      el.addEventListener('pointerleave', function () { el.style.setProperty('--rx', '0deg'); el.style.setProperty('--ry', '0deg'); });
+    });
+  }
+
+  /* v6 : diaporama de l'en-tête (accueil). Fondu toutes les 6 s, pause au survol, au focus et quand l'onglet est caché ;
+     vignettes cliquables, flèches du clavier, glisser au doigt. En mouvement réduit : pas de défilement automatique. */
+  var dp = $('[data-diapo]');
+  if (dp) {
+    var vues = $$('.diapo__vue', dp), pts = $$('.diapo__pt', dp), num = $('[data-diapo-n]', dp), cur = 0, tm = 0, arret = false;
+    var DUREE = 6000, calme = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dp.style.setProperty('--diapo-duree', DUREE + 'ms');
+    var montrer = function (k) {
+      k = (k + vues.length) % vues.length;
+      if (k === cur) return;
+      [cur, k].forEach(function (j) {
+        var a = j === k;
+        vues[j].classList.toggle('is-on', a);
+        if (a) vues[j].removeAttribute('aria-hidden'); else vues[j].setAttribute('aria-hidden', 'true');
+        var l = $('a', vues[j]); if (l) { if (a) l.removeAttribute('tabindex'); else l.setAttribute('tabindex', '-1'); }
+        pts[j].classList.toggle('is-on', a);
+        if (a) pts[j].setAttribute('aria-current', 'true'); else pts[j].removeAttribute('aria-current');
+      });
+      cur = k;
+      if (num) num.textContent = (k < 9 ? '0' : '') + (k + 1);
+      lancer();
+    };
+    var lancer = function () {
+      w.clearTimeout(tm);
+      dp.classList.remove('is-play');
+      if (calme || arret) return;
+      void dp.offsetWidth;            // relance l'animation de la barre
+      dp.classList.add('is-play');
+      tm = w.setTimeout(function () { montrer(cur + 1); }, DUREE);
+    };
+    var suspendre = function (s) { arret = s; dp.classList.toggle('is-pause', s); if (s) w.clearTimeout(tm); else lancer(); };
+    pts.forEach(function (b, k) { on(b, 'click', function () { montrer(k); suivi('diapo_clic', { photo: k + 1 }); }); });
+    on(dp, 'pointerenter', function (e) { if (e.pointerType === 'mouse') suspendre(true); });
+    on(dp, 'pointerleave', function (e) { if (e.pointerType === 'mouse') suspendre(false); });
+    on(dp, 'focusin', function () { suspendre(true); });
+    on(dp, 'focusout', function (e) { if (!dp.contains(e.relatedTarget)) suspendre(false); });
+    on(dp, 'keydown', function (e) {
+      if (e.key === 'ArrowRight') { montrer(cur + 1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { montrer(cur - 1); e.preventDefault(); }
+    });
+    var x0 = null;
+    on(dp, 'touchstart', function (e) { x0 = e.touches[0].clientX; });
+    on(dp, 'touchend', function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) montrer(cur + (dx < 0 ? 1 : -1));
+    });
+    on(d, 'visibilitychange', function () { if (d.hidden) w.clearTimeout(tm); else if (!arret) lancer(); });
+    lancer();
+  }
+
+  /* v6 : les photos se dévoilent à l'entrée dans l'écran (léger zoom arrière) */
+  if (w.IntersectionObserver && d.documentElement.classList.contains('anim')) {
+    var rv = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-vu'); rv.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    $$('.type__media--photo, .feat__media, .methode__photo, .lieu__media, .cas__media, .bande__visuel').forEach(function (el) {
+      el.classList.add('rv'); rv.observe(el);
     });
   }
 })(window, document);

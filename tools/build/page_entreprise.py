@@ -10,7 +10,7 @@ from composants import I_BADGE
 
 
 def build():
-    hero_html, preload = c.hero_image('photo', 'chantier-suspentes-ossature-01')
+    hero_html, preload = c.hero_image('photo', 'piece-combles-platrerie-peinture-01')
     p = dict(fichier='entreprise.html', preload=preload, title='L\'entreprise, à Carouge depuis 2007 | Andy Construct',
              desc='Andy Construct, Chanton & Cie : entreprise de Carouge inscrite au registre du commerce depuis 2007. Histoire, méthode, engagements, identité.')
     p['ld'] = [ld_page('entreprise.html', p['title'], 'L\'entreprise', typ='AboutPage', extra={'about': {'@id': PROD + '#entreprise'}})]
@@ -57,7 +57,7 @@ def build():
     corps += c.feat('metier-titre', 'Notre métier, inscrit au registre du commerce',
                     '<figure class="citation"><blockquote><p>« Pose de faux-plafonds phoniques et cloisons légères phoniques et thermiques, isolations intérieures, '
                     'plâtrerie, peinture, aménagement de logements et bureaux. »</p></blockquote><figcaption>But social, registre du commerce de Genève</figcaption></figure>',
-                    c.media('ill', 'interieur-porte-coulissante-chene', '(min-width: 1440px) 660px, (min-width: 1000px) 46vw, 100vw'),
+                    c.media('photo', 'combles-amenages-charpente-01', '(min-width: 1440px) 660px, (min-width: 1000px) 46vw, 100vw', fmt='4x5'),
                     inverse=True, cls='section--mist')
 
     # Engagements (3 à 4 points, selon les confirmations ; aucune promesse non confirmée en production)

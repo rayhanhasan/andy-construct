@@ -10,7 +10,7 @@ from carte import carte_svg
 
 def build():
     # Les horaires (C03) ne figurent dans la meta qu'une fois confirmés, comme dans la page (audit SEO v4)
-    hero_html, preload = c.hero_image('photo', 'faux-plafond-placo-gorge-lumineuse-01')
+    hero_html, preload = c.hero_image('photo', 'tissu-tendu-cadres-espace-vitre-01')
     p = dict(fichier='contact.html', formulaire=True, preload=preload, title='Contact et demande de devis, Genève | Andy Construct',
              desc='Demandez un devis en trois étapes ou appelez le +41 22 771 20 15%s. Route des Acacias 48, Carouge. Toute la Suisse romande.'
                   % V('C03', ', du lundi au vendredi', ''))
@@ -38,7 +38,7 @@ def build():
           </div>
         </div>''' % dict(
         badges=c.badges(['B1', 'B3', '|B9|B4'], cls='badges--clair badges--col', label='Garanties'),
-        refs=c.refs_ligne('refs-line--aside'), rappel=c.module_rappel('rappel-colonne', niveau='h3'),
+        refs='', rappel=c.module_rappel('rappel-colonne', niveau='h3'),
         mail=mail_html(cls='big big--mail', emplacement='contact'), rdv=rdv, maps=MAPS,
         rappel_txt=T('C01 C03', 'Pas de réponse au téléphone ? Laissez un message : nous rappelons le jour même ou le jour ouvrable suivant.',
                      'Pas de réponse au téléphone ? Laissez un message avec votre numéro : nous vous rappelons.'))

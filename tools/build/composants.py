@@ -174,20 +174,6 @@ def mur_logos(titre_id='refs-titre', h2='Ils nous ont confié des travaux'):
 ''' % (titre_id, titre_id, h2, marque('C22', '<ul class="logo-wall" data-reveal="cells">%s</ul>' % cells, bloc=True), part, nb_refs(), accords)
 
 
-def bande_logos(titre='Ils nous ont confié des travaux', titre_id='defile-titre', cls=''):
-    """Bande défilante (rappel avant un appel à l'action) : logos en couleur, pause au survol, au focus et au bouton.
-    Sans JavaScript ou en mouvement réduit : une rangée statique. La copie qui assure la boucle est créée par main.js."""
-    items = ''.join('<li class="mq__item">%s</li>' % logo_img(rid) for rid in _ids(DEFILE))
-    return '''    <div class="defile%s" role="group" aria-labelledby="%s">
-      <div class="container defile__head">
-        <h2 id="%s" class="defile__titre">%s</h2>
-        <button type="button" class="defile__pause js-only" aria-pressed="false" data-mq-pause>Mettre en pause</button>
-      </div>
-      <div class="mq" data-mq><ul class="mq__track">%s</ul></div>
-    </div>
-''' % ((' ' + cls) if cls else '', titre_id, titre_id, titre, items)
-
-
 def refs_ligne(cls=''):
     """Rappel compact près des formulaires : 6 logos en couleur, puis « et des particuliers »."""
     items = ''.join('<li>%s</li>' % logo_img(rid) for rid in _ids(['ville-de-geneve', 'conservatoire-musique-geneve', 'head-geneve', 'ubs', 'piaget', 'plan-les-ouates']))
@@ -770,7 +756,7 @@ def temoignage_court():
     return '<figure class="quote quote--court"><blockquote><p>« %s »</p></blockquote><figcaption>%s</figcaption></figure>' % (e(t['texte']), e(qui))
 
 
-def bloc_demande(p, service=None, h2=None, intro=None, refs=True, source='accueil', surtitre=False):
+def bloc_demande(p, service=None, h2=None, intro=None, refs=False, source='accueil', surtitre=False):
     """Bloc de demande v3 : formulaire en 3 étapes ; colonne = téléphone, badges B1 B3 B4 (B9 si C01), premier témoignage,
     rappel replié (ouvert d'office en variante B du drapeau entree-demande). refs : liste courte de références en colonne
     (pages sans bande défilante juste au-dessus). source : champ caché (contrat d'interface §3)."""

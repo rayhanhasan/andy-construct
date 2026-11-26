@@ -1,384 +1,773 @@
 [
-  {
-    "id": "faux-plafond-placo-gorge-lumineuse-01",
-    "fichier_source": "P1000782.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          240,
-          4000,
-          2490
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-4x5",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 3000,
-        "cadre_source_px": [
-          880,
-          0,
-          3280,
-          3000
-        ]
-      }
-    }
-  },
-  {
-    "id": "faux-plafond-placo-gorge-lumineuse-02",
-    "fichier_source": "P1000796.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          540,
-          4000,
-          2790
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-4x5",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 3000,
-        "cadre_source_px": [
-          800,
-          0,
-          3200,
-          3000
-        ]
-      }
-    }
-  },
-  {
-    "id": "panneaux-acoustiques-muraux-01",
-    "fichier_source": "P1000517.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          450,
-          4000,
-          2700
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-4x5",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 3000,
-        "cadre_source_px": [
-          480,
-          0,
-          2880,
-          3000
-        ]
-      }
-    }
-  },
-  {
-    "id": "cadre-acoustique-salle-de-reunion-01",
-    "fichier_source": "IMG_3261.jpg",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/cadre-acoustique-salle-de-reunion-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          539,
-          3264,
-          2375
-        ]
-      }
-    }
-  },
-  {
-    "id": "plafond-placo-ilot-ovale-01",
-    "fichier_source": "P1000435.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/plafond-placo-ilot-ovale-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          180,
-          3450,
-          2121
-        ]
-      }
-    }
-  },
-  {
-    "id": "chantier-ossature-puits-de-lumiere-01",
-    "fichier_source": "IMG_5922.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          612,
-          3264,
-          2448
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-4x5",
-        "largeurs": [
-          800,
-          1600
-        ],
-        "largeur": 1600,
-        "hauteur": 2000,
-        "cadre_source_px": [
-          1306,
-          0,
-          3264,
-          2448
-        ]
-      }
-    }
-  },
-  {
-    "id": "chantier-ossature-puits-de-lumiere-02",
-    "fichier_source": "IMG_5924.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          196,
-          2448,
-          1573
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-4x5",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 3000,
-        "cadre_source_px": [
-          0,
-          65,
-          2448,
-          3125
-        ]
-      }
-    }
-  },
-  {
-    "id": "habillage-placo-niches-arrondies-01",
-    "fichier_source": "IMG_3661.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          881,
-          2448,
-          2258
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-4x5",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 3000,
-        "cadre_source_px": [
-          0,
-          163,
-          2448,
-          3223
-        ]
-      }
-    }
-  },
-  {
-    "id": "chantier-suspentes-ossature-01",
-    "fichier_source": "IMG_4395.jpg",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/chantier-suspentes-ossature-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          490,
-          3264,
-          2326
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/chantier-suspentes-ossature-01-4x5",
-        "largeurs": [
-          800,
-          1600
-        ],
-        "largeur": 1600,
-        "hauteur": 1999,
-        "cadre_source_px": [
-          979,
-          0,
-          2938,
-          2448
-        ]
-      }
-    }
-  },
-  {
-    "id": "chantier-salle-de-spectacle-01",
-    "fichier_source": "IMG_6636.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          245,
-          3264,
-          2081
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-4x5",
-        "largeurs": [
-          800,
-          1600
-        ],
-        "largeur": 1600,
-        "hauteur": 2000,
-        "cadre_source_px": [
-          653,
-          0,
-          2611,
-          2448
-        ]
-      }
-    }
-  },
-  {
-    "id": "chantier-salle-de-spectacle-02",
-    "fichier_source": "IMG_6632.JPG",
-    "recadrages": {
-      "16x9": {
-        "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-16x9",
-        "largeurs": [
-          800,
-          1600,
-          2400
-        ],
-        "largeur": 2400,
-        "hauteur": 1350,
-        "cadre_source_px": [
-          0,
-          245,
-          3264,
-          2081
-        ]
-      },
-      "4x5": {
-        "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-4x5",
-        "largeurs": [
-          800,
-          1600
-        ],
-        "largeur": 1600,
-        "hauteur": 1999,
-        "cadre_source_px": [
-          261,
-          0,
-          2220,
-          2448
-        ]
-      }
-    }
+ {
+  "id": "faux-plafond-placo-gorge-lumineuse-01",
+  "fichier_source": "P1000782.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     240,
+     4000,
+     2490
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-01-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     880,
+     0,
+     3280,
+     3000
+    ]
+   }
   }
+ },
+ {
+  "id": "faux-plafond-placo-gorge-lumineuse-02",
+  "fichier_source": "P1000796.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     540,
+     4000,
+     2790
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/faux-plafond-placo-gorge-lumineuse-02-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     800,
+     0,
+     3200,
+     3000
+    ]
+   }
+  }
+ },
+ {
+  "id": "panneaux-acoustiques-muraux-01",
+  "fichier_source": "P1000517.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     450,
+     4000,
+     2700
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/panneaux-acoustiques-muraux-01-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     480,
+     0,
+     2880,
+     3000
+    ]
+   }
+  }
+ },
+ {
+  "id": "cadre-acoustique-salle-de-reunion-01",
+  "fichier_source": "IMG_3261.jpg",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/cadre-acoustique-salle-de-reunion-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     539,
+     3264,
+     2375
+    ]
+   }
+  }
+ },
+ {
+  "id": "plafond-placo-ilot-ovale-01",
+  "fichier_source": "P1000435.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/plafond-placo-ilot-ovale-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     180,
+     3450,
+     2121
+    ]
+   }
+  }
+ },
+ {
+  "id": "chantier-ossature-puits-de-lumiere-01",
+  "fichier_source": "IMG_5922.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     612,
+     3264,
+     2448
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-01-4x5",
+    "largeurs": [
+     800,
+     1600
+    ],
+    "largeur": 1600,
+    "hauteur": 2000,
+    "cadre_source_px": [
+     1306,
+     0,
+     3264,
+     2448
+    ]
+   }
+  }
+ },
+ {
+  "id": "chantier-ossature-puits-de-lumiere-02",
+  "fichier_source": "IMG_5924.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     196,
+     2448,
+     1573
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/chantier-ossature-puits-de-lumiere-02-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     0,
+     65,
+     2448,
+     3125
+    ]
+   }
+  }
+ },
+ {
+  "id": "habillage-placo-niches-arrondies-01",
+  "fichier_source": "IMG_3661.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     881,
+     2448,
+     2258
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/habillage-placo-niches-arrondies-01-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     0,
+     163,
+     2448,
+     3223
+    ]
+   }
+  }
+ },
+ {
+  "id": "chantier-suspentes-ossature-01",
+  "fichier_source": "IMG_4395.jpg",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/chantier-suspentes-ossature-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     490,
+     3264,
+     2326
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/chantier-suspentes-ossature-01-4x5",
+    "largeurs": [
+     800,
+     1600
+    ],
+    "largeur": 1600,
+    "hauteur": 1999,
+    "cadre_source_px": [
+     979,
+     0,
+     2938,
+     2448
+    ]
+   }
+  }
+ },
+ {
+  "id": "chantier-salle-de-spectacle-01",
+  "fichier_source": "IMG_6636.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     245,
+     3264,
+     2081
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/chantier-salle-de-spectacle-01-4x5",
+    "largeurs": [
+     800,
+     1600
+    ],
+    "largeur": 1600,
+    "hauteur": 2000,
+    "cadre_source_px": [
+     653,
+     0,
+     2611,
+     2448
+    ]
+   }
+  }
+ },
+ {
+  "id": "chantier-salle-de-spectacle-02",
+  "fichier_source": "IMG_6632.JPG",
+  "recadrages": {
+   "16x9": {
+    "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 1350,
+    "cadre_source_px": [
+     0,
+     245,
+     3264,
+     2081
+    ]
+   },
+   "4x5": {
+    "base": "assets/img/portfolio/chantier-salle-de-spectacle-02-4x5",
+    "largeurs": [
+     800,
+     1600
+    ],
+    "largeur": 1600,
+    "hauteur": 1999,
+    "cadre_source_px": [
+     261,
+     0,
+     2220,
+     2448
+    ]
+   }
+  }
+ },
+ {
+  "id": "couloir-plafond-ligne-lumineuse-01",
+  "fichier_source": "p01_IMG_9161.JPG",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/couloir-plafond-ligne-lumineuse-01-4x5",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 600,
+    "cadre_source_px": [
+     0,
+     20,
+     480,
+     620
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/couloir-plafond-ligne-lumineuse-01-16x9",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 270,
+    "cadre_source_px": [
+     0,
+     185,
+     480,
+     455
+    ]
+   }
+  }
+ },
+ {
+  "id": "baffles-acoustiques-eclairage-indirect-01",
+  "fichier_source": "p02_IMG_9162.JPG",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/baffles-acoustiques-eclairage-indirect-01-4x5",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 600,
+    "cadre_source_px": [
+     0,
+     0,
+     480,
+     600
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/baffles-acoustiques-eclairage-indirect-01-16x9",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 270,
+    "cadre_source_px": [
+     0,
+     108,
+     480,
+     378
+    ]
+   }
+  }
+ },
+ {
+  "id": "panneaux-acoustiques-sous-charpente-01",
+  "fichier_source": "p03_IMG_9169.JPG",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/panneaux-acoustiques-sous-charpente-01-4x5",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 600,
+    "cadre_source_px": [
+     0,
+     0,
+     480,
+     600
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/panneaux-acoustiques-sous-charpente-01-16x9",
+    "largeurs": [
+     480
+    ],
+    "largeur": 480,
+    "hauteur": 270,
+    "cadre_source_px": [
+     0,
+     134,
+     480,
+     404
+    ]
+   }
+  }
+ },
+ {
+  "id": "piscine-plafond-tendu-lumineux-01",
+  "fichier_source": "p04_Plafond_tissu_tendu.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/piscine-plafond-tendu-lumineux-01-4x5",
+    "largeurs": [
+     768
+    ],
+    "largeur": 768,
+    "hauteur": 960,
+    "cadre_source_px": [
+     0,
+     32,
+     768,
+     992
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/piscine-plafond-tendu-lumineux-01-16x9",
+    "largeurs": [
+     768
+    ],
+    "largeur": 768,
+    "hauteur": 432,
+    "cadre_source_px": [
+     0,
+     91,
+     768,
+     523
+    ]
+   }
+  }
+ },
+ {
+  "id": "tissu-tendu-cadres-espace-vitre-01",
+  "fichier_source": "p05_Tissu_tendu_cadres.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/tissu-tendu-cadres-espace-vitre-01-4x5",
+    "largeurs": [
+     800
+    ],
+    "largeur": 800,
+    "hauteur": 1000,
+    "cadre_source_px": [
+     102,
+     0,
+     921,
+     1024
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/tissu-tendu-cadres-espace-vitre-01-16x9",
+    "largeurs": [
+     800,
+     1024
+    ],
+    "largeur": 1024,
+    "hauteur": 576,
+    "cadre_source_px": [
+     0,
+     142,
+     1024,
+     718
+    ]
+   }
+  }
+ },
+ {
+  "id": "combles-amenages-charpente-01",
+  "fichier_source": "p06_Tissu_tendu_faux_plafond_amenagement_interieur.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/combles-amenages-charpente-01-4x5",
+    "largeurs": [
+     800,
+     899
+    ],
+    "largeur": 899,
+    "hauteur": 1124,
+    "cadre_source_px": [
+     0,
+     110,
+     899,
+     1234
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/combles-amenages-charpente-01-16x9",
+    "largeurs": [
+     800,
+     899
+    ],
+    "largeur": 899,
+    "hauteur": 506,
+    "cadre_source_px": [
+     0,
+     259,
+     899,
+     765
+    ]
+   }
+  }
+ },
+ {
+  "id": "salon-ovales-tissu-tendu-01",
+  "fichier_source": "p07_Tissu_tendu_faux_plafonds_acoustiques.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/salon-ovales-tissu-tendu-01-4x5",
+    "largeurs": [
+     614
+    ],
+    "largeur": 614,
+    "hauteur": 768,
+    "cadre_source_px": [
+     123,
+     0,
+     737,
+     768
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/salon-ovales-tissu-tendu-01-16x9",
+    "largeurs": [
+     800,
+     1024
+    ],
+    "largeur": 1024,
+    "hauteur": 576,
+    "cadre_source_px": [
+     0,
+     58,
+     1024,
+     634
+    ]
+   }
+  }
+ },
+ {
+  "id": "piece-combles-platrerie-peinture-01",
+  "fichier_source": "p08_platrerie_peinture_cloison_faux_plafonds.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/piece-combles-platrerie-peinture-01-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     1008,
+     0,
+     3427,
+     3024
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/piece-combles-platrerie-peinture-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400,
+     4032
+    ],
+    "largeur": 4032,
+    "hauteur": 2268,
+    "cadre_source_px": [
+     0,
+     378,
+     4032,
+     2646
+    ]
+   }
+  }
+ },
+ {
+  "id": "tracage-laser-plafond-01",
+  "fichier_source": "p09_technique_de_tracage_pr_U00e9cis.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/tracage-laser-plafond-01-4x5",
+    "largeurs": [
+     800,
+     1600,
+     2400
+    ],
+    "largeur": 2400,
+    "hauteur": 3000,
+    "cadre_source_px": [
+     484,
+     0,
+     2903,
+     3024
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/tracage-laser-plafond-01-16x9",
+    "largeurs": [
+     800,
+     1600,
+     2400,
+     4032
+    ],
+    "largeur": 4032,
+    "hauteur": 2268,
+    "cadre_source_px": [
+     0,
+     76,
+     4032,
+     2344
+    ]
+   }
+  }
+ },
+ {
+  "id": "restaurant-traitement-acoustique-01",
+  "fichier_source": "p10_traitement_acoustique_restaurant.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/restaurant-traitement-acoustique-01-4x5",
+    "largeurs": [
+     614
+    ],
+    "largeur": 614,
+    "hauteur": 768,
+    "cadre_source_px": [
+     205,
+     0,
+     819,
+     768
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/restaurant-traitement-acoustique-01-16x9",
+    "largeurs": [
+     800,
+     1024
+    ],
+    "largeur": 1024,
+    "hauteur": 576,
+    "cadre_source_px": [
+     0,
+     188,
+     1024,
+     764
+    ]
+   }
+  }
+ },
+ {
+  "id": "salle-de-reunion-cadres-acoustiques-01",
+  "fichier_source": "p11_traitement_cadre_acoustique_amenagement_interieur.jpeg",
+  "recadrages": {
+   "4x5": {
+    "base": "assets/img/portfolio/salle-de-reunion-cadres-acoustiques-01-4x5",
+    "largeurs": [
+     768
+    ],
+    "largeur": 768,
+    "hauteur": 960,
+    "cadre_source_px": [
+     0,
+     0,
+     768,
+     960
+    ]
+   },
+   "16x9": {
+    "base": "assets/img/portfolio/salle-de-reunion-cadres-acoustiques-01-16x9",
+    "largeurs": [
+     768
+    ],
+    "largeur": 768,
+    "hauteur": 432,
+    "cadre_source_px": [
+     0,
+     378,
+     768,
+     810
+    ]
+   }
+  }
+ }
 ]

@@ -16,7 +16,7 @@ def couverture(nom, alt):
 
 def build():
     ref, check, avis = doc('references'), doc('checklist'), doc('avis-locataires')
-    hero_html, preload = c.hero_image('photo', 'plafond-placo-ilot-ovale-01')
+    hero_html, preload = c.hero_image('photo', 'restaurant-traitement-acoustique-01')
     p = dict(fichier='professionnels.html', formulaire=True, preload=preload,
              title='Entreprises générales, architectes, régies | Andy Construct',
              desc='Acoustique, faux plafonds, cloisons, plâtrerie et peinture pour entreprises générales, architectes, régies et communes : offres sur plans, normes SIA, références.')
@@ -138,7 +138,7 @@ def build():
               ('C32', 'Réception avec photos et liste des retouches.')]
     lis = ''.join('<li><span>%s</span></li>' % T(code, txt) for code, txt in points if definitif(code))
     if lis:
-        photo = 'habillage-placo-niches-arrondies-01'
+        photo = 'piece-combles-platrerie-peinture-01'
         import portfolio as pf
         corps += c.feat('site-occupe-titre', 'Immeubles habités et lieux publics : notre méthode',
                         '<ol class="numlist numlist--1">%s</ol>%s' % (lis, ('<p><a class="link-arrow" href="%s" %s>La liste de contrôle « immeuble habité » (%s)</a></p>'
