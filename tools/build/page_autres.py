@@ -158,7 +158,7 @@ def mentions():
         <p>Les liens vers des sites tiers (carte, registre du commerce, réseaux sociaux) ouvrent des sites soumis à leurs propres conditions et à leur propre politique de confidentialité.</p>
         <h2>Crédits</h2>
         <p>Polices de caractères : Archivo et Source Sans 3, sous licence SIL Open Font License, hébergées sur ce site. Carte de la zone d'intervention : limites cantonales de swisstopo et de l'Office fédéral de la statistique, via le paquet swiss-maps (Interactive Things, licence BSD).</p>
-        <p>Certaines images, signalées « Illustration », proviennent d'Unsplash et de Pexels, sous leurs licences respectives. Elles ne montrent pas des chantiers d'Andy Construct. Crédits détaillés sur demande.</p>
+        <p>Les photos de chantier sont celles d'Andy Construct. Quelques images d'ambiance proviennent d'Unsplash et de Pexels, sous leurs licences respectives. Crédits détaillés sur demande.</p>
         <h2 id="donnees">Protection des données</h2>
         <p>La façon dont nous traitons les données transmises par le formulaire et les statistiques du site est décrite dans notre politique de confidentialité. <a href="confidentialite.html">Lire la politique de confidentialité</a></p>
         <h2>Droit applicable</h2>
@@ -265,7 +265,6 @@ def page_404():
       <div class="page-head page-head--404">
         <div class="container">
           <p class="notfound__code" aria-hidden="true">404</p>
-          <span class="laser" aria-hidden="true"></span>
           <h1 id="titre-page">Cette page n'existe pas, ou elle a changé d'adresse</h1>
           <p class="lead">Notre site a été refait : certaines adresses ont changé. Voici les pages les plus consultées.</p>
         </div>

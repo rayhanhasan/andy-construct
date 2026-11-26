@@ -157,7 +157,7 @@ def atouts(items, titre_id, h2, cls=''):
 def media_type(photo, schema):
     """Vraie photo si publiable dans ce mode, sinon le schéma en coupe."""
     if photo and pf.photo_ok(photo):
-        return '<span class="type__media type__media--photo">%s</span>' % c.pic(photo, '(min-width: 1100px) 400px, (min-width: 700px) 46vw, 100vw', pf.alt(photo))
+        return '<span class="type__media type__media--photo">%s</span>' % c.pic_crop(photo, '16x9', '(min-width: 1100px) 400px, (min-width: 700px) 46vw, 100vw', pf.alt(photo))
     return '<span class="type__media">%s</span>' % schema
 
 
@@ -471,7 +471,7 @@ def rendre(d):
 
     precision = ('<p class="hero__note">%s</p>' % d['precision']) if d.get('precision') else ''
     actions = '%s<a class="btn btn--light" href="%s" data-suivi-numero="fixe" data-suivi-emplacement="entete_page">Appeler le %s</a>' % (
-        devis_btn(p, 'entete_page', texte=d['btn']), TEL_URI, TEL)
+        devis_btn(p, 'entete_page', texte='Demander un devis'), TEL_URI, TEL)
     corps = hero_page(d['crumb'], d['h1'], d['chapeau'], actions=actions, media=hero_html, extra=precision,
                       badges=c.badges(['|B11|B4', '|B6|B3', 'B1'], cls='badges--3'))
     corps += c.bande_refs(service=s)

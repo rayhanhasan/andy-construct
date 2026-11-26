@@ -17,15 +17,21 @@ DIAPOS = [
     ('tissu-tendu-cadres-espace-vitre-01', 'Salle vitrée', 'Tissu tendu et cadres lumineux', 'projet-tissu-tendu-cadres'),
     ('restaurant-traitement-acoustique-01', 'Restaurant', 'Plafond traité en acoustique', 'projet-restaurant-acoustique'),
 ]
-SZ_DIAPO = '(min-width: 1440px) 600px, 42vw'
+SZ_DIAPO = '(min-width: 1440px) 46vw, 42vw'
 
 
 def diapo_pic(pid, premiere):
-    b45, b169 = c._srcset_crop(pid, '4x5'), c._srcset_crop(pid, '16x9')
+    """Ordinateur : photo entière (cadrée par object-position) ; mobile : recadrage 16:9."""
+    it = c.MANIFEST[pid]
+    b = it['base']
+    larg = sorted({it['largeur_%d' % t] for t in (800, 1600, 2400) if it.get('largeur_%d' % t)})
+    noms = {it['largeur_%d' % t]: t for t in (2400, 1600, 800) if it.get('largeur_%d' % t)}
+    src_b = ', '.join('%s-%d.webp %dw' % (b, noms[w], w) for w in larg)
+    b169 = c._srcset_crop(pid, '16x9')
     charge = 'fetchpriority="high"' if premiere else 'fetchpriority="low"'   # pas de chargement différé : la photo suivante est prête au fondu
     return ('<picture><source media="(min-width: 900px)" type="image/webp" srcset="%s" sizes="%s">'
             '<source type="image/webp" srcset="%s" sizes="100vw"><img src="%s-800.jpg" width="1600" height="900" alt="%s" %s decoding="async"></picture>'
-            % (b45[0], SZ_DIAPO, b169[0], b169[1], e(pf.alt(pid)), charge))
+            % (src_b, SZ_DIAPO, b169[0], b169[1], e(pf.alt(pid)), charge))
 
 
 def diaporama():
@@ -182,68 +188,29 @@ def carte_service(s, titre, phrase, spec):
             % (' svc--spec' if spec else '', svc_url(s), svc_media(s), '<span class="tag-spec">Notre spécialité</span>' if spec else '', titre, phrase))
 
 
-# ---------------------------------------------------------------- H4 · projets de référence : lieux nommés et avant / après
-LIEUX = [
-    # (id de référence ou None, type, commune, photo, ancre réalisations)
-    # Chaque carte montre un vrai chantier photographié. Le nom du lieu n'apparaît que si le rattachement est confirmé (C25) ;
-    # sinon la carte reprend le titre du projet (aucune photo n'est attribuée à un lieu sans confirmation).
-    # v6 : chantiers photographiés par l'entreprise
-    (None, None, None, 'restaurant-traitement-acoustique-01', 'projet-restaurant-acoustique'),
-    (None, None, None, 'salle-de-reunion-cadres-acoustiques-01', 'projet-salle-reunion-cadres'),
-    (None, None, None, 'panneaux-acoustiques-sous-charpente-01', 'projet-panneaux-suspendus'),
-    (None, None, None, 'piece-combles-platrerie-peinture-01', 'projet-combles-platrerie'),
-    ('alhambra', 'Salle de spectacle', 'Genève', 'chantier-salle-de-spectacle-01', 'projet-salle-de-spectacle'),
-    ('plan-les-ouates', 'Collectivité', 'Plan-les-Ouates', 'chantier-ossature-puits-de-lumiere-02', 'projet-grande-salle-ossature'),
-    (None, None, None, 'plafond-tendu-ilots-lumineux-01', 'projet-ilots-tissu-tendu'),
-    # Secours : chantiers publiés dans toutes les versions
-    (None, None, None, 'plafond-placo-ilot-ovale-01', 'projet-ilot-ovale'),
-    (None, None, None, 'faux-plafond-placo-gorge-lumineuse-01', 'projet-hall-gorge-lumineuse'),
-    (None, None, None, 'chantier-suspentes-ossature-01', 'projet-faux-plafond-dalle-isolee'),
-]
-
-
-def lieu_ok(x):
-    return pf.photo_ok(x[3]) and x[4] in pf.PROJ
-
-
-def carte_lieu(rid, typ, commune, photo, ancre, grand=False):
-    projet = pf.PROJ[ancre]
-    if rid and definitif('C25'):
-        nom = c.nom_ref(rid) if rid != 'alhambra' else 'Salle de l\'Alhambra'
-        texte = '<span class="lieu__type">%s</span><span class="lieu__nom">%s</span><span class="lieu__commune">%s</span>' % (typ, c.insec(e(nom)), commune)
-    else:
-        texte = '<span class="lieu__type">%s</span><span class="lieu__nom">%s</span>' % (pf._txt(projet['lieu']), e(projet['titre']))
-    media = c.pic_crop(photo, '16x9' if grand else '4x5', '(min-width: 1100px) %s, 100vw' % ('720px' if grand else '300px'), pf.alt(photo))
-    corps = '<span class="lieu__media">%s</span><span class="lieu__body">%s</span>' % (media, texte)
-    inner = marque('C25', corps) if ctx.MODE == 'verification' and rid else corps
-    return '<li class="lieu lieu--photo%s"><a class="lieu__link" href="realisations.html#%s">%s</a></li>' % (
-        ' hcard--grand' if grand else '', ancre, inner)
-
-
-def carte_avant_apres(grand):
-    sz = '(min-width: 1100px) %s, 50vw' % ('360px' if grand else '160px')
-    split = ('<span class="hcard__split"><span>%s<span class="hcard__lbl">Avant</span></span><span>%s<span class="hcard__lbl">Après</span></span></span>'
-             % (c.aa_pic('aa6', 'avant', sz, pf.PAIRE['aa6'][4]), c.aa_pic('aa6', 'apres', sz, pf.PAIRE['aa6'][5])))
-    tags = pf.tags_html(pf.paire_services('aa6'), 'C26' if not ctx.confirme('C26') else None)
-    return '''<li class="hcard%s">
-            <a class="hcard__link" href="realisations.html#avant-apres-aa6">
-              <span class="hcard__media">%s</span>
-              <span class="hcard__body"><span class="hcard__titre">Séjour : faux-plafond et spots</span><span class="hcard__lieu">Appartement, avant et après</span></span>
-            </a>
-            %s
-          </li>''' % (' hcard--grand' if grand else '', split, tags)
+# ---------------------------------------------------------------- H4 · projets de référence
+# v7 : les projets de référence défilent en continu (pause au survol et au focus ; à faire glisser sur mobile ;
+# immobiles en mouvement réduit). La seconde copie de la piste assure la boucle et reste invisible aux lecteurs d'écran.
+DEFILE_PROJETS = ['projet-salon-ovales', 'projet-piscine-plafond-tendu', 'projet-restaurant-acoustique', 'projet-combles-platrerie',
+                  'projet-salle-reunion-cadres', 'projet-tissu-tendu-cadres', 'projet-panneaux-suspendus', 'projet-ilots-tissu-tendu',
+                  'projet-couloir-ligne-lumineuse', 'projet-hall-gorge-lumineuse']
 
 
 def projets():
-    """Grande carte : le premier chantier photographié ; puis l'avant / après et trois autres chantiers (toujours avec photo)."""
-    lieux = [x for x in LIEUX if lieu_ok(x)]
-    if not lieux:
-        return carte_avant_apres(True)
-    cartes = [carte_lieu(*lieux[0], grand=True)]
-    cartes += [carte_lieu(*x) for x in lieux[1:3]]
-    cartes.append(carte_avant_apres(False))
-    cartes += [carte_lieu(*x) for x in lieux[3:4]]
-    return ''.join(cartes)
+    items = []
+    for pid in DEFILE_PROJETS:
+        x = pf.PROJ.get(pid)
+        if not x or not pf.proj_ok(x):
+            continue
+        ph = pf.proj_photos(x)[0]
+        items.append((pid, ph, pf._txt(x['lieu']), x['titre']))
+    def piste(cache):
+        return ''.join('<li class="pdefile__item"><a href="realisations.html#%s"%s><span class="pdefile__media">%s</span>'
+                       '<span class="pdefile__txt"><span class="pdefile__lieu">%s</span><span class="pdefile__titre">%s</span></span></a></li>'
+                       % (pid, ' tabindex="-1"' if cache else '', c.pic_crop(ph, '4x5', '(min-width: 1100px) 340px, 70vw', '' if cache else pf.alt(ph)),
+                          e(lieu), e(titre)) for pid, ph, lieu, titre in items)
+    return ('<div class="pdefile" data-pdefile><ul class="pdefile__piste">%s</ul><ul class="pdefile__piste pdefile__copie" aria-hidden="true">%s</ul></div>'
+            % (piste(False), piste(True)))
 
 
 # ---------------------------------------------------------------- H6 · méthode (vraie séquence : numérotée)
@@ -306,7 +273,9 @@ def build():
           <h2 id="realisations-titre">Projets de référence</h2>
           <a class="link-arrow" href="realisations.html">Voir toutes les réalisations</a>
         </div>
-        <ul class="lieux" data-reveal="cells">%(cartes)s</ul>
+      </div>
+      %(cartes)s
+      <div class="container">
         <div class="section-foot">%(devis2)s%(pdf)s</div>
       </div>
     </section>

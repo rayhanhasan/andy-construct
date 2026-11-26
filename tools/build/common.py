@@ -311,7 +311,7 @@ def header(p):
 def footer(p):
     import composants
     ref = doc('references')
-    pdf = ('<li><a href="%s" %s>Dossier de références (%s)</a></li>' % (ref[0], suivi_doc('references'), ref[1])) if ref else ''
+    pdf = ('<li><a href="%s" %s>Dossier de références (PDF)</a></li>' % (ref[0], suivi_doc('references'))) if ref else ''
     callbar = '''
   <div class="callbar%s" role="region" aria-label="Contact rapide" data-suivi-zone="barre_mobile">
     <a class="btn btn--ghost" href="%s" data-suivi-numero="fixe">%s Appeler</a>
@@ -376,7 +376,6 @@ def page_head(crumb, h1, lead, extra='', photo='', cls=''):
       <div class="container">
         %s
         <h1 id="titre-page">%s</h1>
-        <span class="laser laser--court" aria-hidden="true"></span>
         <p class="lead">%s</p>%s
       </div>
     </section>
@@ -394,7 +393,6 @@ def hero_page(crumb, h1, lead, actions='', media='', badges='', extra='', cls=''
         <div class="hero__panel">
           %s
           <h1 id="titre-page" class="hero__titre">%s</h1>
-          <span class="laser" aria-hidden="true"></span>
           <p class="hero__text">%s</p>%s%s%s
           %s
         </div>

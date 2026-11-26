@@ -182,11 +182,12 @@ def refs_ligne(cls=''):
 
 
 def refs_pied():
-    """Pied de page sombre : logos en couleur sur pastilles blanches."""
-    items = ''.join('<li class="pill">%s</li>' % logo_img(rid) for rid in _ids(MUR[:10]))
-    return ('<p class="footer-refs__title">Ils nous ont confié des travaux</p>'
-            '<ul class="pills">%s</ul><p class="footer-refs__part">et des particuliers de toute la région. '
-            '<a href="professionnels.html#references">Toutes nos références</a></p>' % items)
+    """Pied de page : 8 logos en couleur sur pastilles blanches, sur la grille de 4 colonnes du pied de page
+    (bande à faire glisser sur mobile)."""
+    items = ''.join('<li class="pill">%s</li>' % logo_img(rid) for rid in _ids(MUR[:8]))
+    return ('<div class="footer-refs__head"><p class="footer-refs__title">Ils nous ont confié des travaux</p>'
+            '<a class="link-arrow link-arrow--clair" href="professionnels.html#references">Toutes nos références</a></div>'
+            '<ul class="pills" tabindex="0" aria-label="Logos de nos références">%s</ul><p class="footer-refs__part">Et des particuliers de toute la région.</p>' % items)
 
 
 # Liste canonique moyenne (cro-v3 §2.3, règle 7) : pages services sans C23, contact, entreprise
@@ -370,24 +371,24 @@ def _srcset_crop(pid, fmt):
 
 
 def hero_image(kind, ident, alt=None):
-    """Image de l'en-tête de page (grande, à droite sur ordinateur ; sous les boutons sur mobile) et son préchargement.
-    Vraie photo : recadrage 4:5 sur ordinateur, 16:9 sur mobile. Illustration : un seul fichier, mention « Illustration »."""
-    sz_b, sz_m = '(min-width: 1440px) 600px, 42vw', '100vw'
+    """Image de l'en-tête de page (grande, à droite sur ordinateur ; en bande sur mobile) et son préchargement.
+    v7 : sur ordinateur, la photo entière (la plus grande définition disponible) cadrée par object-position, point
+    focal défini par photo dans styles.css ; sur mobile, le recadrage 16:9 centré sur le sujet."""
+    sz_b, sz_m = '(min-width: 1440px) 46vw, 42vw', '100vw'
     if kind == 'photo':
         import portfolio as pf
-        b45, b169 = _srcset_crop(ident, '4x5') or _srcset_crop(ident, '16x9'), _srcset_crop(ident, '16x9')
-        if not b169:   # photo sans recadrage éditorial : fichiers d'origine (400, 800, 1600)
-            it = MANIFEST[ident]
-            b = it['base']
-            src = '%s-400.webp %dw, %s-800.webp %dw, %s-1600.webp %dw' % (b, it['largeur_400'], b, it['largeur_800'], b, it['largeur_1600'])
-            b45 = b45 or (src, b)
-            b169 = (src, b)
+        it = MANIFEST[ident]
+        b = it['base']
+        larg = sorted({it['largeur_%d' % t] for t in (800, 1600, 2400) if it.get('largeur_%d' % t)})
+        noms = {it['largeur_%d' % t]: t for t in (2400, 1600, 800) if it.get('largeur_%d' % t)}
+        src_b = ', '.join('%s-%d.webp %dw' % (b, noms[w], w) for w in larg)
+        b169 = _srcset_crop(ident, '16x9') or (src_b, b)
         html = ('<picture><source media="(min-width: 900px)" type="image/webp" srcset="%s" sizes="%s">'
                 '<source type="image/webp" srcset="%s" sizes="%s"><img src="%s-800.jpg" width="1600" height="900" alt="%s" fetchpriority="high"></picture>'
-                % (b45[0], sz_b, b169[0], sz_m, b169[1], e(alt or pf.alt(ident))))
+                % (src_b, sz_b, b169[0], sz_m, b169[1], e(alt or pf.alt(ident))))
         pre = ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="%s" media="(min-width: 900px)">\n'
                '  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="%s" media="(max-width: 899.98px)">\n'
-               % (b45[0], sz_b, b169[0], sz_m))
+               % (src_b, sz_b, b169[0], sz_m))
         return html, pre
     if kind == 'aa':
         import portfolio as pf
@@ -402,7 +403,7 @@ def hero_image(kind, ident, alt=None):
     it = illustrations.trouver(ident=ident)
     srcset, src, w, h = illustrations._src(it)
     html = ('<picture><source type="image/webp" srcset="%s" sizes="(min-width: 1440px) 600px, (min-width: 900px) 42vw, 100vw">'
-            '<img src="%s" width="%d" height="%d" alt="%s" fetchpriority="high"></picture><span class="ill__tag">Illustration</span>'
+            '<img src="%s" width="%d" height="%d" alt="%s" fetchpriority="high"></picture>'
             % (srcset, src, w, h, e(it.get('alt') or '')))
     pre = ('  <link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="%s" imagesizes="(min-width: 1440px) 600px, (min-width: 900px) 42vw, 100vw">\n' % srcset)
     return html, pre

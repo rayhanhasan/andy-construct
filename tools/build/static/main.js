@@ -719,5 +719,33 @@
     $$('.type__media--photo, .feat__media, .methode__photo, .lieu__media, .cas__media, .bande__visuel').forEach(function (el) {
       el.classList.add('rv'); rv.observe(el);
     });
+    /* v7 : titres et chapeaux des sections qui montent */
+    $$('main .section-head, main section h2:not(.visually-hidden), main .lead').forEach(function (el) {
+      if (el.closest('.hero, .section-head .section-head, [data-reveal]') || (el.parentNode.classList && el.parentNode.classList.contains('section-head'))) return;
+      el.classList.add('rv-t'); rv.observe(el);
+    });
+    /* v7 : parallaxe des grandes photos (déplacement de 48 px au plus dans leur cadre) */
+    var par = $$('.feat__media, .cas__media, .methode__photo, .bande__visuel').filter(function (el) { return $('picture', el); }), vis = [], pr = 0;
+    par.forEach(function (el) { el.classList.add('par'); });
+    var bouger = function () {
+      pr = 0;
+      vis.forEach(function (el) {
+        var r = el.getBoundingClientRect(), k = (r.top + r.height / 2 - w.innerHeight / 2) / w.innerHeight;
+        el.style.setProperty('--par', (Math.max(-1, Math.min(1, k)) * -24).toFixed(1) + 'px');
+      });
+    };
+    var pio = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { var i = vis.indexOf(en.target); if (en.isIntersecting && i < 0) vis.push(en.target); if (!en.isIntersecting && i > -1) vis.splice(i, 1); });
+      bouger();
+    });
+    par.forEach(function (el) { pio.observe(el); });
+    on(w, 'scroll', function () { if (!pr) pr = w.requestAnimationFrame(bouger); });
+  }
+
+  /* v7 : projets de référence en bande continue (souris seulement ; au doigt, la bande se fait glisser) */
+  var pd = $('[data-pdefile]');
+  if (pd && w.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
+    pd.classList.add('is-auto');
+    pd.style.setProperty('--pd-duree', Math.round($('.pdefile__piste', pd).scrollWidth / 45) + 's');
   }
 })(window, document);

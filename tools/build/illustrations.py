@@ -67,7 +67,7 @@ def picture(it, sizes, cls='', lazy=True):
     srcset, src, w, h = _src(it)
     source = ('<source type="image/webp" srcset="%s" sizes="%s">' % (srcset, sizes)) if srcset else ''
     return ('<span class="ill%s"><picture>%s<img src="%s" width="%d" height="%d" alt="%s"%s decoding="async"></picture>'
-            '<span class="ill__tag">Illustration</span></span>'
+            '</span>'
             % ((' ' + cls) if cls else '', source, src, w, h, e(it.get('alt') or ''), ' loading="lazy"' if lazy else ''))
 
 

@@ -207,8 +207,9 @@ def main():
     taille_css, taille_js = ressources(out)
     # Budgets (non compressés ; ~17 Ko et ~10 Ko une fois compressés). v5 : 88 Ko de CSS (solutions, normes, héro plein cadre)
     # (damier, rangées image, mini-cas, grille éditoriale, frise, murs complets) ont un coût mesuré
-    if taille_css > 88 * 1024 or taille_js > 32 * 1024:
-        raise SystemExit('Budget dépassé : CSS %d o (max 88 Ko), JS %d o (max 32 Ko)' % (taille_css, taille_js))
+    # v7 : 96 Ko de CSS et 36 Ko de JS (diaporama, bande des projets, parallaxe demandés par le client)
+    if taille_css > 96 * 1024 or taille_js > 36 * 1024:
+        raise SystemExit('Budget dépassé : CSS %d o (max 96 Ko), JS %d o (max 36 Ko)' % (taille_css, taille_js))
     import page_accueil, page_services, page_realisations, page_professionnels, page_entreprise, page_contact, page_autres, seo
     page_accueil.build()
     page_services.build()
