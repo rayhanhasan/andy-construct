@@ -146,24 +146,7 @@ def build():
                         c.media('photo', photo, '(min-width: 1440px) 660px, (min-width: 1000px) 46vw, 100vw', fmt='4x5'),
                         inverse=True, legende=pf.legende(photo), cls='feat--haut')
 
-    # 7. Collectivités : armoiries de la commune (aucune photo rattachée à ces lieux ; nature et année des travaux : C22)
-    def salle(rid, commune):
-        logo = ('<span class="lieu__logo">%s</span>' % c.logo_img(rid, alt='')) if c.logo_affiche(rid) else ''
-        return ('<li class="lieu lieu--logo">%s<span class="lieu__body"><span class="lieu__type">Collectivité</span>'
-                '<span class="lieu__nom">%s</span><span class="lieu__commune">%s</span></span></li>' % (logo, c.insec(e(c.nom_ref(rid))), commune))
-    salles = ''.join(salle(rid, commune) for rid, commune in (('plan-les-ouates', 'Plan-les-Ouates'), ('collonge-bellerive', 'Collonge-Bellerive')))
-    corps += '''    <section class="section section--dark on-dark" aria-labelledby="public-titre" data-trait>
-      <div class="container cas-public">
-        <div>
-          <h2 id="public-titre">Collectivités</h2>
-          <span class="laser laser--court" aria-hidden="true"></span>
-          <p class="lead">La Ville de Genève et deux communes genevoises nous ont confié des travaux, dont leurs <b>salles communales</b>.</p>
-        </div>
-        <ul class="cas-public__lieux">%s</ul>
-      </div>
-    </section>
-''' % salles
-
+    # 7. (v8) Collectivités : section retirée, les communes figurent déjà dans le mur des références et dans « Ce que nous apportons »
     # 8. Dossier de soumission
     visite = T('C40', 'Vous préférez voir notre travail ? Nous vous faisons visiter un chantier en cours.', '')
     corps += '''    <section class="section soumission" id="soumission" aria-labelledby="soumission-titre" data-suivi-zone="soumission">

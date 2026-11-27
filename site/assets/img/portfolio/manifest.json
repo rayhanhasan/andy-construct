@@ -560,6 +560,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.904,
+    0.994,
+    1.133
+   ],
+   "gamma": 1.02,
+   "contraste": 4
+  },
   "largeur_400": 400,
   "hauteur_400": 533,
   "largeur_800": 480,
@@ -579,6 +588,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.955,
+    0.991,
+    1.055
+   ],
+   "gamma": 1.299,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 533,
   "largeur_800": 480,
@@ -598,6 +616,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.972,
+    0.997,
+    1.028
+   ],
+   "gamma": 1.131,
+   "contraste": 2.5
+  },
   "largeur_400": 400,
   "hauteur_400": 533,
   "largeur_800": 480,
@@ -617,6 +644,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    1.023,
+    0.968,
+    1.003
+   ],
+   "gamma": 1.119,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 533,
   "largeur_800": 768,
@@ -636,6 +672,15 @@
   "orientation": "paysage",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    1.031,
+    0.977,
+    0.986
+   ],
+   "gamma": 1.071,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 400,
   "largeur_800": 800,
@@ -655,6 +700,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.986,
+    0.998,
+    1.01
+   ],
+   "gamma": 1.306,
+   "contraste": 2.5
+  },
   "largeur_400": 400,
   "hauteur_400": 711,
   "largeur_800": 800,
@@ -674,6 +728,15 @@
   "orientation": "paysage",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    1.02,
+    0.987,
+    0.987
+   ],
+   "gamma": 1.292,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 300,
   "largeur_800": 800,
@@ -693,6 +756,15 @@
   "orientation": "paysage",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.964,
+    0.993,
+    1.041
+   ],
+   "gamma": 1.025,
+   "contraste": 2.5
+  },
   "largeur_400": 400,
   "hauteur_400": 300,
   "largeur_800": 800,
@@ -712,6 +784,15 @@
   "orientation": "paysage",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.986,
+    0.992,
+    1.016
+   ],
+   "gamma": 0.987,
+   "contraste": 4
+  },
   "largeur_400": 400,
   "hauteur_400": 300,
   "largeur_800": 800,
@@ -731,6 +812,15 @@
   "orientation": "paysage",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.994,
+    0.985,
+    1.014
+   ],
+   "gamma": 1.143,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 300,
   "largeur_800": 800,
@@ -750,6 +840,15 @@
   "orientation": "portrait",
   "qualite": 5,
   "role": "client-v6",
+  "etalonnage": {
+   "gains": [
+    0.974,
+    0.996,
+    1.025
+   ],
+   "gamma": 0.848,
+   "contraste": 0
+  },
   "largeur_400": 400,
   "hauteur_400": 533,
   "largeur_800": 768,

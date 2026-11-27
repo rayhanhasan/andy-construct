@@ -96,10 +96,16 @@ def a_logo():
 
 def vectoriser_a(png=os.path.join(SITE, 'assets/img/brand/favicon-192.png'), seuil=128, eps=1.1):
     """Contour du « A » (pixels opaques) en chemin SVG, normalisé dans sa boîte englobante."""
-    from PIL import Image
-    im = Image.open(png).convert('RGBA')
-    w, h = im.size
-    alpha = im.getchannel('A').load()
+    try:
+        from PIL import Image
+        im = Image.open(png).convert('RGBA')
+        w, h = im.size
+        alpha = im.getchannel('A').load()
+    except ImportError:                     # sans Pillow : canal alpha lu par ImageMagick
+        import subprocess
+        w, h = (int(v) for v in subprocess.check_output(['identify', '-format', '%w %h', png]).split())
+        brut = subprocess.check_output(['convert', png, '-alpha', 'extract', '-depth', '8', 'gray:-'])
+        alpha = {(x, y): brut[y * w + x] for y in range(h) for x in range(w)}
     plein = lambda x, y: 0 <= x < w and 0 <= y < h and alpha[x, y] >= seuil
     aretes = {}
     for y in range(h):
@@ -193,7 +199,7 @@ def carte_svg():
             <g class="c-lbl" aria-hidden="true">%(etiquettes)s%(siege)s</g>
             <g class="c-cartouche" aria-hidden="true">
               <rect x="14" y="14" width="228" height="118"/>
-              <image href="assets/img/brand/logo-andy-construct-352.png" x="30" y="28" width="150" height="54"/>
+              <image href="assets/img/brand/logo-andy-construct-440.png" x="30" y="30" width="150" height="48"/>
               <text class="c-cart-t" x="30" y="104">Zone d'intervention</text>
               <text class="c-cart-s" x="30" y="122">toute la Suisse romande</text>
             </g>

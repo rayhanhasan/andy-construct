@@ -11,10 +11,9 @@ from icons import ICONS
 
 # v6 : en-tête au format des pages (texte à gauche, photo à droite) ; la photo est un diaporama des chantiers du client
 DIAPOS = [
-    # (photo, lieu, ouvrage, projet)
-    ('salon-ovales-tissu-tendu-01', 'Salon', 'Îlots ovales en tissu tendu', 'projet-salon-ovales'),
-    ('piscine-plafond-tendu-lumineux-01', 'Piscine intérieure', 'Plafond tendu et cercles lumineux', 'projet-piscine-plafond-tendu'),
+    # (photo, lieu, ouvrage, projet) — v8 : trois photos cohérentes (plafonds clairs, nets, même étalonnage)
     ('tissu-tendu-cadres-espace-vitre-01', 'Salle vitrée', 'Tissu tendu et cadres lumineux', 'projet-tissu-tendu-cadres'),
+    ('piscine-plafond-tendu-lumineux-01', 'Piscine intérieure', 'Plafond tendu et cercles lumineux', 'projet-piscine-plafond-tendu'),
     ('restaurant-traitement-acoustique-01', 'Restaurant', 'Plafond traité en acoustique', 'projet-restaurant-acoustique'),
 ]
 SZ_DIAPO = '(min-width: 1440px) 46vw, 42vw'
@@ -35,19 +34,28 @@ def diapo_pic(pid, premiere):
 
 
 def diaporama():
+    """Diaporama de l'en-tête : photos qui s'ouvrent en rideau ; la carte du projet, posée sur la photo, change avec elle."""
     vues, pts = '', ''
     n = len(DIAPOS)
     for i, (pid, lieu, ouvrage, projet) in enumerate(DIAPOS):
         on = i == 0
-        vues += ('<li class="diapo__vue%s" aria-roledescription="diapositive" aria-label="%d sur %d : %s"%s>%s'
-                 '<a class="diapo__legende" href="realisations.html#%s"%s><span class="diapo__lieu">%s</span><span class="diapo__titre">%s</span></a></li>'
-                 % (' is-on' if on else '', i + 1, n, e(lieu + ', ' + ouvrage), '' if on else ' aria-hidden="true"', diapo_pic(pid, on),
-                    projet, '' if on else ' tabindex="-1"', e(lieu), e(ouvrage)))
+        vues += ('<li class="diapo__vue%s" aria-roledescription="diapositive" aria-label="%d sur %d : %s"%s data-lieu="%s" data-titre="%s" data-lien="realisations.html#%s">%s</li>'
+                 % (' is-on' if on else '', i + 1, n, e(lieu + ', ' + ouvrage), '' if on else ' aria-hidden="true"', e(lieu), e(ouvrage), projet,
+                    diapo_pic(pid, on)))
         pts += ('<button type="button" class="diapo__pt%s" aria-label="Photo %d : %s"%s><span class="diapo__barre"></span></button>'
                 % (' is-on' if on else '', i + 1, e(lieu), ' aria-current="true"' if on else ''))
+    pid, lieu, ouvrage, projet = DIAPOS[0]
+    carte = ('<a class="diapo__carte" href="realisations.html#%s" data-diapo-carte>'
+             '<span class="diapo__carte-n"><span data-diapo-n>01</span> / %02d</span>'
+             '<span class="diapo__carte-txt"><span class="diapo__lieu" data-diapo-lieu>%s</span><span class="diapo__titre" data-diapo-titre>%s</span></span>'
+             '<span class="diapo__carte-voir" aria-hidden="true">Voir le projet</span></a>' % (projet, n, e(lieu), e(ouvrage)))
     return ('<div class="diapo" data-diapo aria-roledescription="carrousel" aria-label="Nos chantiers en photos">'
-            '<ul class="diapo__vues">%s</ul><div class="diapo__nav">%s</div>'
-            '<p class="diapo__compte" aria-hidden="true"><span data-diapo-n>01</span> / %02d</p></div>' % (vues, pts, n))
+            '<ul class="diapo__vues">%s</ul><div class="diapo__nav">%s</div></div>%s' % (vues, pts, carte))
+
+
+def filigrane():
+    """« A » du logo en filigrane dans le panneau de l'en-tête (image décorative, très atténuée)."""
+    return '<img class="hero__filigrane" src="assets/img/brand/marque-a-blanc.png" width="676" height="420" alt="" decoding="async">'
 
 
 def hero_preload():
@@ -137,11 +145,12 @@ def hero_titre():
 
 
 def hero(p):
-    """Héro v6 : même gabarit que les autres pages (panneau anthracite, image à droite jusqu'au bord), mêmes informations ;
-    l'image est un diaporama des chantiers photographiés par l'entreprise (fondu, zoom lent, vignettes, glisser au doigt)."""
+    """Héro v8 : panneau anthracite avec le « A » du logo en filigrane ; à droite, grand diaporama de trois chantiers
+    étalonnés (rideau qui s'ouvre, zoom lent), carte du projet posée à cheval sur la photo ; garanties en pied."""
     texte = ('Régies, architectes, communes ou particuliers : nous venons voir, puis remettons une <b>offre écrite</b>%s.'
              % T('C06', ' détaillée', ''))
     return '''    <section class="hero hero--page hero--accueil" aria-labelledby="titre-page" data-suivi-zone="heros">
+      %s
       <div class="container hero__grid">
         <div class="hero__panel">
           <p class="hero__slogan">L'expertise de l'aménagement intérieur</p>
@@ -153,7 +162,7 @@ def hero(p):
         </div>
       </div>
     </section>
-''' % (hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, diaporama(), c.badges(['B1', 'B2', 'B3'], cls='badges--3'))
+''' % (filigrane(), hero_titre(), texte, devis_btn(p, 'heros'), TEL_URI, TEL, diaporama(), c.badges(['B1', 'B2', 'B3'], cls='badges--3'))
 
 
 # ---------------------------------------------------------------- H3 · prestations : 4 cartes illustrées (image 4:3)
@@ -166,9 +175,9 @@ EXPERTISE = [
     ('faux-plafonds', 'Faux plafonds', 'Plafonds techniques et décoratifs pour l\'isolation acoustique et phonique : tissu tendu, plaque de plâtre, fibre minérale ou métal, isolant en fibre de bois.', False),
     ('platrerie-peinture', 'Plâtrerie et peinture', 'Plâtrerie, enduits, lissages et peinture intérieure pour des finitions nettes et durables.', False),
 ]
-PHOTO_SVC = {'isolation-acoustique': ['baffles-acoustiques-eclairage-indirect-01'],
+PHOTO_SVC = {'isolation-acoustique': ['salle-de-reunion-cadres-acoustiques-01'],
              'cloisons': ['piece-combles-platrerie-peinture-01'],
-             'faux-plafonds': ['couloir-plafond-ligne-lumineuse-01'],
+             'faux-plafonds': ['salon-ovales-tissu-tendu-01'],
              'platrerie-peinture': ['combles-amenages-charpente-01']}
 
 
@@ -191,9 +200,10 @@ def carte_service(s, titre, phrase, spec):
 # ---------------------------------------------------------------- H4 · projets de référence
 # v7 : les projets de référence défilent en continu (pause au survol et au focus ; à faire glisser sur mobile ;
 # immobiles en mouvement réduit). La seconde copie de la piste assure la boucle et reste invisible aux lecteurs d'écran.
-DEFILE_PROJETS = ['projet-salon-ovales', 'projet-piscine-plafond-tendu', 'projet-restaurant-acoustique', 'projet-combles-platrerie',
-                  'projet-salle-reunion-cadres', 'projet-tissu-tendu-cadres', 'projet-panneaux-suspendus', 'projet-ilots-tissu-tendu',
-                  'projet-couloir-ligne-lumineuse', 'projet-hall-gorge-lumineuse']
+DEFILE_PROJETS = ['projet-panneaux-suspendus', 'projet-ilots-tissu-tendu', 'projet-couloir-ligne-lumineuse', 'projet-hall-gorge-lumineuse',
+                  'projet-couronnes-lumineuses', 'projet-plafonds-metalliques', 'projet-cloisons-vitrees', 'projet-salle-de-spectacle',
+                  'projet-ilot-ovale', 'projet-correction-acoustique']
+# v8 : aucune photo déjà vue plus haut sur l'accueil (en-tête, cartes des savoir-faire, méthode)
 
 
 def projets():
@@ -279,7 +289,7 @@ def build():
         <div class="section-foot">%(devis2)s%(pdf)s</div>
       </div>
     </section>
-%(chiffres)s%(normes)s%(methode)s%(avis)s%(temoignages)s
+%(chiffres)s%(methode)s%(avis)s%(temoignages)s
     <section class="section faq" aria-labelledby="faq-titre">
       <div class="container split split--48">
         <div class="faq__head">
@@ -290,7 +300,7 @@ def build():
       </div>
     </section>
 ''' % dict(flag=flag_ordre, services=services, cartes=projets(), chiffres=c.chiffres(h2='Un partenaire pour vos projets en Suisse romande', surtitre='Des solutions adaptées à chaque projet'),
-           normes=__import__('page_services').normes_table(), methode=methode(),
+           methode=methode(),
            devis2=devis_btn(p, 'realisations', cls='btn', texte='Un projet semblable ? Demander un devis'), pdf=lien_pdf,
            avis=(('    <section class="section section--tight"><div class="container">%s</div></section>\n' % c.avis_ligne()) if c.avis_ligne() else ''),
            temoignages=c.temoignages(), tel_uri=TEL_URI, tel=TEL, faq=faq_html)

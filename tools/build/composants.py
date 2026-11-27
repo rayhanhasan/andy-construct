@@ -784,7 +784,7 @@ def bloc_demande(p, service=None, h2=None, intro=None, refs=False, source='accue
       </div>
     </section>
 ''' % (h2 or libelle_devis(), intro, form_devis(source, service), par_telephone(),
-       badges(['B1', 'B3', '|B9|B4'], cls='badges--clair badges--col', label='Garanties'), temoignage_court(),
+       '', temoignage_court(),
        module_rappel('rappel-colonne', service=service), refs_ligne('refs-line--aside') if refs else '')
 
 

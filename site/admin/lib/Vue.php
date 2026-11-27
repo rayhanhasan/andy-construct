@@ -223,10 +223,10 @@ final class Vue
         $roleMetier = $u['role_metier'] ? ', rôle « ' . $u['role_metier'] . ' »' : '';
         $corps = '<a class="lien-evitement" href="#contenu">Aller au contenu</a>'
             . '<div class="app"><aside class="lateral" aria-label="Navigation principale">'
-            . '<a class="marque" href="' . self::e(self::url('vue')) . '"><img src="' . self::e(self::$base) . 'assets/logo-blanc.png" alt="Andy Construct" width="132" height="34"><span>Gestion des demandes</span></a>'
+            . '<a class="marque" href="' . self::e(self::url('vue')) . '"><img src="' . self::e(self::$base) . 'assets/logo-blanc.png" alt="Andy Construct" width="132" height="42"><span>Gestion des demandes</span></a>'
             . '<nav aria-label="Écrans">' . $lateral . '</nav>'
             . '<div class="lateral-pied"><strong>' . self::e($u['nom_affiche']) . '</strong>' . self::e($role . $roleMetier) . '</div></aside>'
-            . '<div class="principal"><header class="haut"><img class="logo-mobile" src="' . self::e(self::$base) . 'assets/logo.png" alt="Andy Construct" width="86" height="22">'
+            . '<div class="principal"><header class="haut"><img class="logo-mobile" src="' . self::e(self::$base) . 'assets/logo.png" alt="Andy Construct" width="86" height="28">'
             . $recherche
             . '<div class="haut-actions">' . (Auth::peut($u, 'demandes') ? '<a class="btn btn-sombre btn-saisir" href="' . self::e(self::url('saisie')) . '">Saisir un appel</a>' : '')
             . '<div class="utilisateur"><strong>' . self::e($u['nom_affiche']) . '</strong>' . self::e($role) . '</div>'

@@ -287,7 +287,7 @@ def header(p):
     # Une ligne sur la grille : logo (col. 1-2) · navigation (dès la col. 3) · téléphone et bouton (à droite). Pas d'horaires ici.
     return '''  <header class="site-header" data-suivi-zone="entete">
     <div class="container site-header__inner">
-      <a class="brand" href="index.html"><img src="assets/img/brand/logo-andy-construct-352.png" width="352" height="128" alt="Andy Construct, page d'accueil"></a>
+      <a class="brand" href="index.html"><img src="assets/img/brand/logo-andy-construct-440.png" width="440" height="141" alt="Andy Construct, page d'accueil"></a>
       <nav class="site-nav" id="menu-principal" aria-label="Navigation principale">
         <ul class="nav-list">
           %(items)s
@@ -302,7 +302,7 @@ def header(p):
     </div>
   </header>
 ''' % dict(items=items, tel_uri=TEL_URI, tel=TEL, icon=ICON_PHONE,
-           badges=__import__('composants').badges(['B1', 'B3'], cls='badges--clair badges--menu'),
+           badges='',
            devis='' if p.get('sans_devis') else devis_btn(p, 'menu'),
            cta='' if p.get('sans_devis') else devis_btn(p, 'entete', cls='btn btn--sm header-cta'))
 
@@ -325,8 +325,8 @@ def footer(p):
     </div>
     <div class="container footer-top">
       <div class="footer-brand">
-        <img src="assets/img/brand/logo-andy-construct-blanc-380.png" width="380" height="138" alt="Andy Construct" loading="lazy">
-        <p>L'expertise de l'aménagement intérieur : acoustique, faux plafonds, cloisons, plâtrerie et peinture. Entreprise de Carouge depuis 2007, active dans toute la Suisse romande.</p>
+        <img src="assets/img/brand/logo-andy-construct-blanc-440.png" width="440" height="141" alt="Andy Construct" loading="lazy">
+        <p>L'expertise de l'aménagement intérieur : acoustique, faux plafonds, cloisons, plâtrerie et peinture. Entreprise de Carouge depuis 2007, active dans toute la Suisse romande. Membre du GGE.</p>
       </div>
       <div>
         <h2>Nous joindre</h2>
@@ -361,7 +361,7 @@ def footer(p):
   </footer>%(callbar)s
 ''' % dict(isol=V('C16', 'cloisons isolantes', 'cloisons isothermes'), nap=nap(), maps=MAPS, pdf=pdf,
            svc=''.join('<li><a href="%s">%s</a></li>' % (svc_url(s), svc_nom(s)) for s in SERVICES),
-           refs=composants.refs_pied(), badges=composants.badges(['B1', 'B2', 'B3', 'B7'], cls='badges--pied'), annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
+           refs='' if p.get('_mur_logos') else composants.refs_pied(), badges='', annee=ANNEE, legal=LEGAL, ide=IDE, zefix=ZEFIX, callbar=callbar)
 
 
 # ---------------------------------------------------------------- en-tête de page secondaire (composant page-head)
@@ -422,6 +422,7 @@ def page(p, corps):
     """Assemble et écrit une page. p : dict(fichier, title, desc, …) ; corps : contenu de <main>.
     Les codes Cxx rencontrés depuis la page précédente (corps compris) alimentent la légende du mode verification."""
     hd = header(p)
+    p['_mur_logos'] = 'class="logo-wall' in corps      # v8 : pas de second jeu de logos dans le pied de page
     ft = footer(p)
     doc = (head(p) + '<body>\n  <a class="skip-link" href="#contenu">Aller au contenu</a>\n' + bandeau() + hd
            + '  <main id="contenu">\n' + corps + '  </main>\n' + ft + '</body>\n</html>\n')

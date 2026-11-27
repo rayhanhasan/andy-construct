@@ -18,7 +18,7 @@ def build():
     actions = '%s<a class="btn btn--light" href="#methode">Notre méthode</a>' % devis_btn(p, 'entete_page')
     corps = hero_page('L\'entreprise', 'Andy Construct, entreprise de Carouge depuis 2007',
                       'L\'expertise de l\'aménagement intérieur. <b>L\'art de transformer vos espaces.</b>',
-                      actions=actions, media=hero_html, badges=c.badges(['B1', 'B2', 'B3'], cls='badges--3'))
+                      actions=actions, media=hero_html, badges=c.badges(['B6', 'B9'], cls='badges--3'))
 
     # Frise réelle : FOSC 126/2007 (début le 01.06.2007 à Perly-Certoux), FOSC 44/2010 (Chêne-Bourg), FOSC du 02.05.2023 (Carouge)
     frise = [

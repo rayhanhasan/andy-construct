@@ -66,7 +66,7 @@ def visionneuse():
 
 
 def build():
-    hero_html, preload = c.hero_image('photo', 'piscine-plafond-tendu-lumineux-01')
+    hero_html, preload = c.hero_image('photo', 'combles-amenages-charpente-01')
     p = dict(fichier='realisations.html', title='Réalisations : acoustique, faux plafonds, cloisons | Andy Construct', preload=preload,
              desc='Nos chantiers en images : faux plafonds en tissu tendu et en plâtre, acoustique, cloisons, plâtrerie. Halls, salles, bureaux, logements. Avant / après et références.')
     projets = [x for x in pf.PROJETS if pf.proj_ok(x)]
@@ -190,7 +190,7 @@ def build():
       </div>
     </section>
 ''' % (marque('C22', '<b>%d références</b>, publiques et privées, à Genève et dans le canton de Vaud.' % c.nb_refs()), c.mur_complet(),
-       devis_btn(p, 'realisations_fin'), TEL_URI, TEL, c.badges(['B1', 'B3', 'B4'], cls='badges--clair badges--3 badges--cta'),
+       devis_btn(p, 'realisations_fin'), TEL_URI, TEL, c.badges(['B4', '|B6|B9', 'B11'], cls='badges--clair badges--3 badges--cta'),
        c.module_rappel('realisations', seul=True, niveau='h3'))
     corps += visionneuse()
     page(p, corps)

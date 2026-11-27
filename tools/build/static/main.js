@@ -664,22 +664,35 @@
      vignettes cliquables, flèches du clavier, glisser au doigt. En mouvement réduit : pas de défilement automatique. */
   var dp = $('[data-diapo]');
   if (dp) {
-    var vues = $$('.diapo__vue', dp), pts = $$('.diapo__pt', dp), num = $('[data-diapo-n]', dp), cur = 0, tm = 0, arret = false;
+    var vues = $$('.diapo__vue', dp), pts = $$('.diapo__pt', dp), carte = $('[data-diapo-carte]', dp.parentNode), cur = 0, tm = 0, arret = false, ta = 0;
     var DUREE = 6000, calme = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
     dp.style.setProperty('--diapo-duree', DUREE + 'ms');
     var montrer = function (k) {
       k = (k + vues.length) % vues.length;
       if (k === cur) return;
+      var finAvant = function () { vues.forEach(function (v) { v.classList.toggle('is-avant', false); }); };
+      finAvant();
+      vues[cur].classList.add('is-avant');           // l'ancienne photo reste dessous pendant l'ouverture du rideau
+      w.clearTimeout(ta); ta = w.setTimeout(finAvant, 1300);
       [cur, k].forEach(function (j) {
         var a = j === k;
         vues[j].classList.toggle('is-on', a);
         if (a) vues[j].removeAttribute('aria-hidden'); else vues[j].setAttribute('aria-hidden', 'true');
-        var l = $('a', vues[j]); if (l) { if (a) l.removeAttribute('tabindex'); else l.setAttribute('tabindex', '-1'); }
         pts[j].classList.toggle('is-on', a);
         if (a) pts[j].setAttribute('aria-current', 'true'); else pts[j].removeAttribute('aria-current');
       });
       cur = k;
-      if (num) num.textContent = (k < 9 ? '0' : '') + (k + 1);
+      if (carte) {                                   // la carte du projet change avec la photo
+        var v = vues[k];
+        carte.classList.add('is-change');
+        w.setTimeout(function () {
+          $('[data-diapo-n]', carte).textContent = (k < 9 ? '0' : '') + (k + 1);
+          $('[data-diapo-lieu]', carte).textContent = v.getAttribute('data-lieu');
+          $('[data-diapo-titre]', carte).textContent = v.getAttribute('data-titre');
+          carte.href = v.getAttribute('data-lien');
+          carte.classList.toggle('is-change', false);
+        }, calme ? 0 : 380);
+      }
       lancer();
     };
     var lancer = function () {
@@ -724,6 +737,25 @@
       if (el.closest('.hero, .section-head .section-head, [data-reveal]') || (el.parentNode.classList && el.parentNode.classList.contains('section-head'))) return;
       el.classList.add('rv-t'); rv.observe(el);
     });
+    /* v8 : titres de section qui montent mot à mot */
+    $$('main h2:not(.visually-hidden)').forEach(function (h) {
+      if (h.closest('.hero') || h.children.length || !h.textContent.trim()) return;
+      var mots = h.textContent.trim().split(/\s+/);
+      h.textContent = '';
+      mots.forEach(function (m, i) {
+        var o = d.createElement('span'), in_ = d.createElement('span');
+        o.className = 'mot'; in_.textContent = m; in_.style.setProperty('--i', i); o.appendChild(in_); h.appendChild(o);
+        if (i < mots.length - 1) h.appendChild(d.createTextNode(' '));
+      });
+      h.classList.add('decoupe'); rv.observe(h);
+    });
+    /* v8 : grilles dont les éléments apparaissent l'un après l'autre */
+    $$('main .svcs, main .types, main .lies, main .steps, main .atouts, main .valeurs, main .prepa__etapes, main .faq__list, main .numlist, .footer-top, .pills')
+      .forEach(function (g) {
+        if (g.hasAttribute('data-reveal') || g.closest('[data-reveal]')) return;
+        Array.prototype.forEach.call(g.children, function (c, i) { c.style.setProperty('--i', Math.min(i, 9)); });
+        g.classList.add('rv-g'); rv.observe(g);
+      });
     /* v7 : parallaxe des grandes photos (déplacement de 48 px au plus dans leur cadre) */
     var par = $$('.feat__media, .cas__media, .methode__photo, .bande__visuel').filter(function (el) { return $('picture', el); }), vis = [], pr = 0;
     par.forEach(function (el) { el.classList.add('par'); });

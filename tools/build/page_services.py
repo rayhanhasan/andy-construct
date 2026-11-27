@@ -411,7 +411,7 @@ def acoustique():
             ('correction', 'Cadres et baffles acoustiques', 'Des panneaux muraux, imprimés ou unis, et des baffles verticaux qui réduisent la réverbération des grandes salles.',
              'baffles-acoustiques-eclairage-indirect-01', sch.metallique(), False),
             ('plafonds-cloisons', 'Plafonds et cloisons phoniques', 'Faux plafonds sur suspentes antivibratiles, cloisons à ossatures séparées et plaques doublées : le bruit ne passe plus.',
-             'restaurant-traitement-acoustique-01', sch.cloison_platre(), False),
+             None, sch.cloison_platre(), False),
             ('doublages', 'Doublages acoustiques', 'Ossature indépendante, laine minérale et plaques : contre les voix et les bruits du local voisin.',
              None, sch.doublage(), False)],
             'ac-types', 'Nos solutions acoustiques', 'Corriger l\'écho, isoler du bruit', '',

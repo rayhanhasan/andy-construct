@@ -510,7 +510,7 @@ def p_couverture(d: Doc):
     d.debut(entete=False)
     # Logo, version pour fond clair
     lw = 62 * mm
-    lh = lw * 232 / 640
+    lh = lw * 385 / 1200
     c.drawImage(str(IMG / 'brand' / 'logo-andy-construct.png'), ML - 1.5 * mm, H - 16 * mm - lh, lw, lh, mask='auto')
     # Photo forte : faux-plafond en plaques de plâtre à gorge lumineuse (architecture-cro §8.4 n° 6, « M »)
     haut, bas = H - 50 * mm, H - 50 * mm - 148 * mm
@@ -1008,7 +1008,7 @@ def p_contact(d: Doc):
     c.setFillColor(ANTH)
     c.rect(0, 0, W, bh, stroke=0, fill=1)
     lw = 54 * mm
-    lh = lw * 232 / 640
+    lh = lw * 385 / 1200
     c.drawImage(str(IMG / 'brand' / 'logo-andy-construct-blanc.png'), ML - 1 * mm, bh - 12 * mm - lh, lw, lh, mask='auto')
     maj = f'Document mis à jour le {date_longue(ctx.date)}'.replace(' ', NB)
     pied = f'Andy Construct, Chanton &amp; Cie · Route des Acacias 48 · 1227 Carouge · IDE CHE-113.706.162 · {maj}'
@@ -1422,7 +1422,7 @@ def g_couverture(d: Doc):
     c = d.c
     d.debut(entete=False)
     lw = 50 * mm
-    c.drawImage(str(IMG / 'brand' / 'logo-andy-construct.png'), ML - 1.2 * mm, H - 16 * mm - lw * 232 / 640, lw, lw * 232 / 640, mask='auto')
+    c.drawImage(str(IMG / 'brand' / 'logo-andy-construct.png'), ML - 1.2 * mm, H - 16 * mm - lw * 385 / 1200, lw, lw * 385 / 1200, mask='auto')
     d.y = H - 72 * mm
     d.biseau(ML, d.y, 12 * mm, 2.6 * mm)
     d.espace(9 * mm)
@@ -1676,7 +1676,7 @@ def g_p8(d: Doc):
     d.para('Andy Construct, Chanton &amp; Cie · Route des Acacias 48 · 1227 Carouge · IDE CHE-113.706.162',
            S('gid', 'Sans', 11, 15, GRAPH), largeur=CW)
     lw = 40 * mm
-    c.drawImage(str(IMG / 'brand' / 'logo-andy-construct.png'), W - MR - lw, 24 * mm, lw, lw * 232 / 640, mask='auto')
+    c.drawImage(str(IMG / 'brand' / 'logo-andy-construct.png'), W - MR - lw, 24 * mm, lw, lw * 385 / 1200, mask='auto')
     d.controle()
     d.fin()
 
@@ -1806,7 +1806,7 @@ def k_p3(d: Doc):
         (f'<b>Où</b> : {ch("parties communes, étages, logements concernés")}', st, 2 * mm),
         (f'<b>Horaires</b> : du lundi au vendredi, de {ch("heure")} à {ch("heure")}', st, 2 * mm),
         (f'<b>Ce qui change pour vous</b> : {ch("accès, ascenseur, bruit, poussière, présence nécessaire dans le logement")}', st, 5 * mm),
-        (f'L\'entreprise {ch("nom de l\'entreprise")} protège les parties communes et nettoie chaque soir. Pour toute question sur le chantier : {ch("nom du responsable")}, {ch("téléphone")}. Pour toute autre question : {ch("régie")}, {ch("téléphone de la régie")}.', st, 4 * mm),
+        (f'L\'entreprise {ch("nom de l’entreprise")} protège les parties communes et nettoie chaque soir. Pour toute question sur le chantier : {ch("nom du responsable")}, {ch("téléphone")}. Pour toute autre question : {ch("régie")}, {ch("téléphone de la régie")}.', st, 4 * mm),
         ('Nous vous remercions de votre compréhension.', st, 6 * mm),
         (f'{ch("Régie")}, le {ch("date")}', st, 0),
     ]

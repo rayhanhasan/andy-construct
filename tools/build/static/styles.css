@@ -130,8 +130,8 @@ div.vc > .vc__code { position: absolute; top: -10px; right: -6px; font-size: 1re
 .site-header__inner > * { transition: transform var(--d) var(--ease-pose); }
 .is-compact .site-header__inner > * { transform: translateY(calc(var(--shift) / 2)); }
 .brand { flex: none; display: block; margin-right: auto; padding: 4px 0; }
-.brand img { width: 112px; transform-origin: left center; transition: transform var(--d) var(--ease-pose); }
-@media (min-width: 900px) { .brand img { width: 132px; } .is-compact .brand img { transform: scale(.85); } }
+.brand img { width: 128px; transform-origin: left center; transition: transform var(--d) var(--ease-pose); }
+@media (min-width: 900px) { .brand img { width: 156px; } .is-compact .brand img { transform: scale(.85); } }
 .site-nav a:not(.btn) { text-decoration: none; color: var(--ink); }
 .nav-list a { font: 560 1rem/1.25 var(--head); font-stretch: var(--wide-ui); }
 .nav-extra { display: none; }
@@ -174,7 +174,7 @@ div.vc > .vc__code { position: absolute; top: -10px; right: -6px; font-size: 1re
   .header-actions { padding-left: 20px; border-left: var(--rule); }
 }
 /* ≥ 1440 px : la navigation part de la 3e colonne de la grille (même verticale que la 2e cellule du mur de logos) */
-@media (min-width: 1440px) { .brand { margin-right: 0; } .site-nav { margin-left: calc((100% - 11 * var(--gutter)) / 6 + 2 * var(--gutter) - 132px - 12px - 11px); } .header-actions { margin-left: auto; } }
+@media (min-width: 1440px) { .brand { margin-right: 0; } .site-nav { margin-left: calc((100% - 11 * var(--gutter)) / 6 + 2 * var(--gutter) - 156px - 12px - 11px); } .header-actions { margin-left: auto; } }
 
 /* 8. Héro (accueil) et en-têtes de page : panneau anthracite + photo nette ; le trait laser relie les deux.
    Mobile : titre, phrase et boutons d'abord, puis la photo en bande pleine largeur, puis les badges.
@@ -1151,17 +1151,11 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
 /* 33. v6 : diaporama de l'en-tête (accueil), cartes en profondeur, photos qui se dévoilent */
 .diapo { position: absolute; inset: 0; overflow: hidden; background: #2A2D31; touch-action: pan-y; }
 .diapo__vues { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
-.diapo__vue { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 1.1s var(--ease-pose), visibility 0s 1.1s; }
-.diapo__vue.is-on { z-index: 1; opacity: 1; visibility: visible; transition: opacity 1.1s var(--ease-pose); }
 .diapo__vue picture, .diapo__vue img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .diapo__vue img { object-fit: cover; }
 .diapo__vue::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(29 31 34 / 0) 48%, rgb(29 31 34 / .82) 100%); pointer-events: none; }
-.diapo__legende { position: absolute; z-index: 2; left: 24px; right: 88px; bottom: 52px; display: flex; flex-direction: column; gap: 4px; color: var(--white); text-decoration: none; opacity: 0; transform: translateY(10px); transition: opacity .6s .35s, transform .6s .35s var(--ease-pose); }
-.diapo__vue.is-on .diapo__legende { opacity: 1; transform: none; }
 .diapo__lieu { font: 650 .8125rem/1.3 var(--head); font-stretch: var(--wide-ui); letter-spacing: .12em; text-transform: uppercase; color: #E8EAED; }
 .diapo__titre { font: 650 clamp(1.125rem, 1rem + .5vw, 1.5rem)/1.2 var(--head); font-stretch: var(--wide); }
-.diapo__legende:hover .diapo__titre, .diapo__legende:focus-visible .diapo__titre { text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 2px; text-underline-offset: .2em; }
-.diapo__nav { position: absolute; z-index: 3; left: 24px; right: 88px; bottom: 14px; display: flex; gap: 8px; }
 .diapo__pt { position: relative; flex: 1; height: 32px; padding: 0; border: 0; background: none; cursor: pointer; }
 .diapo__pt::before, .diapo__barre { content: ""; position: absolute; left: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; }
 .diapo__pt::before { right: 0; background: rgb(255 255 255 / .32); transition: background-color .2s; }
@@ -1172,9 +1166,6 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
 .diapo.is-play .diapo__pt.is-on .diapo__barre { animation: diapo-barre var(--diapo-duree, 6s) linear both; }
 .diapo.is-pause .diapo__pt.is-on .diapo__barre { animation-play-state: paused; }
 @keyframes diapo-barre { from { width: 0; } to { width: 100%; } }
-.diapo__compte { position: absolute; z-index: 3; right: 24px; bottom: 22px; margin: 0; font: 600 .875rem/1 var(--head); font-variant-numeric: tabular-nums; color: rgb(255 255 255 / .7); }
-.diapo__compte span { color: var(--white); }
-@media (max-width: 599.98px) { .diapo__legende { left: 16px; right: 16px; bottom: 44px; } .diapo__nav { left: 16px; right: 72px; bottom: 8px; } .diapo__compte { right: 16px; bottom: 18px; } }
 .hero--accueil .hero__titre { max-width: 17ch; }
 @media (min-width: 900px) { .hero--accueil .hero__grid { min-height: clamp(560px, calc(100vh - var(--header-h) - 120px), 760px); } }
 @media (prefers-reduced-motion: no-preference) {
@@ -1269,3 +1260,59 @@ main > .section--dark:last-child { border-bottom: 1px solid var(--steel-a); }
 }
 @keyframes devoile { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
 @keyframes glisse { to { transform: translateX(calc(-100% - 16px)); } }
+
+/* 38. v8 : en-tête de l'accueil. Filigrane du « A » du logo ; grand diaporama qui s'ouvre en rideau ; carte du projet */
+.hero--accueil .hero__panel > :not(.hero__media) { position: relative; z-index: 1; }
+.hero__filigrane { position: absolute; z-index: 0; left: -4%; bottom: -8%; width: min(46vw, 680px); height: auto; opacity: .045; pointer-events: none; user-select: none; }
+.diapo__vue { position: absolute; inset: 0; visibility: hidden; clip-path: inset(0 0 0 100%); transition: clip-path 1.25s var(--ease-pose), visibility 0s 1.25s; }
+.diapo__vue.is-on { z-index: 2; visibility: visible; clip-path: inset(0); transition: clip-path 1.25s var(--ease-pose); }
+.diapo__vue.is-avant { z-index: 1; visibility: visible; clip-path: inset(0); transition: none; }
+.diapo__nav { position: absolute; z-index: 3; right: 20px; top: 16px; display: flex; gap: 6px; width: 132px; }
+.diapo__carte { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: 16px; display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; align-items: center; padding: 12px 16px; background: rgb(255 255 255 / .96); color: var(--ink); text-decoration: none; box-shadow: 0 18px 40px -18px rgb(0 0 0 / .45); }
+.diapo__carte-n { grid-row: span 2; font: 650 .8125rem/1 var(--head); font-variant-numeric: tabular-nums; color: var(--grey); }
+.diapo__carte-n span { color: var(--red); }
+.diapo__carte-txt { display: flex; flex-direction: column; gap: 2px; transition: opacity .35s, transform .35s var(--ease-pose); }
+.diapo__carte.is-change .diapo__carte-txt { opacity: 0; transform: translateY(8px); }
+.diapo__carte .diapo__lieu { color: var(--grey); }
+.diapo__carte .diapo__titre { font: 650 1.0625rem/1.25 var(--head); font-stretch: var(--wide); }
+.diapo__carte-voir { display: none; }
+.diapo__carte:hover .diapo__titre, .diapo__carte:focus-visible .diapo__titre { text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 2px; text-underline-offset: .2em; }
+@media (min-width: 900px) {
+  .hero--accueil .hero__panel { grid-column: 1 / 7; }
+  .hero--accueil .hero__media { left: calc(var(--margin) + (100% - 2 * var(--margin) + var(--gutter)) * 6 / 12 + var(--gutter)); }
+  .hero--accueil .hero__grid { min-height: clamp(580px, calc(100svh - var(--header-h)), 840px); }
+  .diapo__carte { left: 32px; right: auto; bottom: 32px; width: min(420px, calc(100% - 64px)); padding: 20px 24px; gap: 4px 20px; grid-template-columns: auto 1fr auto; }
+  .diapo__carte .diapo__titre { font-size: 1.25rem; }
+  .diapo__carte-voir { display: inline-flex; grid-row: span 2; align-self: center; font: 600 .9375rem/1 var(--head); font-stretch: var(--wide-ui); color: var(--red); }
+  .diapo__carte-voir::after { content: "→"; margin-left: 8px; transition: transform .3s var(--ease-pose); }
+  .diapo__carte:hover .diapo__carte-voir::after { transform: translateX(4px); }
+}
+@media (min-width: 1440px) { .hero--accueil .hero__media { left: calc((100% - var(--max)) / 2 + (var(--max) + var(--gutter)) * 6 / 12 + var(--gutter)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .hero__filigrane { animation: derive 24s ease-in-out infinite alternate; }
+  .js .hero__filigrane { animation: entre-a 1.8s var(--ease-pose) .2s both, derive 24s ease-in-out 2s infinite alternate; }
+  .js .diapo__carte { animation: monte .8s var(--ease-pose) 1s both; }
+}
+@media (prefers-reduced-motion: reduce) { .diapo__vue, .diapo__vue.is-on { transition: none; } }
+@keyframes derive { to { transform: translate3d(3%, -4%, 0) rotate(-2deg); } }
+@keyframes entre-a { from { opacity: 0; transform: translate3d(-6%, 4%, 0); } }
+@media (min-width: 900px) { .diapo img[src*="tissu-tendu-cadres"], .hero__media img[src*="tissu-tendu-cadres"] { object-position: 50% 42%; } }
+
+/* 39. v8 : animations globales (chargement et défilement), jamais en mouvement réduit */
+@media (prefers-reduced-motion: no-preference) {
+  .js .site-header { animation: tombe .7s var(--ease-pose) both; }
+  .anim .decoupe .mot { display: inline-block; overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; vertical-align: top; }
+  .anim .decoupe .mot > span { display: inline-block; transition: transform .9s var(--ease-pose); transition-delay: calc(var(--i, 0) * 45ms); }
+  .anim .decoupe:not(.is-vu) .mot > span { transform: translateY(108%); }
+  .anim .rv-g > * { transition: opacity .7s var(--ease-pose), transform .7s var(--ease-pose); transition-delay: calc(var(--i, 0) * 70ms); }
+  .anim .rv-g:not(.is-vu) > * { opacity: 0; transform: translateY(28px); }
+}
+@keyframes tombe { from { transform: translateY(-100%); } }
+@media (min-width: 900px) { .diapo__carte { width: min(500px, calc(100% - 64px)); } .diapo__carte .diapo__titre { font-size: 1.125rem; } }
+@media (min-width: 1200px) { .hero--accueil .badges--3 { grid-template-columns: repeat(3, auto); justify-content: space-between; column-gap: 24px; } }
+@media (max-width: 899.98px) {
+  .diapo__carte { left: 0; right: 0; bottom: 0; padding: 36px 16px 12px; gap: 0 12px; background: linear-gradient(180deg, rgb(29 31 34 / 0), rgb(29 31 34 / .82) 55%); color: var(--white); box-shadow: none; }
+  .diapo__carte-n { color: #C9CDD2; }
+  .diapo__carte .diapo__lieu { color: #E2E4E7; font-size: .75rem; }
+  .diapo__carte .diapo__titre { font-size: .9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

@@ -53,5 +53,5 @@ return static function (App $app): string {
             . '<button class="btn btn-principal btn-large" type="submit">Continuer</button></form>'
             . '<p class="petit discret">Mot de passe oublié : demandez à un associé de réinitialiser votre accès (Paramètres, Utilisateurs).</p>';
     }
-    return Vue::document('Connexion', '<main class="page-seule" id="contenu"><div class="carte-connexion"><img class="logo-connexion" src="' . $e(Vue::$base) . 'assets/logo.png" alt="Andy Construct" width="132" height="34">' . $form . '</div></main>', 'seul');
+    return Vue::document('Connexion', '<main class="page-seule" id="contenu"><div class="carte-connexion"><img class="logo-connexion" src="' . $e(Vue::$base) . 'assets/logo.png" alt="Andy Construct" width="132" height="42">' . $form . '</div></main>', 'seul');
 };

@@ -9,7 +9,7 @@
 - mise à jour de site/assets/img/portfolio/manifest.json et recadrages.json.
 Nécessite ImageMagick (convert, identify).
 """
-import json, os, subprocess, sys
+import json, math, os, subprocess, sys
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(ICI))
@@ -63,6 +63,35 @@ def ecrire(src, sortie, largeur, crop=None):
                                                            ['-define', 'webp:method=6']) + ['%s.%s' % (sortie, ext)])
 
 
+# Étalonnage commun (v8) : toutes les photos ramenées à la même lumière, pour un ensemble cohérent.
+CIBLE_LUM = 0.52                       # luminance moyenne visée
+TEINTE = (1.015, 1.0, 0.975)           # neutre légèrement chaud, identique pour toutes les photos
+FORCE_BALANCE = 0.75                   # part de la dominante corrigée (0 = rien, 1 = gris neutre strict)
+
+
+def mesures(f):
+    v = subprocess.check_output(['convert', f, '-resize', '1024x1024>', '-format',
+                                 '%[fx:mean.r] %[fx:mean.g] %[fx:mean.b] %[fx:standard_deviation]', 'info:']).decode().split()
+    return [float(x) for x in v]
+
+
+def etalonner(src, dst):
+    """Balance des blancs (gris neutre légèrement chaud), exposition par gamma, contraste relevé si l'image est plate,
+    hautes lumières protégées. Renvoie les réglages appliqués."""
+    r, g, b, sd = mesures(src)
+    m = (r + g + b) / 3
+    gains = [1 + FORCE_BALANCE * (m * t / c - 1) for c, t in zip((r, g, b), TEINTE)]
+    m2 = sum(c * k for c, k in zip((r, g, b), gains)) / 3
+    gamma = min(1.35, max(0.8, math.log(m2) / math.log(CIBLE_LUM)))
+    contraste = 4 if sd < 0.12 else 2.5 if sd < 0.17 else 0
+    cmd = ['convert', src, '-color-matrix', '%.4f 0 0 0 %.4f 0 0 0 %.4f' % tuple(gains), '-gamma', '%.3f' % gamma]
+    if contraste:
+        cmd += ['-sigmoidal-contrast', '%gx50%%' % contraste]
+    cmd += ['-level', '0%,99.4%', dst]
+    subprocess.check_call(cmd)
+    return dict(gains=[round(x, 3) for x in gains], gamma=round(gamma, 3), contraste=contraste)
+
+
 def cadre(w, h, ratio, fx, fy):
     """Plus grand cadre au ratio donné, centré au mieux sur (fx, fy)."""
     cw, ch = (w, round(w / ratio)) if w / h < ratio else (round(h * ratio), h)
@@ -82,11 +111,12 @@ def main():
     for prefixe, pid, titre, alt, cat, f45, f169 in PHOTOS:
         src = os.path.join(src_dir, next(f for f in fichiers if prefixe in f))
         tmp = '/tmp/_redresse.png'
-        subprocess.check_call(['convert', src, '-auto-orient', '-strip', tmp])
+        subprocess.check_call(['convert', src, '-auto-orient', '-strip', '/tmp/_brut.png'])
+        reglages = etalonner('/tmp/_brut.png', tmp)
         w, h = dims(tmp)
         base = os.path.join(DEST, pid)
         it = dict(id=pid, fichier_source=os.path.basename(src), base=REL + pid, titre=titre, alt=alt, categorie=cat,
-                  orientation='portrait' if h > w else 'paysage', qualite=5, role='client-v6')
+                  orientation='portrait' if h > w else 'paysage', qualite=5, role='client-v6', etalonnage=reglages)
         for t in TAILLES:
             lw = min(t, w)
             ecrire(tmp, '%s-%d' % (base, t), lw)

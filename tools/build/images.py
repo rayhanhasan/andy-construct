@@ -85,7 +85,7 @@ def portfolio():
 
 def logos():
     brand = os.path.join(SITE, 'assets/img/brand')
-    for nom, w in (('logo-andy-construct', 352), ('logo-andy-construct-blanc', 380)):
+    for nom, w in (('logo-andy-construct', 440), ('logo-andy-construct-blanc', 440)):
         im = Image.open(os.path.join(brand, nom + '.png')).convert('RGBA')
         im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
         # PNG à palette de 48 couleurs : ≈ 6 Ko, plus léger que le WebP pour un logo en aplats
